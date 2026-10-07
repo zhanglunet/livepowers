@@ -2,6 +2,29 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循[语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.2.0] - 2026-10-07
+
+独立评审（只读仓库、实跑 60 多条命令；并调研 Superpowers 与 9 个同类产品）之后的修正与补强。决策记录见 [docs/devlog.md](docs/devlog.md)。
+
+### 修复
+
+- 任务看板：`takeover` 不能再直接迁到 `running`（必须经 待验证 → 已注册）；`closed` 为终态；接管后重开须显式 `task move <id> explore --reset-loops` 或 `--extend-budget <金额> [--max-loops N]`，否则止损条件仍成立。
+- 结果台账：`outcome baseline --direction lower|higher`，越低越好的指标（逾期数、时长）不再算出负的增量价值；`outcome cost` 须已有基线。
+- 注册表：`registry add --supersedes <旧id>` 发新版本并自动退役旧版、记录 `superseded_by`；修正 `crystallize-to-system1` 与脚本矛盾的"旧版本保留"说法。
+- 17 个技能的 `description` 改为只写触发条件；`test_frontmatter` 现在会拒绝破折号接流程摘要、流程动词和超过 400 字符的描述。
+- `using-livepowers` 的工作循环与 `system1-first` 一致（先 `registry find`，MISS 且功能级以上才建任务；证据每轮一条）；`templates/action.yaml` 的测试项与八项检查一一对应；`acceptance-gates` 门 1 不再把 `lp job validate` 当通用形式检查；文档写出 F-V-S-R 合成公式。
+- 网站 Codex / Cursor 安装改用 npm 安装器，不再 `cat AGENTS.md >>`。
+
+### 新增
+
+- 技能 `takeover-handling`（18 个技能）：止损后冻结并交付诊断包、七类主因只选一个、换人重开 / 重定规格 / 关闭、接管成本入账；进入路由表与晨报待办。
+- `lp pending add / list / done`：夜间固化产物清单（意图、评分、n*、测试命令与结果、位置、生成者）；晨报自动汇总；`done` 拒绝生成者给自己验收。
+- `lp canary record / compare / list`：金丝雀评测记录与比较（通过率下降 >10% 或 token 上升 >30% 算回归，exit 5）；晨报含金丝雀段。
+- `lp --help` 为所有子命令与参数提供说明。
+- `using-livepowers`：三种安装方式下 `lp` 与模板位置的对照表、项目目录约定表、冷启动说明；npm 安装器把 `templates/` 装到 `using-livepowers/templates/`。
+- 文档：`docs/scenarios.md`（12 个场景与五分钟 demo）、`docs/comparison.md`（与 Superpowers 逐项对比、三种串联用法、9 个同类产品）、`docs/devlog.md`（开发日志）；Issue 模板新增"使用反馈 / 问题"；开启 Discussions。
+- 网站：首屏放安装命令与"两种死"；新增场景、demo（真实输出）、对比、FAQ、开发日志、反馈入口板块与页内导航。
+
 ## [1.1.0] - 2026-10-07
 
 ### 新增

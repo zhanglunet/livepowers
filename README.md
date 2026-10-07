@@ -149,14 +149,24 @@ K 是固化成本，M 是维护成本，c1 和 c2 是单次执行成本，p 是 
 
 ## 文档
 
-- [docs/index.html](docs/index.html)：图文说明页（启用 GitHub Pages 后可在线浏览）
+- [官网 livepowers.pages.dev](https://livepowers.pages.dev)：图文说明页（含场景、demo、对比、FAQ、开发日志）
 - [docs/paradigm.md](docs/paradigm.md)：范式要点（一页纸）
+- [docs/scenarios.md](docs/scenarios.md)：12 个场景与应用案例，每个带命令与产出
+- [docs/comparison.md](docs/comparison.md)：与 Superpowers 逐项对比、三种串联用法、9 个同类产品
+- [docs/devlog.md](docs/devlog.md)：开发日志（做了什么、为什么、放弃了什么）
 - [docs/testing.md](docs/testing.md)：如何测试脚本与技能
 - [CHANGELOG.md](CHANGELOG.md)：版本记录
 
-## 参与
+## 反馈与参与
 
-欢迎提 issue 和 PR。修改技能前请先读 `skills/writing-livepowers-skills/SKILL.md`，提交前运行：
+这个项目靠使用反馈迭代。用了之后哪里别扭、不清楚、Agent 绕过了规则、想要什么场景，都欢迎提 Issue：
+
+- [使用反馈 / 问题](https://github.com/zhanglunet/livepowers/issues/new?template=feedback.md)：哪里不清楚、期望什么
+- [问题报告](https://github.com/zhanglunet/livepowers/issues/new?template=bug_report.md)：技能没触发、脚本出错、规则被绕过
+- [技能提议](https://github.com/zhanglunet/livepowers/issues/new?template=skill_proposal.md)：先写下没有这个技能时 Agent 怎么失败
+- [Discussions](https://github.com/zhanglunet/livepowers/discussions)：场景交流、落地经验
+
+提 PR 前请先读 `skills/writing-livepowers-skills/SKILL.md`，并运行：
 
 ```bash
 python -m unittest discover -s tests -v

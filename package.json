@@ -1,6 +1,6 @@
 {
   "name": "livepowers",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Live Product paradigm skills for agents: Agent + Ontology + Harness. Installs skills into Claude Code, Codex, Cursor and other Agent Skills clients. 活产品范式技能包。",
   "keywords": ["agentic", "ontology", "harness", "live-product", "agent-skills", "claude-code", "codex", "cursor", "skills"],
   "homepage": "https://livepowers.pages.dev",

@@ -56,6 +56,18 @@ svg{width:100%;height:auto;display:block}
 .tree{font-family:var(--mono);font-size:12.5px;line-height:1.65;white-space:pre;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px 16px;overflow-x:auto}
 .cmp td:nth-child(2),.cmp td:nth-child(3){width:38%}
 a{color:inherit}
+.install{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:14px 0 12px}
+.install pre{padding:10px 14px;font-size:14px;flex:1 1 280px}
+.install a.btn{font-size:13.5px;border:1px solid var(--ink);border-radius:8px;padding:9px 14px;text-decoration:none;background:var(--ink);color:var(--bg)}
+.install a.btn.ghost{background:transparent;color:var(--ink)}
+nav.toc{display:flex;gap:6px 14px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin:18px 0 6px;padding:10px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+nav.toc a{text-decoration:none}nav.toc a:hover{color:var(--ink)}
+details{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin-bottom:8px}
+details summary{cursor:pointer;font-weight:600}details p{margin:8px 0 0;color:var(--muted);font-size:14px}
+.scn{counter-reset:s}.scn .card{position:relative}.scn .card h3{font-family:inherit;font-size:15px}
+.scn .card .skills{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:6px}
+.log li{margin-bottom:6px}.log .d{font-family:var(--mono);font-size:12px;color:var(--muted);margin-right:8px}
+.demo pre{max-height:520px;overflow:auto}
 footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
 @media (max-width:900px){.hero,.g3,.g4{grid-template-columns:1fr 1fr}.hero{grid-template-columns:1fr}}
 @media (max-width:620px){.g3,.g2,.g4{grid-template-columns:1fr}h1{font-size:34px}}
@@ -66,12 +78,13 @@ footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);font-si
 
 <section class="hero">
   <div>
-    <div class="kicker">Skills for the Live Product paradigm · v1.1.0 · MIT</div>
+    <div class="kicker">Skills for the Live Product paradigm · v1.2.0 · MIT</div>
     <h1>Live<span>powers</span><br>活产品范式技能包</h1>
-    <p class="lead">一套给智能体用的工作方法，可以直接装进 Claude Code、Codex、Cursor，或任何支持 Agent Skills 标准的客户端。它规定的流程是强制的：<b>先走 System 1，再走 System 2；探索必须留证据；成功路径要固化；所有成果都要过独立验收。白天探索，夜间固化，早晨验收。</b></p>
+    <p class="lead">业务智能体每次都从零推理，同一件事做一千次就付一千次的钱，结果还是概率性的；用 AI 更快写出的软件，业务含义仍然写死在代码里，交付即冻结。Livepowers 是一套装进 Claude Code、Codex、Cursor 的工作方法，让智能体<b>先复用已固化的能力，没有才去探索并留下证据，把成功路径固化成经测试的代码，一切成果过独立验收</b>——越用越熟练。</p>
     <div class="formula">Agentic AI = Agent + Ontology + Harness</div>
-    <div class="badges"><span class="badge">18 个技能</span><span class="badge">4 个零依赖脚本</span><span class="badge">8 个模板</span><span class="badge">3 个命令</span><span class="badge">SessionStart 自动注入</span><span class="badge">npx 一键安装</span><span class="badge">34 项自动化测试</span><span class="badge">结构借鉴 obra/superpowers</span></div>
-    <div class="badges"><a class="badge" href="https://github.com/zhanglunet/livepowers">github.com/zhanglunet/livepowers</a></div>
+    <div class="install"><pre><span class="k">npx livepowers install</span>   <span class="c"># Claude Code · Cursor · Codex</span></pre><a class="btn" href="#demo">五分钟 demo</a><a class="btn ghost" href="#install">其他安装方式</a></div>
+    <div class="badges"><span class="badge">18 个技能</span><span class="badge">4 个零依赖脚本</span><span class="badge">8 个模板</span><span class="badge">3 个命令</span><span class="badge">SessionStart 自动注入</span><span class="badge">npx 一键安装</span><span class="badge">12 个场景</span><span class="badge">40 项自动化测试</span><span class="badge">结构借鉴 obra/superpowers</span></div>
+    <div class="badges"><a class="badge" href="https://github.com/zhanglunet/livepowers">github.com/zhanglunet/livepowers</a><a class="badge" href="https://www.npmjs.com/package/livepowers">npm: livepowers</a><a class="badge" href="#feedback">提反馈</a></div>
   </div>
   <figure>
     <svg viewBox="0 0 420 300" role="img" aria-label="System 1 与 System 2 的探索与固化循环">
@@ -104,7 +117,16 @@ footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);font-si
   </figure>
 </section>
 
-<h2>七条铁律</h2>
+<nav class="toc"><a href="#why">为什么</a><a href="#rules">七条铁律</a><a href="#skills">18 个技能</a><a href="#scenarios">场景</a><a href="#demo">demo</a><a href="#rhythm">节律</a><a href="#board">看板</a><a href="#gate">固化门禁</a><a href="#accept">验收</a><a href="#scripts">脚本</a><a href="#install">安装</a><a href="#compare">对比</a><a href="#faq">FAQ</a><a href="#steps">落地</a><a href="#devlog">开发日志</a><a href="#feedback">反馈</a></nav>
+
+<h2 id="why">为什么需要它：两种"死"</h2>
+<div class="grid g3">
+  <div class="card"><span class="tag t-safe">死代码</span><h3 style="font-family:inherit">业务含义写死在程序里</h3><p>交付即冻结；每次变化都要重新解释需求、改写实现。用 AI 更快地生成这种软件，只是穿新鞋走老路。</p></div>
+  <div class="card"><span class="tag t-safe">死循环的智能体</span><h3 style="font-family:inherit">每次都从零理解、从零推理</h3><p>同一件事做一千次就付一千次推理的钱，结果还是概率性的；没有证据，没有积累，产品不会变熟练。</p></div>
+  <div class="card"><span class="tag t-night">活产品</span><h3 style="font-family:inherit">本体定义语义，能力随使用生长</h3><p>高频、可验证、稳定的事固化为 System 1（代码 / CLI / SQL，CPU，便宜、确定）；新问题交给 System 2（Agent + 大模型）探索并留证据；固化失效就去固化。System 2 占比随时间下降，能力库随时间增长。</p></div>
+</div>
+
+<h2 id="rules">七条铁律</h2>
 <p class="sub">写在 <code>using-livepowers</code> 里，会话启动时由钩子注入。它们是强制流程，不是建议。</p>
 <div class="grid g3">
   <div class="rule"><div class="n">1</div><p><b>先检查技能。</b>只要有 1% 的可能适用，就先读。</p></div>
@@ -116,7 +138,7 @@ footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);font-si
   <div class="rule"><div class="n">7</div><p><b>没有基线的价值不算价值。</b>承诺业务结果之前，先登记基线。</p></div>
 </div>
 
-<h2>18 个技能</h2>
+<h2 id="skills">18 个技能</h2>
 <p class="sub">按工作循环分组。每个技能是一个含 <code>SKILL.md</code> 的文件夹，符合 Agent Skills 开放标准。标 <b>NEW</b> 的是 v1.0 新增的。</p>
 <div class="grid g3">
   <div class="card"><span class="tag t-core">入口</span><h3>using-livepowers <small>总入口</small></h3><p>七条铁律、路由表、三层架构落点（本体 / 工具 / 技能）、标准工作循环和反模式。</p><div class="when"><b>何时：</b>每个会话开始时（自动注入）。</div></div>
@@ -139,7 +161,75 @@ footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);font-si
   <div class="card"><span class="tag t-core">元 · NEW</span><h3>writing-livepowers-skills <small>编写技能</small></h3><p>先看 Agent 在没有技能时如何失败，再写最小的技能去纠正它。description 只写触发条件，写完用结构测试检查。</p><div class="when"><b>何时：</b>新建或修改技能时。</div></div>
 </div>
 
-<h2>一天的节律</h2>
+<h2 id="scenarios">12 个场景</h2>
+<p class="sub">每个场景写清触发 → 走哪些技能 → 产出。完整命令见 <a href="https://github.com/zhanglunet/livepowers/blob/main/docs/scenarios.md">docs/scenarios.md</a>。</p>
+<div class="grid g3 scn">
+  <div class="card"><span class="tag t-s2">1 · 首响</span><h3>周报类查询第一次来</h3><p>注册表未命中，会话级小请求不建任务，直接在本体范围内探索，用已知数字核对，留证据。</p><div class="skills">system1-first → explore-with-evidence</div></div>
+  <div class="card"><span class="tag t-s2">2 · 固化</span><h3>同一件事第三次探索成功</h3><p>评分 ≥5 且调用次数 &gt; n*：夜间先写测试再写参数化 SQL，登记产物；早晨人工过四道门后注册。</p><div class="skills">nightly-crystallization-review → crystallize-to-system1 → acceptance-gates</div></div>
+  <div class="card"><span class="tag t-s1">3 · 命中</span><h3>请求命中已固化能力</h3><p><code>lp registry find</code> HIT，核对前置条件后按 entry 调用，几乎零 Token；证据里 S1 占比上升。</p><div class="skills">system1-first</div></div>
+  <div class="card"><span class="tag t-safe">4 · 写操作</span><h3>把逾期的重点商机转给主管</h3><p>"有效跟进"是本体层变化；原子行动填八项检查与九项测试；先预演后执行；注册必须带测试。</p><div class="skills">ontology-grounded-spec → ontology-evolution → oltp-action-safety → acceptance-gates</div></div>
+  <div class="card"><span class="tag t-core">5 · 接入</span><h3>接入一个用了八年的存量 CRM</h3><p>只读扫描生成环境指纹和本体草稿，业务逐个确认对象、状态机、口径；选试点场景，登记基线。</p><div class="skills">env-scan-ontology → fde-delivery → outcome-ledger</div></div>
+  <div class="card"><span class="tag t-safe">6 · 漂移</span><h3>夜里发现状态机多了一个取值</h3><p>指纹比对报漂移；相关能力退役回到 System 2；提本体 Delta 后用 <code>--supersedes</code> 固化新版本。</p><div class="skills">env-scan-ontology → ontology-evolution → system1-first（去固化）</div></div>
+  <div class="card"><span class="tag t-safe">7 · 接管</span><h3>探索三轮没收敛</h3><p>脚本止损；执行者冻结并交付诊断包；接管人归因只选一个主因；换人重开或重定规格；接管成本入账。</p><div class="skills">takeover-handling → outcome-ledger</div></div>
+  <div class="card"><span class="tag t-core">8 · 换模型</span><h3>换了更便宜的执行模型</h3><p>金丝雀记录与比较；Skill 类能力标记待复验；重跑基准后去掉不再需要的约束。</p><div class="skills">agent-harness-for-tools → nightly-crystallization-review</div></div>
+  <div class="card"><span class="tag t-night">9 · 协作</span><h3>派工、执行、评审三个 Agent</h3><p>同一任务 id + 契约版本；消息经交换机，哈希链防篡改；审计点名"声称完成却无回执"。</p><div class="skills">auditable-agent-comms → acceptance-gates</div></div>
+  <div class="card"><span class="tag t-core">10 · 岗位</span><h3>合同审核岗交给人 + 智能体团队</h3><p>任务归属 auto / agent / handoff / human；接管条件与 KPI；接管比例高就先固化再谈规模。</p><div class="skills">digital-role-spec → outcome-ledger</div></div>
+  <div class="card"><span class="tag t-night">11 · 跨夜</span><h3>夜里把 500 份合同抽成结构化字段</h3><p>强模型拆 DAG，按便宜模型可稳定运行的时长切段；每段写作业契约、独立检查者与止损。</p><div class="skills">night-loop-planning</div></div>
+  <div class="card"><span class="tag t-night">12 · 计价</span><h3>向客户说明到底省了什么</h3><p>基线 → 测量 → 成本归集（含失败、返工、接管）→ 验收任务平均成本、首次价值交付时间、ΔV。</p><div class="skills">outcome-ledger</div></div>
+</div>
+
+<h2 id="demo">五分钟 demo</h2>
+<p class="sub"><code>bash examples/walkthrough.sh</code> 的真实输出：用一个虚构的商机数据库走完 扫描 → 基线 → MISS → 三轮探索 → 评分 → 看板 → 独立验收 → 注册 → HIT → 台账 → 漂移 → 晨报。</p>
+<div class="demo"><pre><span class="c">工作目录：&lt;临时目录&gt;</span>
+已初始化 .livepowers/（evidence.jsonl, registry.json, tasks.json, outcomes.jsonl, assets.json, reports/）
+<span class="c">--- 本体草稿（节选）</span>
+<span class="c"># 本体草稿（scan_sqlite.py 自动生成）——须业务确认后才能晋升为 ontology.yaml</span>
+source: sqlite:demo.sqlite
+ontology_version: 0.1.0-draft
+objects:
+  - name: activities
+    description: &quot;&quot;   # TODO(需业务确认) 业务含义
+    identity: [&#x27;id&#x27;]
+    row_count: 0
+    attributes:
+      - {name: id, type: INTEGER, nullable: true}
+      - {name: opportunity_id, type: INTEGER, nullable: true}
+      - {name: kind, type: TEXT, nullable: true}
+      - {name: created_at, type: TEXT, nullable: true}  # 候选时间字段：事件时间还是快照时间？
+<span class="k">已登记基线 stale-opps/逾期重点商机数 = 40.0</span>
+<span class="k">MISS —— 未命中已固化能力 → 转 System 2 探索（记得记录证据）</span>
+（MISS → System 2）
+t_8a03132e: 待澄清 → 规格确认
+t_8a03132e: 规格确认 → 探索
+t_8a03132e: 探索 → 探索
+t_8a03132e: 探索 → 探索
+<span class="k">固化候选（按 调用次数 × 可验证度 排序）：</span>
+- transfer stale opportunity: S2 3 次, 成功率 100%, 可验证 100%, 均成本 0.8000 （写操作：需 oltp-action-safety）
+<span class="k">F-V-S-R 评分: 10.0/10  分项 {&#x27;F&#x27;: 2, &#x27;V&#x27;: 2, &#x27;S&#x27;: 2, &#x27;R&#x27;: 1}</span>
+System 2 有效单次成本 c2&#x27; = 2.2500（含失败重试与人工兜底）
+<span class="k">盈亏平衡调用次数 n* = 11.1；预计 6 个月内调用 180 次</span>
+<span class="k">建议: 固化</span>
+提示: 写操作——固化前必须完成 oltp-action-safety 八项检查测试
+t_8a03132e: 探索 → 待验证
+t_8a03132e: 待验证 → 已注册
+<span class="k">已注册 cap_转交逾期商机 v1.0.0</span>
+<span class="k">HIT —— 命中已固化能力 → 走 System 1 执行：</span>
+  [3] cap_转交逾期商机 v1.0.0 (cli) entry: crm opp transfer-stale --days {days}  [写操作]
+ok
+ok
+<span class="c">### 场景 stale-opps</span>
+- 逾期重点商机数: 基线 40.0 → 目标 10.0；当前 22.0（Δ -18，-45.0%）
+- 归集成本 2.40（inference 2.40）
+- 通过验收任务 1，未通过 0；验收任务平均成本 = 2.40
+- 首次价值交付时间：0.0 天（自范围确认至首个生产任务被采纳）
+<span class="k">环境漂移：</span>
+- customers: 新增列 industry
+- opportunities.stage: 状态出现新取值 [&#x27;on_hold&#x27;]（状态机须更新）
+<span class="c">--- 晨报：.livepowers/reports/morning-2026-10-07.md</span>
+<span class="c"># 晨间报告 · 2026-10-07</span>
+<span class="c">…（晨报：待验收产物 · 固化候选 · 金丝雀 · 能力复核 · 看板 · 台账 · 需要人决定的事）</span></pre></div>
+
+<h2 id="rhythm">一天的节律</h2>
 <p class="sub">技能之间如何衔接：白天探索，夜间固化，早晨验收。</p>
 <table>
   <thead><tr><th style="width:14%">时段</th><th>发生什么</th><th style="width:36%">用到的技能 / 命令</th></tr></thead>
@@ -151,7 +241,7 @@ footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);font-si
   </tbody>
 </table>
 
-<h2>任务看板：每次迁移都有条件和责任主体</h2>
+<h2 id="board">任务看板：每次迁移都有条件和责任主体</h2>
 <p class="sub"><code>lp task</code> 把看板规则写成了代码，不只是写在文档里。</p>
 <figure>
   <svg viewBox="0 0 1000 150" role="img" aria-label="任务看板状态机">
@@ -176,7 +266,7 @@ footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);font-si
   </svg>
 </figure>
 
-<h2>固化门禁：F-V-S-R 与盈亏平衡</h2>
+<h2 id="gate">固化门禁：F-V-S-R 与盈亏平衡</h2>
 <p class="sub">不是所有探索都值得固化。<code>lp score</code> 同时给出评分和盈亏平衡调用次数 n*；建议固化时退出码为 0，否则为 3。</p>
 <div class="grid g2">
   <table>
@@ -196,7 +286,7 @@ footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);font-si
   </div>
 </div>
 
-<h2>四道验收门 · 结果台账</h2>
+<h2 id="accept">四道验收门 · 结果台账</h2>
 <p class="sub">v1.0 把"算不算完成"和"值不值"也变成了可检查的流程。</p>
 <div class="grid g2">
   <table>
@@ -219,7 +309,7 @@ footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);font-si
   </table>
 </div>
 
-<h2>自带脚本</h2>
+<h2 id="scripts">自带脚本</h2>
 <p class="sub">纯 Python 3.9+ 标准库，不用安装任何依赖。数据全部落在项目的 <code>.livepowers/</code> 下，建议纳入 git。</p>
 <div class="tabs" role="tablist">
   <button class="on" data-p="p1">lp.py</button><button data-p="p2">agent_switch.py</button><button data-p="p3">scan_sqlite.py</button>
@@ -257,7 +347,7 @@ footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);font-si
 <span class="c">#  - customers: 新增列 industry</span>
 <span class="c">#  - opportunities.stage: 状态出现新取值 ['on_hold']（状态机须更新）</span></pre></div>
 
-<h2>安装</h2>
+<h2 id="install">安装</h2>
 <div class="grid g2">
   <div>
     <div class="tabs" role="tablist">
@@ -309,38 +399,81 @@ ls livepowers/dist/skills/</pre></div>
 │                             tool-card · capability-package
 │                             digital-role · job-contract
 ├── examples/walkthrough.sh   五分钟完整体验
-├── tests/                    34 项测试（CI）
-├── docs/                     范式一页纸 · 测试
+├── tests/                    40 项测试（CI）
+├── docs/                     范式 · 场景 · 对比 · 开发日志 · 测试 · 本站
 ├── package.json  AGENTS.md  CHANGELOG.md  LICENSE (MIT)
 └── README.md</div>
   </div>
 </div>
 
-<h2>与 Superpowers 的关系</h2>
-<p class="sub">借鉴了它的形式，解决的是不同的问题。</p>
+<h2 id="compare">对比：Superpowers 与同类产品</h2>
+<p class="sub">借鉴了 Superpowers 的形式，解决的是不同的问题；两者可以同装。逐项对比、三种串联用法和 9 个同类产品的详细表见 <a href="https://github.com/zhanglunet/livepowers/blob/main/docs/comparison.md">docs/comparison.md</a>。</p>
 <table class="cmp">
   <thead><tr><th>维度</th><th>obra/superpowers</th><th>Livepowers</th></tr></thead>
   <tbody>
     <tr><td>定位</td><td>软件开发方法论：让编码 Agent 像资深工程师一样工作</td><td>企业业务产品范式：让业务 Agent 在本体内工作，并越用越熟练</td></tr>
     <tr><td>主流程</td><td>brainstorming → worktree → writing-plans → 子 Agent 执行 → TDD → review</td><td>system1-first → 探索留证据 → 验收门 → 夜间固化评审 → TDD 固化 → 能力包注册 → 复核 / 去固化</td></tr>
     <tr><td>世界模型</td><td>代码仓库</td><td>本体（描述面 + 运行面），带环境感知、漂移检测和版本化演进</td></tr>
-    <tr><td>固化物</td><td>人工从对话中提炼的 markdown 技能</td><td>带测试、版本和元数据的确定性代码 / CLI / SQL，组装成能力包</td></tr>
+    <tr><td>固化物</td><td>人工从对话中提炼的 markdown 技能</td><td>带测试、版本和元数据的确定性代码 / CLI / SQL，组装成能力包；生成者 ≠ 采纳人由脚本强制</td></tr>
+    <tr><td>异常与夜间</td><td>遇阻即停，交给人</td><td>止损 → 异常接管技能；夜间固化评审、金丝雀、晨报、早晨人工采纳</td></tr>
     <tr><td>成本与价值</td><td>未涉及</td><td>F-V-S-R、盈亏平衡 n*、S2 占比趋势、结果台账、资产回流率</td></tr>
     <tr><td>写操作安全</td><td>通用 code review</td><td>先仿真后执行；八项检查与对应测试</td></tr>
     <tr><td>多 Agent</td><td>子 Agent 执行，逐任务审查</td><td>派工 / 执行 / 验证 / 采纳 / 运营五种职责分离；可审计交换机、回放、信任域分级</td></tr>
     <tr><td>共同点</td><td colspan="2">技能是强制工作流；会话启动时注入入口技能；TDD；生成与评审分离；澄清时一次只问一个问题；用压力测试来写技能。两者可以同时安装：Livepowers 负责"做什么、要不要固化、算不算完成"，Superpowers 负责"固化代码怎么写好"。</td></tr>
   </tbody>
 </table>
+<p class="sub" style="margin-top:18px">和其他同类产品比，Livepowers 最像谁、独有什么：</p>
+<table>
+  <thead><tr><th>产品</th><th>定位</th><th>最像的点</th><th>Livepowers 独有 / 缺失</th></tr></thead>
+  <tbody>
+    <tr><td>Agent Skills 标准 · anthropics/skills</td><td>开放技能格式与官方示例库</td><td>Livepowers 完全遵循该格式</td><td>独有整套业务方法论与运行时；缺触发率自动评测</td></tr>
+    <tr><td>GitHub spec-kit</td><td>规格驱动开发</td><td>constitution ≈ 铁律 + 不变量；converge ≈ 验收门</td><td>独有 System 1 路由、固化经济学、夜间循环；缺任务 ID 产物链</td></tr>
+    <tr><td>BMAD-METHOD</td><td>角色化 Agile 框架</td><td>多角色 ≈ 数字岗位 + 职责分离</td><td>独有本体、固化、台账；缺 PRD / Story 模板体系</td></tr>
+    <tr><td>Agent OS</td><td>提取代码规范注入 Agent</td><td>从环境提取标准 ≈ 环境扫描</td><td>扫的是业务语义而非代码风格</td></tr>
+    <tr><td>claude-flow / Ruflo</td><td>多 Agent 编排平台</td><td>从成功轨迹学习 + 路由 ≈ System 1 优先</td><td>固化物是可测试代码，有人工采纳门；缺向量检索</td></tr>
+    <tr><td>Palantir AIP / Ontology</td><td>商业企业平台</td><td>Agent + Ontology 公式；行动审批审计</td><td>开源、零依赖、可装进任意 Agent；缺本体运行时</td></tr>
+    <tr><td>Devin Playbooks</td><td>可复用流程 prompt</td><td>Playbook ≈ 工具卡 + 剧本</td><td>固化物是代码而非 prompt；缺从会话自动生成</td></tr>
+    <tr><td>Voyager 式自增长技能库</td><td>自动蒸馏技能</td><td>探索留证据 → 固化</td><td>独有 n*、生成者 ≠ 采纳人、去固化；缺 hook 自动采集</td></tr>
+    <tr><td>skills.sh · Cursor rules</td><td>分发渠道</td><td>npx 安装对应这些渠道</td><td>未上架 skills.sh；不生成 .mdc</td></tr>
+  </tbody>
+</table>
 
-<h2>落地三步</h2>
+<h2 id="faq">FAQ</h2>
+<details><summary>和 Superpowers 能同时装吗？会打架吗？</summary><p>能，而且建议同装。Livepowers 决定"做什么、要不要固化、算不算完成"，Superpowers 决定"固化代码怎么写好"。两者的入口技能都在会话启动时注入，互不覆盖；固化流水线里 Livepowers 挑候选并验收，Superpowers 的 brainstorming → writing-plans → TDD 负责实现。</p></details>
+<details><summary>不用 Claude Code 能用吗？</summary><p>能。<code>npx livepowers install --target cursor | codex | agents</code> 装到对应客户端的技能目录；任何支持 Agent Skills 标准的客户端都能读 <code>skills/*/SKILL.md</code>。区别是只有 Claude Code 插件自带 SessionStart 钩子自动注入入口技能，其他客户端靠技能描述触发，Codex 可以把入口说明合并进项目的 AGENTS.md（安装器会做）。</p></details>
+<details><summary><code>lp</code> 命令在哪里？</summary><p><code>npm i -g livepowers</code> 后直接用（需要 Python 3.9+）；Claude Code 插件里是 <code>python3 ${CLAUDE_PLUGIN_ROOT}/scripts/lp.py</code>，钩子会告诉 Agent 路径；仅复制技能的用户给仓库脚本起个别名。<code>lp --help</code> 列出全部子命令。</p></details>
+<details><summary>数据存在哪？要不要进 git？</summary><p>全部在项目的 <code>.livepowers/</code> 下（证据、注册表、看板、台账、金丝雀、晨报、夜间产物），建议纳入 git——它就是产品"变熟练"的记录。本仓库自己的 .gitignore 忽略它只是因为仓库不是业务项目，不要照抄。</p></details>
+<details><summary>必须先有本体才能开始吗？</summary><p>不必。用 <code>env-scan-ontology</code> 扫出的草稿本体（版本 0.1.0-draft）就能走通第一个任务，规格里引用草稿对象名，等业务确认后升版。但铁律 4 不变：缺对象、缺口径时提本体变更，不要用脚本掩盖。</p></details>
+<details><summary>Agent 会不会"自己说完成"就算完成？</summary><p>不会，这正是它要解决的问题。完成与否由验收条件决定：看板拒绝执行者把任务迁到已注册，注册要求生成者 ≠ 采纳人，夜间产物清单拒绝自我验收，交换机审计会点名"声称完成却无回执"的消息。</p></details>
+<details><summary>固化会不会把错误也固化进去？</summary><p>可验证度 V=0 一票否决；候选要 3 次成功且被样例核对过；固化物必须带测试；写操作缺测试拒绝注册；早晨由人采纳；运行期连续失败、口径变化、环境漂移、换模型都会触发复核或去固化。自动固化并不可靠，所以夜间产出的永远是"草稿 + 测试证据"，最终决定权在人。</p></details>
+<details><summary>只有 SQLite 扫描脚本，我的库是 PostgreSQL / MySQL 怎么办？</summary><p><code>scan_sqlite.py</code> 是示例：按同样的输出结构（对象、属性、外键、状态取值抽样、指纹）查你数据库的 information_schema 即可，其余流程不变。欢迎提 PR 补其他数据库的扫描器。</p></details>
+
+<h2 id="steps">落地三步</h2>
 <div class="grid g3">
   <div class="card"><span class="tag t-core">第一步</span><h3 style="font-family:inherit">先白盒</h3><p>选一个有代表性的分析场景，启用 <code>using-livepowers</code>、<code>system1-first</code>、<code>explore-with-evidence</code>、<code>outcome-ledger</code>。先登记基线、记录证据，统一意图的命名。</p></div>
   <div class="card"><span class="tag t-night">第二步</span><h3 style="font-family:inherit">再契约</h3><p>把关键口径写进本体和规格。开启 <code>acceptance-gates</code> 和夜间评审，每天早晨人工采纳，观察 System 2 占比的曲线。</p></div>
   <div class="card"><span class="tag t-safe">第三步</span><h3 style="font-family:inherit">后证据闭环</h3><p>扩展到写操作场景和长程任务，多 Agent 协作接入交换机。现场交付统一走 <code>fde-delivery</code>，把资产回流率纳入评价。</p></div>
 </div>
 
+<h2 id="devlog">开发日志</h2>
+<p class="sub">做了什么、为什么、放弃了什么。全文见 <a href="https://github.com/zhanglunet/livepowers/blob/main/docs/devlog.md">docs/devlog.md</a>；版本条目见 <a href="https://github.com/zhanglunet/livepowers/blob/main/CHANGELOG.md">CHANGELOG</a>。</p>
+<ul class="log">
+  <li><span class="d">2026-10-07 · v1.2.0</span>独立评审后的修正与补强：17 个技能描述改为只写触发条件；任务看板堵住"接管直达生产"和"接管后无法重开"两个漏洞；台账支持越低越好的指标；<code>registry add --supersedes</code>；新增 <code>takeover-handling</code> 技能、<code>lp pending</code> 夜间产物清单、<code>lp canary</code> 金丝雀；入口技能写清三种安装方式下脚本与模板的位置；网站加场景、demo、对比、FAQ、开发日志与反馈入口。推迟：hook 自动采集证据、意图同义词表、触发率自动评测。</li>
+  <li><span class="d">2026-10-07 · v1.1.0</span>npm 安装包：<code>npx livepowers install</code> 装进 Claude Code / Cursor / Codex，<code>lp</code> 命令随包安装；官网上线。</li>
+  <li><span class="d">2026-10-07 · v1.0.0</span>首个公开版本：17 个技能、3 个零依赖脚本、8 个模板、三种插件清单、测试与 CI、MIT。</li>
+</ul>
+
+<h2 id="feedback">反馈与参与</h2>
+<p class="sub">这个项目靠使用反馈迭代。用了之后哪里别扭、不清楚、Agent 绕过了规则、想要什么场景，都请告诉我们。</p>
+<div class="grid g3">
+  <div class="card"><span class="tag t-core">反馈</span><h3 style="font-family:inherit"><a href="https://github.com/zhanglunet/livepowers/issues/new?template=feedback.md">使用反馈 / 问题</a></h3><p>哪里不清楚、期望什么、用在了什么场景。写下你读到哪一句开始不明白，最有帮助。</p></div>
+  <div class="card"><span class="tag t-safe">Bug</span><h3 style="font-family:inherit"><a href="https://github.com/zhanglunet/livepowers/issues/new?template=bug_report.md">问题报告</a></h3><p>技能没触发、脚本出错、Agent 绕过了某条规则。附 <code>lp</code> 输出或对话片段（脱敏）。</p></div>
+  <div class="card"><span class="tag t-night">提议</span><h3 style="font-family:inherit"><a href="https://github.com/zhanglunet/livepowers/issues/new?template=skill_proposal.md">技能提议</a></h3><p>先写下没有这个技能时 Agent 在什么压力情境下怎么失败——这是写技能的第一步。</p></div>
+</div>
+<p class="sub" style="margin-top:12px">场景交流与落地经验请到 <a href="https://github.com/zhanglunet/livepowers/discussions">Discussions</a>。提 PR 前先读 <code>writing-livepowers-skills</code>，并运行 <code>python -m unittest discover -s tests -v</code>。</p>
+
 <footer>
-  Livepowers v1.1.0 · MIT · <a href="https://github.com/zhanglunet/livepowers">github.com/zhanglunet/livepowers</a> · <a href="https://www.npmjs.com/package/livepowers">npm</a>。仓库结构与"技能即强制工作流"的设计借鉴自 obra/superpowers。脚本已通过 34 项自动化测试：评分与盈亏平衡、中文路由、看板规则与止损、结果台账、资产四道门、作业契约、扫描与漂移、交换机的中转 / 拒绝 / 回放 / 篡改检测 / 审计、技能结构、钩子输出、示例流程、npm 安装器。
+  Livepowers v1.2.0 · MIT · <a href="https://github.com/zhanglunet/livepowers">github.com/zhanglunet/livepowers</a> · <a href="https://www.npmjs.com/package/livepowers">npm</a> · <a href="#feedback">反馈</a>。仓库结构与"技能即强制工作流"的设计借鉴自 obra/superpowers。脚本已通过 40 项自动化测试：评分与盈亏平衡、中文路由、看板规则与止损、结果台账、资产四道门、作业契约、扫描与漂移、交换机的中转 / 拒绝 / 回放 / 篡改检测 / 审计、技能结构、钩子输出、示例流程、npm 安装器、接管重开、夜间产物清单、金丝雀。
 </footer>
 </div>
 <script>
