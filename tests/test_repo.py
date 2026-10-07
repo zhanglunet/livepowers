@@ -90,6 +90,15 @@ class TestManifests(unittest.TestCase):
             self.assertIn("七条铁律", json.dumps(data, ensure_ascii=False))
 
 
+    def test_panorama_svg_in_sync_with_site(self):
+        site = read(os.path.join(REPO, "docs", "index.html"))
+        inline = re.search(r'<figure class="pano">\s*<svg[^>]*>(.*?)</svg>', site, re.S).group(1)
+        standalone = read(os.path.join(REPO, "docs", "panorama.svg"))
+        body = re.search(r"<svg[^>]*>(.*?)</svg>", standalone, re.S).group(1)
+        body = re.sub(r"<style>.*?</style>\s*<rect width=\"1000\" height=\"770\"[^>]*/>\s*", "", body, flags=re.S)
+        self.assertEqual(body.strip(), inline.strip(), "docs/panorama.svg 与网站内联全景图不一致，请重新生成")
+        self.assertIn("panorama.svg", read(os.path.join(REPO, "README.md")))
+
     def test_evidence_capture_hook(self):
         hooks = json.loads(read(os.path.join(REPO, "hooks", "hooks.json")))["hooks"]
         self.assertEqual(hooks["PostToolUse"][0]["matcher"], "Bash")

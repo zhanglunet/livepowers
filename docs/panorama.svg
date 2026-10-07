@@ -1,0 +1,156 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 770" width="1000" height="770" role="img" aria-label="Livepowers 全景架构：一个请求的旅程、三块地基、一天的节律与四道护栏">
+  <style>
+    svg{--bg:#f7f5ef;--paper:#fff;--ink:#1c1b19;--muted:#6b675f;--line:#e5e0d5;--s1:#1f5f8b;--s1s:#e6f0f7;--s2:#b8641b;--s2s:#fbeede;--ok:#2f6b4a;--oks:#e3efe7;--rd:#8a2f3b;--rds:#f6e4e6;--pp:#5b4a8a;--pps:#ebe6f5;
+      font-family:"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",system-ui,sans-serif}
+    @media (prefers-color-scheme:dark){svg{--bg:#15150f;--paper:#1f1e1a;--ink:#ecebe6;--muted:#a8a498;--line:#34322c;--s1s:#1b2d3a;--s2s:#3a2a18;--oks:#1c3024;--rds:#3a1d22;--pps:#29233a;--s1:#7fb6de;--s2:#e6a468;--ok:#86c7a0;--rd:#e39aa4;--pp:#b7a8e6}}
+    .bt{font-size:12px;fill:var(--muted);letter-spacing:.12em}
+    .h{font-size:14.5px;font-weight:700;fill:var(--ink)}
+    .b{font-size:12.5px;fill:var(--ink)}
+    .m{font-size:11.5px;fill:var(--muted)}
+    .sk{font-family:"SFMono-Regular",Menlo,"Noto Sans Mono CJK SC",monospace;font-size:10.5px;fill:var(--muted)}
+  </style>
+  <rect width="1000" height="770" fill="var(--paper)"/>
+  <defs>
+    <marker id="pa" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0L8,4L0,8z" fill="var(--muted)"/></marker>
+    <marker id="pa1" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0L8,4L0,8z" fill="var(--s1)"/></marker>
+    <marker id="pa2" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0L8,4L0,8z" fill="var(--s2)"/></marker>
+    <marker id="pag" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0L8,4L0,8z" fill="var(--ok)"/></marker>
+  </defs>
+
+  <!-- 带 1：一个请求的旅程 -->
+  <rect x="10" y="10" width="980" height="290" rx="16" fill="var(--bg)" stroke="var(--line)"/>
+  <text x="28" y="36" class="bt">① 一个请求的旅程</text>
+
+  <rect x="28" y="110" width="120" height="58" rx="10" fill="var(--paper)" stroke="var(--line)"/>
+  <text x="88" y="135" text-anchor="middle" class="h">业务请求</text>
+  <text x="88" y="153" text-anchor="middle" class="m">"各地区上周收入？"</text>
+
+  <line x1="148" y1="139" x2="176" y2="139" stroke="var(--muted)" marker-end="url(#pa)"/>
+
+  <rect x="178" y="98" width="160" height="82" rx="10" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.4"/>
+  <text x="258" y="124" text-anchor="middle" class="h">先翻工具箱</text>
+  <text x="258" y="142" text-anchor="middle" class="b">有没有现成的做法？</text>
+  <text x="258" y="160" text-anchor="middle" class="m">不先从零推理</text>
+  <text x="258" y="194" text-anchor="middle" class="sk">system1-first</text>
+
+  <!-- 找到了 -->
+  <path d="M338,120 C360,120 360,66 380,66" fill="none" stroke="var(--s1)" stroke-width="1.6" marker-end="url(#pa1)"/>
+  <text x="352" y="58" class="m" style="fill:var(--s1)">找到了</text>
+  <rect x="384" y="40" width="300" height="56" rx="10" fill="var(--s1s)" stroke="var(--s1)"/>
+  <text x="534" y="63" text-anchor="middle" class="h" style="fill:var(--s1)">直接用现成工具</text>
+  <text x="534" y="82" text-anchor="middle" class="m">几乎不花钱 · 结果确定 · 顺手记一笔日志</text>
+  <path d="M684,68 L850,68 L850,120" fill="none" stroke="var(--s1)" stroke-width="1.6" marker-end="url(#pa1)"/>
+
+  <!-- 没找到 -->
+  <path d="M338,160 C360,160 360,214 380,214" fill="none" stroke="var(--s2)" stroke-width="1.6" marker-end="url(#pa2)"/>
+  <text x="340" y="246" class="m" style="fill:var(--s2)">没找到</text>
+  <rect x="384" y="188" width="126" height="56" rx="10" fill="var(--s2s)" stroke="var(--s2)"/>
+  <text x="447" y="211" text-anchor="middle" class="h" style="fill:var(--s2)">先说清要什么</text>
+  <text x="447" y="229" text-anchor="middle" class="m">一次只问一个问题</text>
+  <text x="447" y="262" text-anchor="middle" class="sk">ontology-grounded-spec</text>
+
+  <line x1="510" y1="216" x2="528" y2="216" stroke="var(--s2)" marker-end="url(#pa2)"/>
+  <rect x="530" y="188" width="176" height="56" rx="10" fill="var(--s2s)" stroke="var(--s2)"/>
+  <text x="618" y="211" text-anchor="middle" class="h" style="fill:var(--s2)">探索者去想办法</text>
+  <text x="618" y="229" text-anchor="middle" class="m">只在地图范围内 · 有预算上限</text>
+  <text x="618" y="262" text-anchor="middle" class="sk">explore-with-evidence</text>
+
+  <line x1="706" y1="216" x2="722" y2="216" stroke="var(--s2)" marker-end="url(#pa2)"/>
+  <rect x="724" y="188" width="84" height="56" rx="10" fill="var(--rds)" stroke="var(--rd)"/>
+  <text x="766" y="211" text-anchor="middle" class="h" style="fill:var(--rd)">质检</text>
+  <text x="766" y="229" text-anchor="middle" class="m">不能自己说了算</text>
+  <text x="766" y="262" text-anchor="middle" class="sk">acceptance-gates</text>
+
+  <path d="M808,216 L850,216 L850,180" fill="none" stroke="var(--s2)" stroke-width="1.6" marker-end="url(#pa2)"/>
+  <rect x="804" y="122" width="92" height="56" rx="10" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.4"/>
+  <text x="850" y="146" text-anchor="middle" class="h">交付</text>
+  <text x="850" y="164" text-anchor="middle" class="m">答案 / 报表 / 动作</text>
+
+  <!-- 日志与止损 -->
+  <rect x="384" y="272" width="300" height="18" rx="9" fill="var(--paper)" stroke="var(--line)" opacity="0"/>
+  <text x="28" y="222" class="b">每一步都留下</text>
+  <text x="28" y="240" class="h">工作日志</text>
+  <text x="28" y="258" class="m">证据：做了什么、花了多少、</text>
+  <text x="28" y="274" class="m">对不对。忘了记，钩子会补。</text>
+  <text x="28" y="292" class="sk">lp evidence · hooks</text>
+
+  <rect x="870" y="196" width="118" height="92" rx="10" fill="var(--rds)" stroke="var(--rd)" stroke-dasharray="4 3"/>
+  <text x="929" y="218" text-anchor="middle" class="h" style="fill:var(--rd)">走不通？</text>
+  <text x="929" y="236" text-anchor="middle" class="m">到预算就止损</text>
+  <text x="929" y="252" text-anchor="middle" class="m">交出诊断 · 换人接手</text>
+  <text x="929" y="276" text-anchor="middle" class="sk">takeover-handling</text>
+  <path d="M706,236 C740,236 760,250 790,250 L866,250" fill="none" stroke="var(--rd)" stroke-dasharray="4 3" marker-end="url(#pa)"/>
+
+  <!-- 带 2：三块地基 -->
+  <rect x="10" y="318" width="980" height="166" rx="16" fill="var(--bg)" stroke="var(--line)"/>
+  <text x="28" y="344" class="bt">② 三块地基</text>
+
+  <rect x="28" y="358" width="300" height="110" rx="12" fill="var(--pps)" stroke="var(--pp)"/>
+  <text x="178" y="384" text-anchor="middle" class="h" style="fill:var(--pp)">业务地图（本体）</text>
+  <text x="178" y="404" text-anchor="middle" class="b">业务里有哪些东西、什么状态、口径怎么算、</text>
+  <text x="178" y="421" text-anchor="middle" class="b">谁能做什么。写在代码外面，可以确认和改版。</text>
+  <text x="178" y="441" text-anchor="middle" class="m">智能体只在地图范围内行动；地图缺了就先补地图</text>
+  <text x="178" y="459" text-anchor="middle" class="sk">env-scan-ontology · ontology-evolution</text>
+
+  <rect x="350" y="358" width="300" height="110" rx="12" fill="var(--s1s)" stroke="var(--s1)"/>
+  <text x="500" y="384" text-anchor="middle" class="h" style="fill:var(--s1)">工具箱（已固化的能力）</text>
+  <text x="500" y="404" text-anchor="middle" class="b">反复做成功的事，做成"按钮"：代码、命令、</text>
+  <text x="500" y="421" text-anchor="middle" class="b">查询、流程。每个都带测试、版本和责任人。</text>
+  <text x="500" y="441" text-anchor="middle" class="m">按得越多越便宜；不灵了就下架，回到探索</text>
+  <text x="500" y="459" text-anchor="middle" class="sk">crystallize-to-system1 · agent-harness</text>
+
+  <rect x="672" y="358" width="300" height="110" rx="12" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.4"/>
+  <text x="822" y="384" text-anchor="middle" class="h">操作手册（18 个技能）</text>
+  <text x="822" y="404" text-anchor="middle" class="b">什么时候该做什么、怎么做、做到什么程度算完。</text>
+  <text x="822" y="421" text-anchor="middle" class="b">会话一开始就自动翻开，是规定不是建议。</text>
+  <text x="822" y="441" text-anchor="middle" class="m">装进 Claude Code / Cursor / Codex 即可</text>
+  <text x="822" y="459" text-anchor="middle" class="sk">using-livepowers 路由到其余 17 个</text>
+
+  <!-- 带 3：一天的节律 -->
+  <rect x="10" y="502" width="980" height="258" rx="16" fill="var(--bg)" stroke="var(--line)"/>
+  <text x="28" y="528" class="bt">③ 一天的节律：产品越用越熟练</text>
+
+  <rect x="28" y="546" width="286" height="118" rx="12" fill="var(--s2s)" stroke="var(--s2)"/>
+  <text x="171" y="572" text-anchor="middle" class="h" style="fill:var(--s2)">白天 · 用和探索</text>
+  <text x="171" y="594" text-anchor="middle" class="b">能用工具的用工具；没有的让探索者做，</text>
+  <text x="171" y="611" text-anchor="middle" class="b">每一步留日志。写操作先演练再执行。</text>
+  <text x="171" y="631" text-anchor="middle" class="m">多个智能体协作时，对话经过可审计的交换机</text>
+  <text x="171" y="652" text-anchor="middle" class="sk">oltp-action-safety · auditable-agent-comms</text>
+
+  <line x1="314" y1="605" x2="352" y2="605" stroke="var(--muted)" marker-end="url(#pa)"/>
+
+  <rect x="356" y="546" width="286" height="118" rx="12" fill="var(--oks)" stroke="var(--ok)"/>
+  <text x="499" y="572" text-anchor="middle" class="h" style="fill:var(--ok)">夜里 · 整理和固化</text>
+  <text x="499" y="594" text-anchor="middle" class="b">翻一天的日志：哪件事反复成功、值得做成</text>
+  <text x="499" y="611" text-anchor="middle" class="b">按钮？先算值不值，再写测试和草稿。</text>
+  <text x="499" y="631" text-anchor="middle" class="m">顺便检查旧工具还灵不灵、环境有没有变、模型有没有退步</text>
+  <text x="499" y="652" text-anchor="middle" class="sk">nightly-crystallization-review · night-loop-planning</text>
+
+  <line x1="642" y1="605" x2="680" y2="605" stroke="var(--muted)" marker-end="url(#pa)"/>
+
+  <rect x="684" y="546" width="288" height="118" rx="12" fill="var(--rds)" stroke="var(--rd)"/>
+  <text x="828" y="572" text-anchor="middle" class="h" style="fill:var(--rd)">早晨 · 人来验收</text>
+  <text x="828" y="594" text-anchor="middle" class="b">看晨报，逐个决定：通过的放进工具箱，</text>
+  <text x="828" y="611" text-anchor="middle" class="b">不通过的写明原因。做的人不能自己验收。</text>
+  <text x="828" y="631" text-anchor="middle" class="m">夜里永远只出"草稿 + 测试证据"，决定权在人</text>
+  <text x="828" y="652" text-anchor="middle" class="sk">acceptance-gates · /lp-morning</text>
+
+  <!-- 回流箭头：早晨 → 工具箱 -->
+  <path d="M828,546 L828,520 L500,520 L500,470" fill="none" stroke="var(--ok)" stroke-width="1.8" marker-end="url(#pag)"/>
+  <text x="664" y="514" text-anchor="middle" class="m" style="fill:var(--ok)">通过验收的新工具，放进工具箱 → 明天的请求更多走"找到了"</text>
+
+  <!-- 护栏 -->
+  <text x="28" y="696" class="bt">四道护栏，贯穿全程</text>
+  <rect x="28" y="708" width="220" height="40" rx="20" fill="var(--paper)" stroke="var(--line)"/>
+  <text x="138" y="727" text-anchor="middle" class="b">质检：回执为准，不认自我声明</text>
+  <text x="138" y="742" text-anchor="middle" class="sk">acceptance-gates</text>
+  <rect x="262" y="708" width="220" height="40" rx="20" fill="var(--paper)" stroke="var(--line)"/>
+  <text x="372" y="727" text-anchor="middle" class="b">写操作：先演练，八项检查</text>
+  <text x="372" y="742" text-anchor="middle" class="sk">oltp-action-safety</text>
+  <rect x="496" y="708" width="220" height="40" rx="20" fill="var(--paper)" stroke="var(--line)"/>
+  <text x="606" y="727" text-anchor="middle" class="b">账本：先有基线，再谈价值</text>
+  <text x="606" y="742" text-anchor="middle" class="sk">outcome-ledger</text>
+  <rect x="730" y="708" width="242" height="40" rx="20" fill="var(--paper)" stroke="var(--line)"/>
+  <text x="851" y="727" text-anchor="middle" class="b">交付到现场：资产回流，越做越快</text>
+  <text x="851" y="742" text-anchor="middle" class="sk">fde-delivery</text>
+</svg>
