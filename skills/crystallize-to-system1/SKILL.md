@@ -66,6 +66,7 @@ lp registry add --name "<名称>" --kind cli|sql|script|skill|view|mcp|workflow 
 ```
 
 - 意图关键字覆盖用户常见说法（中英文都写），否则 `system1-first` 找不到它。
+- 夜间生成、等早晨验收的产物，用 `lp pending add` 登记（见 `nightly-crystallization-review`），不要直接注册。
 - **在产品内发布，不必整版升级。**探索态对终端用户不可见；通过验收后以新工具、新 Skill、新流程或新看板的形式上线。
 - 被业务 Agent 调用的能力，转 `agent-harness-for-tools` 补工具卡与剧本。
 

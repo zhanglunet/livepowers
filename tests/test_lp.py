@@ -144,6 +144,38 @@ class TestCLI(Workdir):
             self.assertIn(word, out)
         self.assertIn("--reset-loops", self.lp("task", "move", "--help").stdout)
 
+    def test_canary_record_and_compare(self):
+        self.lp("init")
+        self.lp("canary", "compare", "--name", "core", check=1)  # 无记录
+        self.lp("canary", "record", "--name", "core", "--model", "m1", "--pass", "10", "--total", "10", "--tokens", "1000")
+        self.assertIn("首次记录", self.lp("canary", "compare", "--name", "core").stdout)
+        self.lp("canary", "record", "--name", "core", "--model", "m2", "--pass", "7", "--total", "10", "--tokens", "1000")
+        out = self.lp("canary", "compare", "--name", "core", check=5).stdout
+        self.assertIn("通过率", out)
+        self.lp("canary", "record", "--name", "core", "--model", "m2", "--pass", "10", "--total", "10", "--tokens", "1500")
+        out = self.lp("canary", "compare", "--name", "core", check=5).stdout
+        self.assertIn("token", out.lower())
+        self.assertIn("core", self.lp("canary", "list").stdout)
+
+    def test_pending_manifest_in_report(self):
+        self.lp("init")
+        self.lp("pending", "add", "--intent", "weekly revenue", "--score", "8.5", "--n-star", "11.1",
+                "--tests", "pytest tests/wr -q", "--result", "pass", "--location", "branch:night/weekly-revenue",
+                "--generated-by", "night-agent", "--writes-state")
+        m = self.read_json(".livepowers/pending/weekly_revenue/manifest.json")
+        self.assertEqual(m["intent"], "weekly revenue")
+        self.assertEqual(m["generated_by"], "night-agent")
+        self.assertIn("weekly revenue", self.lp("pending", "list").stdout)
+        path = self.lp("report").stdout.strip()
+        with open(os.path.join(self.dir, path), encoding="utf-8") as f:
+            text = f.read()
+        for s_ in ("weekly revenue", "8.5", "11.1", "pass", "night-agent", "写操作", "branch:night/weekly-revenue"):
+            self.assertIn(s_, text)
+        self.lp("pending", "add", "--intent", "weekly revenue", "--score", "1", "--n-star", "1", "--tests", "t",
+                "--result", "fail", "--location", "x", "--generated-by", "g", check=1)  # 已存在
+        self.lp("pending", "done", "weekly revenue", "--by", "owner", "--accepted")
+        self.assertNotIn("weekly revenue", self.lp("pending", "list").stdout)
+
     def test_outcome_ledger(self):
         self.lp("init")
         self.lp("outcome", "measure", "--scenario", "s", "--metric", "m", "--value", "1", check=1)  # 无基线

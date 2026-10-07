@@ -33,14 +33,15 @@ Livepowers 让智能体按「活产品（Live Product）」范式工作：
 | 场景 | 技能 |
 |---|---|
 | 接入新环境 / 新数据库 / 新系统；需要"知道自己在哪里"；环境可能变了 | `env-scan-ontology` |
-| 有一个业务需求要实现（报表、看板、命令、流程） | `ontology-grounded-spec` |
+| 注册表未命中、且需求是功能级以上（报表、看板、命令、流程） | `ontology-grounded-spec` |
 | 需要新增或修改对象、关系、状态、指标口径、规则 | `ontology-evolution` |
-| 收到业务请求，准备动手 | `system1-first` |
+| 收到业务请求，准备动手（**先走这一行**） | `system1-first` |
 | 没有现成能力，需要 Agent 探索 | `explore-with-evidence` |
 | 某条路径被反复探索成功，考虑变成代码 / CLI / 能力包 | `crystallize-to-system1` |
 | 接口已有，但业务 Agent 用不稳；或要换模型 | `agent-harness-for-tools` |
 | 任何候选能力要进入生产；任何"我做完了"需要被确认 | `acceptance-gates` |
 | 任何写生产状态的动作 | `oltp-action-safety` |
+| 任务被止损转入异常接管、Agent 反复失败、人要从 Agent 手里接手 | `takeover-handling` |
 | 跨小时 / 跨夜任务、多模型分工、利用夜间算力 | `night-loop-planning` |
 | 收工或夜间：回顾证据、挑固化候选、复核能力、出晨报 | `nightly-crystallization-review` |
 | 多个 Agent 互相通信，需要可审计、可回放 | `auditable-agent-comms` |
@@ -53,11 +54,34 @@ Livepowers 让智能体按「活产品（Live Product）」范式工作：
 
 技能包自带脚本（纯 Python 3.9+ 标准库，位于插件的 `scripts/`）：
 
-- `lp.py`：证据、能力注册表与 System 1 路由、F-V-S-R 评分与盈亏平衡、固化候选、任务看板状态机、结果台账、资产回流、作业契约校验、能力复核、晨报。
+- `lp.py`：证据、能力注册表与 System 1 路由、F-V-S-R 评分与盈亏平衡、固化候选、任务看板状态机、结果台账、资产回流、夜间产物清单、金丝雀评测、作业契约校验、能力复核、晨报。
 - `agent_switch.py`：智能体交换机（中转 / 旁路记录、哈希链、回放、审计）。
 - `scan_sqlite.py`：环境扫描示例（本体草稿、环境指纹、漂移比对）。
 
-首次在项目中使用：`python <plugin>/scripts/lp.py init`，创建 `.livepowers/`（建议纳入 git）。下文用 `lp` 代指 `python <plugin>/scripts/lp.py`。
+技能正文里的 `lp` 和 `templates/` 按安装方式对应到：
+
+| 安装方式 | `lp` 是什么 | 脚本与模板在哪 |
+|---|---|---|
+| Claude Code 插件 | `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/lp.py`（启动钩子已告知路径） | `${CLAUDE_PLUGIN_ROOT}/scripts/`、`${CLAUDE_PLUGIN_ROOT}/templates/` |
+| npm（`npx livepowers install`） | `npm i -g livepowers` 后直接 `lp`；或 `npx livepowers path` 取根目录 | `$(livepowers path)/scripts/`；模板同时装在本技能目录 `using-livepowers/templates/` |
+| 仅复制技能 | 克隆仓库后 `alias lp='python3 /path/to/livepowers/scripts/lp.py'` | 仓库的 `scripts/`、`templates/` |
+
+需要 Python 3.9+。找不到 `lp` 时先 `lp --help` 确认，不要凭记忆拼命令。
+
+首次在项目中使用：`lp init`，创建 `.livepowers/`。
+
+## 项目目录约定
+
+| 位置 | 放什么 | 入 git |
+|---|---|---|
+| `.livepowers/` | 证据、注册表、看板、台账、资产、金丝雀记录、晨报（`reports/`）、探索记录（`explorations/`）、环境指纹（`env/`）、夜间产物（`pending/<意图>/`） | 是（本仓库自己的 `.gitignore` 忽略它，你的项目不要照抄） |
+| `.livepowers/ontology.draft.yaml` | `env-scan-ontology` 生成的本体草稿 | 是 |
+| `ontology/ontology.yaml` | 已确认的本体（按 `templates/ontology.yaml`），版本号写在文件里 | 是 |
+| `ontology/deltas/` | 本体变更提案（`ontology-evolution`） | 是 |
+| `specs/<feature>.md` | 规格（`ontology-grounded-spec`） | 是 |
+| 能力实现与测试 | 项目自己的代码目录；能力包清单路径写进 `lp registry add --package` | 是 |
+
+冷启动：还没有确认本体时，用草稿本体（版本记为 `0.1.0-draft`）走通第一个任务；规格里引用草稿的对象名，待本体确认后升版。
 
 ## 三层架构的落点
 

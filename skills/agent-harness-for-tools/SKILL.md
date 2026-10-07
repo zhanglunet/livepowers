@@ -56,7 +56,7 @@ Harness 与模型是匹配的：在一个模型上调好的 Harness，换到另�
 
 1. **换模型就重跑基准**；把通过的模型写进能力的 `--validated-model`，`lp registry review --current-model <新模型>` 会列出未复验的 Skill 类能力。
 2. **每次模型升级做一次消融**：去掉某条 Harness 约束或某段剧本后，是否仍达标？仍达标就"去 Harness 化"——删掉它，减少维护成本。这与"去固化"对称：能力和约束都应随环境增减。
-3. 固定一组**金丝雀样例**，夜间跑，检测模型的隐性降质（`nightly-crystallization-review`）。
+3. 固定一组**金丝雀样例**，夜间跑并 `lp canary record`，用 `lp canary compare` 检测模型的隐性降质（`nightly-crystallization-review`）。
 
 ## 与固化的关系
 

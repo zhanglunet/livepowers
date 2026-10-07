@@ -61,6 +61,7 @@ class TestInstaller(unittest.TestCase):
         pkg = json.loads(read(os.path.join(REPO, "package.json")))
         self.assertEqual(manifest["version"], pkg["version"])
         self.assertIn("/plugin install", out)
+        self.assertTrue(os.path.isfile(os.path.join(dest, "using-livepowers", "templates", "spec.md")))
 
     def test_existing_skill_skipped_unless_force(self):
         self.cli("install")

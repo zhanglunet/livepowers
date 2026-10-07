@@ -26,8 +26,10 @@ lp —— Livepowers 命令行工具（只依赖 Python 3.9+ 标准库）
   asset add / gate / list       现场创新入库四道门（可抽象、可版本化、可评测、可复用）与资产回流率
 
 夜间
+  pending add / list / done     夜间固化产物清单（意图、评分、n*、测试结果、位置、生成者），供早晨验收
+  canary record / compare / list 金丝雀评测：记录每晚结果，与历史比较通过率与 token 用量
   job validate <file.json>      校验统一作业契约（必填字段、悬空依赖、环、单段时长不超过模型可稳定时长）
-  report                        生成晨间报告（Markdown）
+  report                        生成晨间报告（Markdown；汇总 pending 清单与金丝雀结果）
 
 数据全部存放在 .livepowers/ 下（可用环境变量 LIVEPOWERS_HOME 改位置），建议纳入 git。
 """
@@ -51,6 +53,8 @@ TASKS = os.path.join(ROOT, "tasks.json")
 OUTCOME = os.path.join(ROOT, "outcomes.jsonl")
 ASSETS = os.path.join(ROOT, "assets.json")
 REPORTS = os.path.join(ROOT, "reports")
+CANARY = os.path.join(ROOT, "canary.jsonl")
+PENDING = os.path.join(ROOT, "pending")
 
 
 # ---------------------------------------------------------------- utils
@@ -798,8 +802,20 @@ def cmd_report(a):
                 pass
         return buf.getvalue().strip()
 
-    L += ["", "## 待人工验收的固化候选", "",
+    L += ["", "## 待人工验收的固化产物", ""]
+    pend = pending_list()
+    if pend:
+        for m in pend:
+            flag = "【写操作】" if m.get("writes_state") else ""
+            L.append(f"- {flag}`{m['intent']}`：评分 {m.get('score')}，n* {m.get('n_star')}，"
+                     f"测试 `{m.get('tests')}` → {m.get('result')}；位置 {m.get('location')}；"
+                     f"生成者 {m.get('generated_by')}；采纳人须不同于生成者")
+    else:
+        L.append("暂无（夜间 Agent 用 lp pending add 登记产物）")
+    L += ["", "## 固化候选（来自证据）", "",
           capture(cmd_candidates, argparse.Namespace(min_count=a.min_count, json=False)) or "暂无",
+          "", "## 金丝雀", "",
+          capture(cmd_canary_compare, argparse.Namespace(name="", pass_threshold=0.1, token_threshold=0.3)) or "暂无",
           "", "## 能力复核", "",
           capture(cmd_registry_review, argparse.Namespace(idle_days=a.idle_days, verify_days=a.verify_days,
                                                           current_model=a.current_model)) or "暂无",
@@ -808,12 +824,135 @@ def cmd_report(a):
           "", "## 最近注册的能力", ""]
     for c in sorted(active, key=lambda c: c["created"], reverse=True)[:10]:
         L.append(f"- `{c['id']}` v{c['version']}（{c['kind']}）— {', '.join(c['intents'])}")
-    L += ["", "## 需要人决定的事", "", "- [ ] 逐项验收上面的固化候选（通过 → lp registry add；不通过 → 写明原因）",
-          "- [ ] 处理能力复核项（退役 / 复验 / 重跑基准）", "- [ ] 处理异常接管中的任务"]
+    L += ["", "## 需要人决定的事", "",
+          "- [ ] 逐项验收上面的固化产物（通过 → lp registry add + lp pending done --accepted；不通过 → lp pending done 写明原因）",
+          "- [ ] 处理能力复核项（退役 / 复验 / 重跑基准）",
+          "- [ ] 处理异常接管中的任务（见 takeover-handling；重开用 lp task move <id> explore --reset-loops）",
+          "- [ ] 金丝雀有回归时：先核对样例，再决定是否换模型 / 补 Harness"]
     path = os.path.join(REPORTS, f"morning-{day}.md")
     with open(path, "w", encoding="utf-8") as f:
         f.write("\n".join(L) + "\n")
     print(path)
+
+
+# ---------------------------------------------------------------- pending（夜间产物清单）
+def pending_dir(intent):
+    return os.path.join(PENDING, slug(intent))
+
+
+def pending_list():
+    out = []
+    if not os.path.isdir(PENDING):
+        return out
+    for d in sorted(os.listdir(PENDING)):
+        mp = os.path.join(PENDING, d, "manifest.json")
+        if os.path.isfile(mp):
+            m = jload(mp, {})
+            if m.get("status", "pending") == "pending":
+                out.append(m)
+    return out
+
+
+def cmd_pending_add(a):
+    ensure()
+    d = pending_dir(a.intent)
+    mp = os.path.join(d, "manifest.json")
+    if os.path.isfile(mp) and jload(mp, {}).get("status", "pending") == "pending":
+        die(f"{a.intent} 已有待验收产物（{mp}）；先 lp pending done，或换意图名")
+    os.makedirs(d, exist_ok=True)
+    m = {"intent": a.intent, "score": a.score, "n_star": a.n_star, "tests": a.tests, "result": a.result,
+         "location": a.location, "generated_by": a.generated_by, "writes_state": a.writes_state,
+         "model": a.model, "note": a.note, "status": "pending", "created": now()}
+    jsave(mp, m)
+    print(mp)
+
+
+def cmd_pending_list(a):
+    pend = pending_list()
+    if not pend:
+        print("没有待验收的固化产物。")
+        return
+    for m in pend:
+        flag = "[写操作] " if m.get("writes_state") else ""
+        print(f"- {flag}{m['intent']}  评分={m.get('score')} n*={m.get('n_star')} 测试={m.get('result')}"
+              f" 位置={m.get('location')} 生成者={m.get('generated_by')}")
+
+
+def cmd_pending_done(a):
+    mp = os.path.join(pending_dir(a.intent), "manifest.json")
+    if not os.path.isfile(mp):
+        die(f"未找到 {a.intent} 的待验收产物")
+    m = jload(mp, {})
+    if m.get("generated_by") and m["generated_by"] == a.by:
+        die(f"生成者不能验收自己：{a.by} 是该产物的生成者")
+    m["status"] = "accepted" if a.accepted else "rejected"
+    m["decided_by"] = a.by
+    m["decided"] = now()
+    m["decision_reason"] = a.reason
+    jsave(mp, m)
+    print(f"{a.intent}: {m['status']}")
+
+
+# ---------------------------------------------------------------- canary（金丝雀评测）
+def cmd_canary_record(a):
+    ensure()
+    if a.total <= 0 or a.passed > a.total:
+        die("--pass 不能大于 --total，且 --total > 0")
+    jsonl_append(CANARY, {"ts": now(), "name": a.name, "model": a.model, "passed": a.passed, "total": a.total,
+                          "tokens": a.tokens, "seconds": a.seconds, "note": a.note})
+    print(f"已记录 {a.name}: {a.passed}/{a.total}（{a.model or '未注明模型'}）")
+
+
+def canary_runs():
+    by = defaultdict(list)
+    for r in jsonl_read(CANARY):
+        by[r["name"]].append(r)
+    return by
+
+
+def cmd_canary_compare(a):
+    by = canary_runs()
+    names = [a.name] if a.name else sorted(by)
+    if a.name and a.name not in by:
+        die(f"没有名为 {a.name} 的金丝雀记录；先 lp canary record")
+    if not names:
+        print("没有金丝雀记录。")
+        return
+    regressed = False
+    for n in names:
+        runs = by[n]
+        cur = runs[-1]
+        rate = cur["passed"] / cur["total"]
+        head = f"- {n}: 最新 {cur['passed']}/{cur['total']}（{rate:.0%}，{cur.get('model') or '?'}）"
+        if len(runs) < 2:
+            print(head + " — 首次记录，无可比较基线")
+            continue
+        hist = runs[:-1]
+        best = max(r["passed"] / r["total"] for r in hist)
+        base_tok = [r["tokens"] for r in hist if r.get("tokens")]
+        issues = []
+        if best - rate > a.pass_threshold:
+            issues.append(f"通过率下降 {best:.0%} → {rate:.0%}")
+        if base_tok and cur.get("tokens"):
+            avg = sum(base_tok) / len(base_tok)
+            if cur["tokens"] > avg * (1 + a.token_threshold):
+                issues.append(f"token 用量上升 {avg:.0f} → {cur['tokens']}（+{cur['tokens'] / avg - 1:.0%}）")
+        if issues:
+            regressed = True
+            print(head + " ⚠ 回归：" + "；".join(issues))
+        else:
+            print(head + " 无回归")
+    if regressed:
+        sys.exit(5)
+
+
+def cmd_canary_list(a):
+    by = canary_runs()
+    if not by:
+        print("没有金丝雀记录。")
+        return
+    for n, runs in sorted(by.items()):
+        print(f"- {n}: {len(runs)} 次；" + " → ".join(f"{r['passed']}/{r['total']}" for r in runs[-6:]))
 
 
 # ---------------------------------------------------------------- argparse
@@ -989,6 +1128,44 @@ def main(argv=None):
     au.add_argument("--verified", action="store_true", help="完成适配并重新验证")
     au.set_defaults(fn=cmd_asset_reuse)
     asp.add_parser("list", help="列出资产、门禁进度与回流率").set_defaults(fn=cmd_asset_list)
+
+    pd = sp.add_parser("pending", help="夜间固化产物清单：add / list / done").add_subparsers(dest="sub", required=True)
+    pa = pd.add_parser("add", help="登记一个待验收的固化产物（写 .livepowers/pending/<意图>/manifest.json）")
+    pa.add_argument("--intent", required=True, help="规范化意图")
+    pa.add_argument("--score", type=float, required=True, help="F-V-S-R 评分")
+    pa.add_argument("--n-star", type=float, required=True, help="盈亏平衡调用次数 n*")
+    pa.add_argument("--tests", required=True, help="测试命令或测试集位置")
+    pa.add_argument("--result", choices=["pass", "fail", "partial"], required=True, help="测试结果")
+    pa.add_argument("--location", required=True, help="产物位置（分支 / 目录）")
+    pa.add_argument("--generated-by", required=True, help="生成者（采纳人必须不同）")
+    pa.add_argument("--writes-state", action="store_true", help="写操作能力（需 oltp-action-safety）")
+    pa.add_argument("--model", default="", help="生成所用模型")
+    pa.add_argument("--note", default="")
+    pa.set_defaults(fn=cmd_pending_add)
+    pd.add_parser("list", help="列出待验收产物").set_defaults(fn=cmd_pending_list)
+    pdn = pd.add_parser("done", help="记录验收结论（采纳 / 拒绝）")
+    pdn.add_argument("intent")
+    pdn.add_argument("--by", required=True, help="采纳人（不能是生成者）")
+    pdn.add_argument("--accepted", action="store_true", help="通过验收（默认拒绝）")
+    pdn.add_argument("--reason", default="", help="结论依据")
+    pdn.set_defaults(fn=cmd_pending_done)
+
+    cn = sp.add_parser("canary", help="金丝雀评测：record / compare / list").add_subparsers(dest="sub", required=True)
+    cr = cn.add_parser("record", help="记录一次金丝雀运行结果")
+    cr.add_argument("--name", required=True, help="样例套件名")
+    cr.add_argument("--model", default="", help="所用模型")
+    cr.add_argument("--pass", dest="passed", type=int, required=True, help="通过样例数")
+    cr.add_argument("--total", type=int, required=True, help="样例总数")
+    cr.add_argument("--tokens", type=int, default=0, help="总 token 用量")
+    cr.add_argument("--seconds", type=float, default=0, help="总耗时")
+    cr.add_argument("--note", default="")
+    cr.set_defaults(fn=cmd_canary_record)
+    cc = cn.add_parser("compare", help="最新一次与历史比较（回归 exit 5）")
+    cc.add_argument("--name", default="", help="只比较某个套件（默认全部）")
+    cc.add_argument("--pass-threshold", type=float, default=0.1, help="通过率下降超过此值算回归")
+    cc.add_argument("--token-threshold", type=float, default=0.3, help="token 用量较历史均值上升超过此比例算回归")
+    cc.set_defaults(fn=cmd_canary_compare)
+    cn.add_parser("list", help="列出各套件历史").set_defaults(fn=cmd_canary_list)
 
     j = sp.add_parser("job", help="夜间作业契约：validate").add_subparsers(dest="sub", required=True)
     jv = j.add_parser("validate", help="校验作业契约 JSON（必填字段、悬空依赖、环、单段时长）")

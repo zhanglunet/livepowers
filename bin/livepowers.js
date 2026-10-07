@@ -110,6 +110,8 @@ function install(opts) {
     if (!opts.dryRun) {
       fs.rmSync(to, { recursive: true, force: true });
       fs.cpSync(path.join(ROOT, "skills", name), to, { recursive: true });
+      // 模板随入口技能一起安装，技能正文里的 templates/ 才有落点
+      if (name === "using-livepowers") fs.cpSync(path.join(ROOT, "templates"), path.join(to, "templates"), { recursive: true });
     }
     ours.add(name);
     installed++;

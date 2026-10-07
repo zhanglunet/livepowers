@@ -21,7 +21,12 @@ description: Use at end of day, when a nightly job starts, or when asked "what c
    ```
    对每个候选：读 `.livepowers/explorations/` 对应记录，合并同义意图；用 `lp score` 过 F-V-S-R 与盈亏平衡；写操作候选标"需 oltp-action-safety"。
 
-3. **夜间生成。**对通过门禁的候选，按 `crystallize-to-system1` 生成测试、实现与能力包草稿，在隔离环境运行测试。**不要在夜间注册**——注册要等早晨人工采纳。产物放分支或 `.livepowers/pending/<intent>/`。
+3. **夜间生成。**对通过门禁的候选，按 `crystallize-to-system1` 生成测试、实现与能力包草稿，在隔离环境运行测试。**不要在夜间注册**——注册要等早晨人工采纳。产物放分支或 `.livepowers/pending/<意图>/`，并登记清单：
+   ```bash
+   lp pending add --intent "<意图>" --score <评分> --n-star <n*> --tests "<测试命令>" --result pass|fail|partial \
+     --location "<分支或目录>" --generated-by <夜间Agent> [--writes-state] --model <模型>
+   ```
+   没有登记的产物不会出现在晨报里，早晨也不会被验收。
 
 4. **复核已固化能力。**
    ```bash
@@ -33,18 +38,20 @@ description: Use at end of day, when a nightly job starts, or when asked "what c
    - 久未复验（重跑测试集后 `lp registry verify <id>`）；
    - 验证模型与当前模型不一致（重跑基准，见 `agent-harness-for-tools`）。
 
-5. **金丝雀评测。**固定一组小样例，每晚用当前模型跑，与历史结果比较，发现模型隐性降质或 Token 异常增长。
+5. **金丝雀评测。**固定一组小样例（每个能力包的 `evals:` 里挑 3–5 个，加上几条跨能力的综合样例），每晚用当前模型跑一遍并记录：
+   ```bash
+   lp canary record --name <套件名> --model <当前模型> --pass <通过数> --total <总数> --tokens <总token>
+   lp canary compare            # 通过率下降 >10% 或 token 上升 >30% → exit 5
+   ```
+   回归时先核对样例本身是否过期，再判断是模型降质还是能力失效；不要在夜间自动换模型。
 
 6. **出晨报。**
    ```bash
    lp report --current-model <当前模型>
    ```
-   在 `.livepowers/reports/morning-<日期>.md` 末尾补充：
-   - 每个待验收产物：意图、评分、n*、测试结果、分支位置、需要谁签字；
-   - 建议退役 / 复核的能力及原因；
-   - 金丝雀结果；本夜资源消耗。
+   晨报会自动汇总 `lp pending` 清单、证据候选、金丝雀比较、能力复核、看板与台账。在 `.livepowers/reports/morning-<日期>.md` 末尾只需补充：建议退役 / 复核的能力及原因、本夜资源消耗、需要谁签字。
 
-7. **早晨采纳后**：通过的 `lp registry add ... --generated-by <夜间Agent> --accepted-by <采纳人>`；不通过的写明原因回到 System 2。
+7. **早晨采纳后**：通过的 `lp registry add ... --generated-by <夜间Agent> --accepted-by <采纳人>` 并 `lp pending done "<意图>" --by <采纳人> --accepted`；不通过的 `lp pending done "<意图>" --by <采纳人> --reason "<原因>"`，回到 System 2。`pending done` 会拒绝生成者给自己验收。
 
 ## 汇报口径
 

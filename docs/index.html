@@ -70,7 +70,7 @@ footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);font-si
     <h1>Live<span>powers</span><br>活产品范式技能包</h1>
     <p class="lead">一套给智能体用的工作方法，可以直接装进 Claude Code、Codex、Cursor，或任何支持 Agent Skills 标准的客户端。它规定的流程是强制的：<b>先走 System 1，再走 System 2；探索必须留证据；成功路径要固化；所有成果都要过独立验收。白天探索，夜间固化，早晨验收。</b></p>
     <div class="formula">Agentic AI = Agent + Ontology + Harness</div>
-    <div class="badges"><span class="badge">17 个技能</span><span class="badge">4 个零依赖脚本</span><span class="badge">8 个模板</span><span class="badge">3 个命令</span><span class="badge">SessionStart 自动注入</span><span class="badge">npx 一键安装</span><span class="badge">34 项自动化测试</span><span class="badge">结构借鉴 obra/superpowers</span></div>
+    <div class="badges"><span class="badge">18 个技能</span><span class="badge">4 个零依赖脚本</span><span class="badge">8 个模板</span><span class="badge">3 个命令</span><span class="badge">SessionStart 自动注入</span><span class="badge">npx 一键安装</span><span class="badge">34 项自动化测试</span><span class="badge">结构借鉴 obra/superpowers</span></div>
     <div class="badges"><a class="badge" href="https://github.com/zhanglunet/livepowers">github.com/zhanglunet/livepowers</a></div>
   </div>
   <figure>
@@ -116,7 +116,7 @@ footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);font-si
   <div class="rule"><div class="n">7</div><p><b>没有基线的价值不算价值。</b>承诺业务结果之前，先登记基线。</p></div>
 </div>
 
-<h2>17 个技能</h2>
+<h2>18 个技能</h2>
 <p class="sub">按工作循环分组。每个技能是一个含 <code>SKILL.md</code> 的文件夹，符合 Agent Skills 开放标准。标 <b>NEW</b> 的是 v1.0 新增的。</p>
 <div class="grid g3">
   <div class="card"><span class="tag t-core">入口</span><h3>using-livepowers <small>总入口</small></h3><p>七条铁律、路由表、三层架构落点（本体 / 工具 / 技能）、标准工作循环和反模式。</p><div class="when"><b>何时：</b>每个会话开始时（自动注入）。</div></div>
@@ -129,6 +129,7 @@ footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);font-si
   <div class="card"><span class="tag t-s1">System 1</span><h3>agent-harness-for-tools <small>Agent Harness</small></h3><p>每个工具一张工具卡、带决策点的业务剧本、硬约束；弱模型跑 10 次成功率要 ≥95%。换模型就重跑基准，模型升级后不再需要的约束就去掉。</p><div class="when"><b>何时：</b>接口已有但 Agent 用不稳，或要换模型时。</div></div>
   <div class="card"><span class="tag t-safe">验收 · NEW</span><h3>acceptance-gates <small>四道门禁</small></h3><p>四道门依次是：形式检查、契约测试、独立对抗审查、人工采纳。以回执为准，不认声明；派工、执行、验证、采纳、运营五种职责分开。</p><div class="when"><b>何时：</b>任何成果要进生产或要说"完成"时。</div></div>
   <div class="card"><span class="tag t-safe">安全</span><h3>oltp-action-safety <small>写操作门禁</small></h3><p>先仿真后执行；八项检查各配对应测试；审批后重新校验；超时先查状态再决定是否重试；写清存量系统能保证到什么程度。</p><div class="when"><b>何时：</b>任何写生产状态的动作。</div></div>
+  <div class="card"><span class="tag t-safe">接管 · NEW</span><h3>takeover-handling <small>异常接管</small></h3><p>止损后先冻结、交付诊断包；七类主因只选一个（规格不清 / 本体缺口 / 环境漂移 / 能力失效 / 预算太低 / 工具故障 / 不该做）；换人重开、重定规格或关闭，接管成本入账。</p><div class="when"><b>何时：</b>任务被止损、Agent 反复失败、人要接手时。</div></div>
   <div class="card"><span class="tag t-night">夜间</span><h3>night-loop-planning <small>长程任务</small></h3><p>强模型规划、便宜模型执行；按模型能稳定运行的时长切段；交接时写实际终态并指定独立检查者；用 DAG 拆任务、设止损和熔断，统一填作业契约。</p><div class="when"><b>何时：</b>跨小时或跨夜的任务。</div></div>
   <div class="card"><span class="tag t-night">夜间</span><h3>nightly-crystallization-review <small>固化评审</small></h3><p>看 System 2 占比的变化趋势，挑出固化候选，复核已有能力（失败、闲置、久未复验、换了模型），跑金丝雀评测，生成晨报。</p><div class="when"><b>何时：</b>收工或夜间作业开始时。</div></div>
   <div class="card"><span class="tag t-safe">协作</span><h3>auditable-agent-comms <small>可审计协作</small></h3><p>按信任域分级；协调消息和大块内容分两条线；所有 Agent 共用一个任务标识和契约版本；哈希链防篡改，支持回放和审计。</p><div class="when"><b>何时：</b>多个 Agent 互相通信时。</div></div>
@@ -298,7 +299,7 @@ ls livepowers/dist/skills/</pre></div>
 ├── bin/                      npm：livepowers 安装器 · lp 命令
 ├── hooks/                    SessionStart 注入
 ├── commands/                 /lp-route · /lp-nightly · /lp-morning
-├── skills/                   17 个技能（SKILL.md）
+├── skills/                   18 个技能（SKILL.md）
 ├── scripts/
 │   ├── lp.py                 证据 · 路由 · 评分 · 看板 · 台账 · 资产 · 晨报
 │   ├── agent_switch.py       交换机 · 回放 · 校验 · 审计
