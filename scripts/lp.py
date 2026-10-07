@@ -57,10 +57,14 @@ def now():
 
 
 def parse_ts(s):
+    """解析 ISO 时间；不带时区的按本地时区处理，避免与带时区时间相减出错。"""
     try:
-        return datetime.fromisoformat(s)
+        t = datetime.fromisoformat(s)
     except (TypeError, ValueError):
         return None
+    if t.tzinfo is None:
+        t = t.astimezone()
+    return t
 
 
 def jload(path, default):
@@ -515,6 +519,8 @@ def cmd_task_list(a):
 # ---------------------------------------------------------------- outcome ledger
 def cmd_outcome_baseline(a):
     ensure()
+    if a.confirmed_at and parse_ts(a.confirmed_at) is None:
+        die("--confirmed-at 须为 ISO 时间，如 2026-01-15 或 2026-01-15T09:00:00+08:00")
     jsonl_append(OUTCOME, {"ts": now(), "type": "baseline", "scenario": a.scenario, "metric": a.metric,
                            "value": a.value, "target": a.target, "base": a.base, "owner": a.owner,
                            "confirmed_at": a.confirmed_at or now()})

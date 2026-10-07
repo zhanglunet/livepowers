@@ -76,7 +76,7 @@
 
 **Claude Code（仅技能）**：把 `skills/*` 复制到 `~/.claude/skills/`（个人）或项目的 `.claude/skills/`（团队）。
 
-**Codex**：仓库带 `.codex-plugin/plugin.json`，可作为插件安装；或把 `skills/*` 复制到 `~/.agents/skills/`，并把 `AGENTS.md` 合并进项目根目录的 `AGENTS.md`。
+**Codex**：仓库带 `.codex-plugin/plugin.json`，可作为插件安装；或把 `skills/*` 复制到 `~/.agents/skills/`。Codex 插件不带会话启动钩子，请把本仓库 `AGENTS.md` 的内容合并进项目根目录的 `AGENTS.md`，让 Agent 在开始时读取 `using-livepowers`。
 
 **Cursor**：仓库带 `.cursor-plugin/plugin.json` 与 `hooks/hooks-cursor.json`。
 

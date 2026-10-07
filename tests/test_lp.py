@@ -117,6 +117,16 @@ class TestCLI(Workdir):
         self.assertIn("ΔV = B×u = 1,000,000×0.0500 = 50,000.00", out)
         self.assertIn("首次价值交付时间", out)
 
+    def test_outcome_naive_confirmed_at(self):
+        self.lp("init")
+        self.lp("outcome", "baseline", "--scenario", "s", "--metric", "m", "--value", "1",
+                "--confirmed-at", "2026-01-01")
+        self.lp("outcome", "baseline", "--scenario", "s", "--metric", "n", "--value", "1",
+                "--confirmed-at", "not-a-date", check=1)
+        self.lp("outcome", "accept", "--scenario", "s", "--by", "o", "--first")
+        self.assertIn("首次价值交付时间", self.lp("outcome", "report").stdout)
+        self.lp("report")
+
     def test_asset_gates(self):
         self.lp("init")
         self.lp("asset", "add", "--name", "Skill A", "--id", "a1")
