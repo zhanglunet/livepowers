@@ -66,11 +66,11 @@ footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);font-si
 
 <section class="hero">
   <div>
-    <div class="kicker">Skills for the Live Product paradigm · v1.0.0 · MIT</div>
+    <div class="kicker">Skills for the Live Product paradigm · v1.1.0 · MIT</div>
     <h1>Live<span>powers</span><br>活产品范式技能包</h1>
     <p class="lead">一套给智能体用的工作方法，可以直接装进 Claude Code、Codex、Cursor，或任何支持 Agent Skills 标准的客户端。它规定的流程是强制的：<b>先走 System 1，再走 System 2；探索必须留证据；成功路径要固化；所有成果都要过独立验收。白天探索，夜间固化，早晨验收。</b></p>
     <div class="formula">Agentic AI = Agent + Ontology + Harness</div>
-    <div class="badges"><span class="badge">17 个技能</span><span class="badge">4 个零依赖脚本</span><span class="badge">8 个模板</span><span class="badge">3 个命令</span><span class="badge">SessionStart 自动注入</span><span class="badge">25 项自动化测试</span><span class="badge">结构借鉴 obra/superpowers</span></div>
+    <div class="badges"><span class="badge">17 个技能</span><span class="badge">4 个零依赖脚本</span><span class="badge">8 个模板</span><span class="badge">3 个命令</span><span class="badge">SessionStart 自动注入</span><span class="badge">npx 一键安装</span><span class="badge">34 项自动化测试</span><span class="badge">结构借鉴 obra/superpowers</span></div>
     <div class="badges"><a class="badge" href="https://github.com/zhanglunet/livepowers">github.com/zhanglunet/livepowers</a></div>
   </div>
   <figure>
@@ -259,9 +259,20 @@ footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);font-si
 <div class="grid g2">
   <div>
     <div class="tabs" role="tablist">
-      <button class="on" data-p="i1">Claude Code</button><button data-p="i2">仅技能</button><button data-p="i3">Codex / Cursor</button><button data-p="i4">网页端</button>
+      <button class="on" data-p="i0">npm</button><button data-p="i1">Claude Code</button><button data-p="i2">仅技能</button><button data-p="i3">Codex / Cursor</button><button data-p="i4">网页端</button>
     </div>
-    <div id="i1" class="pane on"><pre>/plugin marketplace add zhanglunet/livepowers
+    <div id="i0" class="pane on"><pre><span class="c"># 一键安装技能（默认装到 ~/.claude/skills）</span>
+<span class="k">npx livepowers install</span>
+<span class="c"># 其他客户端：--target codex | cursor | agents</span>
+<span class="k">npx livepowers install</span> --target cursor
+<span class="c"># 装到当前项目；codex 会同时合并 AGENTS.md 入口说明</span>
+<span class="k">npx livepowers install</span> --target codex --project
+<span class="c"># 全局安装后可直接用 lp 命令（需要 Python 3.9+）</span>
+<span class="k">npm i -g livepowers</span> &amp;&amp; lp --version
+<span class="c"># 查看 / 卸载</span>
+livepowers list
+livepowers uninstall --target codex --project</pre></div>
+    <div id="i1" class="pane"><pre>/plugin marketplace add zhanglunet/livepowers
 /plugin install livepowers@livepowers-marketplace
 <span class="c"># 自带 SessionStart 钩子，自动注入 using-livepowers</span>
 <span class="c"># 命令：/lp-route  /lp-nightly  /lp-morning</span></pre></div>
@@ -281,6 +292,7 @@ ls livepowers/dist/skills/</pre></div>
   <div>
     <div class="tree">livepowers/
 ├── .claude-plugin/  .codex-plugin/  .cursor-plugin/
+├── bin/                      npm：livepowers 安装器 · lp 命令
 ├── hooks/                    SessionStart 注入
 ├── commands/                 /lp-route · /lp-nightly · /lp-morning
 ├── skills/                   17 个技能（SKILL.md）
@@ -293,9 +305,9 @@ ls livepowers/dist/skills/</pre></div>
 │                             tool-card · capability-package
 │                             digital-role · job-contract
 ├── examples/walkthrough.sh   五分钟完整体验
-├── tests/                    25 项测试（CI）
+├── tests/                    34 项测试（CI）
 ├── docs/                     范式一页纸 · 测试
-├── AGENTS.md  CHANGELOG.md  LICENSE (MIT)
+├── package.json  AGENTS.md  CHANGELOG.md  LICENSE (MIT)
 └── README.md</div>
   </div>
 </div>
@@ -324,7 +336,7 @@ ls livepowers/dist/skills/</pre></div>
 </div>
 
 <footer>
-  Livepowers v1.0.0 · MIT · <a href="https://github.com/zhanglunet/livepowers">github.com/zhanglunet/livepowers</a>。仓库结构与"技能即强制工作流"的设计借鉴自 obra/superpowers。脚本已通过 25 项自动化测试：评分与盈亏平衡、中文路由、看板规则与止损、结果台账、资产四道门、作业契约、扫描与漂移、交换机的中转 / 拒绝 / 回放 / 篡改检测 / 审计、技能结构、钩子输出、示例流程。
+  Livepowers v1.1.0 · MIT · <a href="https://github.com/zhanglunet/livepowers">github.com/zhanglunet/livepowers</a> · <a href="https://www.npmjs.com/package/livepowers">npm</a>。仓库结构与"技能即强制工作流"的设计借鉴自 obra/superpowers。脚本已通过 34 项自动化测试：评分与盈亏平衡、中文路由、看板规则与止损、结果台账、资产四道门、作业契约、扫描与漂移、交换机的中转 / 拒绝 / 回放 / 篡改检测 / 审计、技能结构、钩子输出、示例流程、npm 安装器。
 </footer>
 </div>
 <script>

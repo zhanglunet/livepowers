@@ -63,6 +63,7 @@ class TestManifests(unittest.TestCase):
         for p in (".claude-plugin/plugin.json", ".codex-plugin/plugin.json", ".cursor-plugin/plugin.json"):
             vs.add(json.loads(read(os.path.join(REPO, p)))["version"])
         vs.add(json.loads(read(os.path.join(REPO, ".claude-plugin/marketplace.json")))["plugins"][0]["version"])
+        vs.add(json.loads(read(os.path.join(REPO, "package.json")))["version"])
         sys.path.insert(0, os.path.join(REPO, "scripts"))
         import lp
         vs.add(lp.__version__)

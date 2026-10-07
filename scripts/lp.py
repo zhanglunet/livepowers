@@ -40,7 +40,7 @@ import uuid
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 ROOT = os.environ.get("LIVEPOWERS_HOME", ".livepowers")
 EVID = os.path.join(ROOT, "evidence.jsonl")

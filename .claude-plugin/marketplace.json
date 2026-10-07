@@ -6,7 +6,7 @@
     {
       "name": "livepowers",
       "description": "Live Product paradigm skills for agents: Agent + Ontology + Harness. System 1 first, explore with evidence, crystallize proven paths into tested capabilities, accept through independent gates; night loops, auditable agent comms, FDE delivery and outcome ledger. 活产品范式技能包。",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "source": "./",
       "author": {"name": "Livepowers contributors"}
     }

@@ -2,6 +2,22 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循[语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.1.0] - 2026-10-07
+
+### 新增
+
+- 发布 npm 包 `livepowers`（零依赖，Node 18+）：
+  - `npx livepowers install`：把技能装进 Claude Code（`.claude/skills`）、Cursor（`.cursor/skills`）、Codex 及其他 Agent Skills 客户端（`.agents/skills`）；支持个人或项目级（`--project`）、`--force`、`--dry-run`；写入安装清单，`uninstall` 只删除自己装的技能。
+  - `--target codex|agents --project` 会把入口说明合并进项目的 `AGENTS.md`（带标记，重复安装只替换、卸载时移除）。
+  - `livepowers list` / `livepowers path`。
+  - `lp` 命令：全局安装后直接可用，转发到自带的 `scripts/lp.py`（需要 Python 3.9+）。
+- 官网 <https://livepowers.pages.dev>，安装说明新增 npm 方式。
+
+### 改进
+
+- 测试读文件、请求 HTTP 时及时关闭句柄，不再刷屏 `ResourceWarning`；`agent_switch.py` 读日志同样处理。
+- 新增 `tests/test_npm.py`；版本一致性检查纳入 `package.json`；CI 安装 Node。
+
 ## [1.0.0] - 2026-10-07
 
 首个公开发布版本，在 0.9 试用版的基础上迭代。

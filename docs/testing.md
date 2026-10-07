@@ -10,7 +10,8 @@ python -m unittest discover -s tests -v
 |---|---|
 | `tests/test_lp.py` | 盈亏平衡、F-V-S-R、中文路由、注册与退役、写操作必须带测试、生成者不能自验、调用次数统计、能力复核、任务看板（非法迁移、缺理由、缺证据、自验、止损）、结果台账、资产四道门、作业契约、晨报 |
 | `tests/test_scan_and_switch.py` | 扫描（外键、命名推断、敏感字段跳过、状态抽样）、指纹与漂移；交换机的中转、策略拒绝、超长消息、收件、旁路、回放、审计、篡改检测 |
-| `tests/test_repo.py` | 技能 frontmatter、路由表与 README 覆盖、技能互相引用、清单版本一致、会话钩子在三种平台的输出、示例脚本、可选敏感词黑名单 |
+| `tests/test_repo.py` | 技能 frontmatter、路由表与 README 覆盖、技能互相引用、清单版本一致（含 package.json）、会话钩子在三种平台的输出、示例脚本、可选敏感词黑名单 |
+| `tests/test_npm.py` | npm 安装器：各目标目录、个人 / 项目安装、已存在时跳过与 `--force`、安装清单、AGENTS.md 合并与卸载清理、`--dry-run`、`list` / `path`、参数错误、`lp` 转发；`npm pack` 只含运行时文件（需要 node / npm，缺失时跳过） |
 
 发布前可以设置黑名单，检查仓库里没有不该出现的名称：
 

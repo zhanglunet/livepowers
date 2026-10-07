@@ -2,6 +2,7 @@
 
 [![test](https://github.com/zhanglunet/livepowers/actions/workflows/test.yml/badge.svg)](https://github.com/zhanglunet/livepowers/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![npm](https://img.shields.io/npm/v/livepowers)](https://www.npmjs.com/package/livepowers)
 [![网站](https://img.shields.io/badge/网站-livepowers.pages.dev-f38020)](https://livepowers.pages.dev)
 
 **官网：<https://livepowers.pages.dev>**（介绍与安装）
@@ -63,10 +64,22 @@
 | `scripts/agent_switch.py` | 智能体交换机：HTTP 中转 / 旁路记录、策略拦截（未知类型、超长消息、拦截词）、哈希链防篡改、回放、审计 |
 | `scripts/scan_sqlite.py` | 环境扫描示例：本体草稿、状态取值抽样、敏感字段跳过、环境指纹、漂移比对 |
 | `scripts/package-skills.sh` | 把每个技能打成单独 zip，便于在网页端上传 |
+| `bin/livepowers.js` · `bin/lp.js` | npm 包的命令：`livepowers install / uninstall / list / path` 安装器，`lp` 转发到 `scripts/lp.py` |
 
 数据全部落在项目的 `.livepowers/` 下，建议纳入 git。
 
 ## 安装
+
+**npm（一键安装，推荐）**
+
+```bash
+npx livepowers install                            # 装到 ~/.claude/skills（默认 --target claude）
+npx livepowers install --target cursor            # 或 codex / agents
+npx livepowers install --target codex --project   # 装到当前项目，并合并 AGENTS.md 入口说明
+npm i -g livepowers                               # 全局安装后可直接用 lp 命令（需要 Python 3.9+）
+```
+
+`livepowers list` 查看已安装位置，`livepowers uninstall`（参数同 install）只删除自己装的技能。同名技能已存在时默认跳过，加 `--force` 覆盖；加 `--dry-run` 只预览。
 
 **Claude Code（插件）**
 
@@ -99,7 +112,7 @@ bash examples/walkthrough.sh
 常用命令：
 
 ```bash
-lp() { python /path/to/livepowers/scripts/lp.py "$@"; }
+npm i -g livepowers   # 或在仓库里：lp() { python /path/to/livepowers/scripts/lp.py "$@"; }
 lp init
 lp registry find "各地区的周收入"                   # HIT → exit 0；MISS → exit 2
 lp evidence add --intent "weekly revenue by region" --system S2 --outcome success --cost 0.9 --verifiable

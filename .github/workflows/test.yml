@@ -13,6 +13,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
       - name: denylist (optional, set repository variable LP_DENYLIST)
         env:
           LP_DENYLIST: ${{ vars.LP_DENYLIST }}
