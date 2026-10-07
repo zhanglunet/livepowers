@@ -185,6 +185,7 @@ footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);font-si
       <tr><td><b>V</b> 可验证</td><td>结果能否被样例 / 断言自动核对</td><td>0 / 1 / 2；<b>V=0 一票否决</b></td></tr>
       <tr><td><b>S</b> 稳定</td><td>口径、输入结构、接口是否稳定</td><td>0 / 1 / 2</td></tr>
       <tr><td><b>R</b> 风险</td><td>是否写生产状态</td><td>写操作收益最大，但须过八项检查</td></tr>
+      <tr><td colspan="3" style="color:var(--muted)">合成分 = F×2 + V×1.5 + S + R（满分 10）；≥5 且预计调用次数 &gt; n* 才建议固化</td></tr>
     </tbody>
   </table>
   <div class="card">
@@ -281,10 +282,12 @@ livepowers uninstall --target codex --project</pre></div>
 cp -r livepowers/skills/* ~/.claude/skills/
 <span class="c"># 团队共享（随仓库走）</span>
 cp -r livepowers/skills/* your-repo/.claude/skills/</pre></div>
-    <div id="i3" class="pane"><pre><span class="c"># Codex：.codex-plugin/plugin.json；或</span>
-cp -r livepowers/skills/* ~/.agents/skills/
-cat livepowers/AGENTS.md &gt;&gt; your-repo/AGENTS.md
-<span class="c"># Cursor：.cursor-plugin/plugin.json + hooks/hooks-cursor.json</span></pre></div>
+    <div id="i3" class="pane"><pre><span class="c"># Codex：装到项目，并把入口说明合并进项目的 AGENTS.md（带标记，可卸载）</span>
+<span class="k">npx livepowers install</span> --target codex --project
+<span class="c"># 或作为插件：.codex-plugin/plugin.json</span>
+<span class="c"># Cursor：个人技能目录 ~/.cursor/skills</span>
+<span class="k">npx livepowers install</span> --target cursor
+<span class="c"># 或作为插件：.cursor-plugin/plugin.json + hooks/hooks-cursor.json</span></pre></div>
     <div id="i4" class="pane"><pre><span class="c"># 每个技能单独打包为 zip，在设置的技能页逐个上传</span>
 bash livepowers/scripts/package-skills.sh
 ls livepowers/dist/skills/</pre></div>

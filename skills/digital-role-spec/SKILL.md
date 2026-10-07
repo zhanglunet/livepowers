@@ -1,6 +1,6 @@
 ---
 name: digital-role-spec
-description: Use when a job role or recurring function is to be carried by humans plus an agent team (a "digital role") — specifies responsibilities, ontology scope, skills, tools, permissions, KPIs, escalation paths and human-in-the-loop points, marks which tasks are automated versus human-owned, and tracks the human-to-digital ratio and role economics. 把一个岗位的工作交给"人 + 智能体团队"时使用。
+description: Use when a job role or recurring function is to be carried by humans plus an agent team (a "digital role"), or when someone asks which parts of a position can be automated and what it would cost. 把一个岗位的工作交给"人 + 智能体团队"时使用。
 ---
 
 # 数字岗位规格

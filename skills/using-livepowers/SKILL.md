@@ -1,6 +1,6 @@
 ---
 name: using-livepowers
-description: Use when starting any conversation that touches business software, data analysis, transactional systems, ontology, agent product delivery, long-running jobs or multi-agent work — establishes the Live Product workflow (System 1 first, explore with evidence, crystallize, accept by gates) and routes to the right Livepowers skill before any response or action. 开始任何企业业务软件 / 数据分析 / 交易系统 / 本体 / 智能体交付 / 长程任务 / 多智能体工作前使用。
+description: Use when starting any conversation that touches business software, data analysis, transactional systems, ontology, agent product delivery, long-running jobs or multi-agent work, before any response or action. 开始任何企业业务软件 / 数据分析 / 交易系统 / 本体 / 智能体交付 / 长程任务 / 多智能体工作前使用。
 ---
 
 # Using Livepowers
@@ -72,16 +72,18 @@ Livepowers 让智能体按「活产品（Live Product）」范式工作：
 ## 一次标准工作循环
 
 ```
-业务请求 ──► lp task new（看板：待澄清）
-  └─ system1-first：lp registry find
-        ├─ HIT  → 执行已固化能力 → lp evidence add --system S1
-        └─ MISS → ontology-grounded-spec（必要时 ontology-evolution）
-                  → explore-with-evidence（看板：探索；有轮次与预算上限）
-                  → acceptance-gates（看板：待验证）→ 交付 → lp evidence add --system S2
-夜间 ──► nightly-crystallization-review：lp candidates → crystallize-to-system1（草稿 + 测试）
+业务请求 ──► system1-first：lp registry find
+  ├─ HIT  → 核对前置条件 → 执行已固化能力 → lp evidence add --system S1
+  └─ MISS → 功能级以上：lp task new（看板：待澄清）→ ontology-grounded-spec（必要时 ontology-evolution）
+            → explore-with-evidence（看板：探索；有轮次与预算上限；**每轮结束 lp evidence add --system S2**）
+            → acceptance-gates（看板：待验证）→ 交付
+            └─ 超轮次 / 超预算 → 止损（看板：异常接管）→ takeover-handling
+夜间 ──► nightly-crystallization-review：lp candidates → crystallize-to-system1（草稿 + 测试，写 pending 清单）
 早晨 ──► 人工采纳：lp registry add（看板：已注册 → 生产运行）；不通过写明原因
 运行 ──► 失败 / 口径变化 / 环境漂移 → 去固化（看板：回到探索）
 ```
+
+会话级的小请求（一次性查询）不建任务，直接探索并记证据。
 
 ## 反模式（看到自己在这样想就停下）
 

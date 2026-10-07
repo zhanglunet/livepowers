@@ -38,6 +38,12 @@ class TestSkills(unittest.TestCase):
             self.assertTrue(d.startswith("Use when") or d.startswith("Use before") or d.startswith("Use at")
                             or d.startswith("Use whenever"), f"{n}: description 应以触发条件开头")
             self.assertLessEqual(len(d), 1024, n)
+            # 只写触发条件：不概括流程（writing-livepowers-skills 的规则）
+            self.assertNotRegex(d, r"\s—\s", f"{n}: description 不要用破折号接流程摘要")
+            self.assertNotRegex(d, r"\b(runs|produces|enforces|turns|builds|specifies|evolves|compiles|registers|"
+                                   r"checks the|picks|reviews the|sets exploration|applies)\b",
+                                f"{n}: description 只写何时使用，不要概括流程")
+            self.assertLessEqual(len(d), 400, f"{n}: description 过长（{len(d)}），只保留触发条件")
             self.assertGreater(len(body.strip()), 200, n)
 
     def test_router_and_readme_cover_all(self):

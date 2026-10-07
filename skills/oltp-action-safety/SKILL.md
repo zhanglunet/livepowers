@@ -1,6 +1,6 @@
 ---
 name: oltp-action-safety
-description: Use before exploring, crystallizing or executing any action that writes production state — create, update, transfer, approve, bill, push configuration — enforces simulate-before-execute and eight checks (precondition, permission, transaction, idempotency, concurrency, approval, audit, compensation) with matching test cases, including adapters for legacy systems that lack transactions. 任何写生产状态的动作之前使用。
+description: Use before exploring, crystallizing or executing any action that writes production state: create, update, transfer, approve, bill, push configuration, including on legacy systems without transactions. 任何写生产状态的动作之前使用。
 ---
 
 # 写操作安全门禁

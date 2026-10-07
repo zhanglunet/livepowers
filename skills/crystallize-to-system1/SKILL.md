@@ -1,6 +1,6 @@
 ---
 name: crystallize-to-system1
-description: Use when an intent has been explored successfully several times, the user says "do it this way from now on", or the nightly review selected a candidate — turns the proven path into a tested, versioned, registered deterministic capability package (code / CLI / parameterized SQL / workflow + skill + evals). This is the Coding Harness. 把探索成功的路径固化为 System 1 能力包时使用。
+description: Use when an intent has been explored successfully several times, when the user says "do it this way from now on", or when the nightly review has selected a crystallization candidate. 把探索成功的路径固化为 System 1 能力包时使用。
 ---
 
 # 固化到 System 1
@@ -19,6 +19,8 @@ lp score --freq <每月次数> --verifiable 0|1|2 --stability 0|1|2 [--writes-st
 - **V 可验证**：0 = 无法自动核对；1 = 有样例可核对；2 = 有断言 / 对账可全自动核对。**V=0 一票否决。**
 - **S 稳定**：0 = 口径或接口常变；1 = 偶尔变；2 = 稳定
 - **R 风险**：写生产状态时加 `--writes-state`（收益最大，测试要求最严）
+
+合成分 = F×2 + V×1.5 + S×1 + R×1，满分 10（`lp score` 会打印分项）。
 
 盈亏平衡：`n* = (K + M) / (c2′ − c1)`，其中 `c2′ = c2/p + (1−p)·h/p`。**成功率越低，固化越划算；夜间空闲算力能摊薄 K；口径常变会抬高 M。**评分 ≥5 且预计调用次数 > n* 才继续。把输出贴进变更说明。
 
@@ -69,7 +71,7 @@ lp registry add --name "<名称>" --kind cli|sql|script|skill|view|mcp|workflow 
 
 ## 版本与退役
 
-- 修改已注册能力 = 发新版本（语义化版本号），旧版本在迁移期内保留。
+- 修改已注册能力 = 发新版本：`lp registry add --id <新id> --version 2.0.0 --supersedes <旧id> ...`。旧版本自动退役并记录 `superseded_by`，注册表仍能查到它供调用方迁移；同一 id 不能重复注册。
 - 口径变化或连续失败 → `lp registry retire <id> --reason ...`，回到 System 2。
 - 已提交的业务动作通过有记录的补偿行动纠正；代码回退只控制后续执行。
 

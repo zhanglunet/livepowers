@@ -1,6 +1,6 @@
 ---
 name: ontology-evolution
-description: Use when a task needs an object, relation, state, metric definition or rule that the ontology does not have, when two definitions conflict, or when a business rule changes (new policy, new threshold, new effective date) — evolves the ontology through candidate → validated → confirmed → published states with source, scope, effective time and version, instead of hiding gaps in scripts. 需要新增或修改本体定义、规则变更时使用。
+description: Use when a task needs an object, relation, state, metric definition or rule the ontology does not have, when two definitions conflict, or when a business rule changes (new policy, new threshold, new effective date). 需要新增或修改本体定义、规则变更时使用。
 ---
 
 # 本体演进

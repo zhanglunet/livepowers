@@ -1,6 +1,6 @@
 ---
 name: agent-harness-for-tools
-description: Use when CLIs / MCP tools / APIs already exist but business agents use them unreliably, a weaker or different model must take over, or a model upgrade lands — writes tool cards (including when NOT to use), decision-point playbooks and hard constraints, benchmarks success over repeated runs, and checks whether the harness still pays off after a model change. 接口已有但 Agent 用不稳、或要换模型时使用。
+description: Use when CLIs / MCP tools / APIs already exist but business agents use them unreliably, when a weaker or different model must take over a workflow, or right after a model upgrade lands. 接口已有但 Agent 用不稳、或要换模型时使用。
 ---
 
 # 用工具办事的 Harness（Agent Harness）

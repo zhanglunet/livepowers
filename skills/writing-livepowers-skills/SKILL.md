@@ -1,6 +1,6 @@
 ---
 name: writing-livepowers-skills
-description: Use when creating a new Livepowers skill, editing an existing one, or turning a team's recurring practice into a skill — applies test-first writing (watch an agent fail without the skill under pressure, then write the minimal skill that fixes it), keeps descriptions trigger-only, and validates structure with the repository tests. 新建或修改 Livepowers 技能时使用。
+description: Use when creating a new Livepowers skill, editing an existing one, or turning a team's recurring practice into a skill. 新建或修改 Livepowers 技能时使用。
 ---
 
 # 编写 Livepowers 技能

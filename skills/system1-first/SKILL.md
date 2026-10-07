@@ -1,6 +1,6 @@
 ---
 name: system1-first
-description: Use when handling any business request (query, report, dashboard, business operation, routine task) and before reasoning it out from scratch — checks the capability registry and reuses a crystallized CLI / SQL / workflow when one fits, otherwise hands off to System 2 exploration; also defines de-crystallization signals. 收到任何业务请求、准备动手前使用。
+description: Use when handling any business request (query, report, dashboard, business operation, routine task), before reasoning it out from scratch. 收到任何业务请求、准备动手前使用。
 ---
 
 # System 1 优先

@@ -1,6 +1,6 @@
 ---
 name: outcome-ledger
-description: Use when committing to a business outcome, choosing pilot scenarios, reporting value, comparing delivery approaches, or preparing outcome- or workflow-based pricing — registers a baseline before any work, measures deltas, allocates all costs (including failures, rework and takeover) to accepted tasks, and reports cost per accepted task, time to first value and incremental value. 衡量业务结果、核算单位成本、论证价值时使用。
+description: Use when committing to a business outcome, choosing pilot scenarios, reporting value, comparing delivery approaches, or preparing outcome- or workflow-based pricing. 衡量业务结果、核算单位成本、论证价值时使用。
 ---
 
 # 结果台账

@@ -1,6 +1,6 @@
 ---
 name: env-scan-ontology
-description: Use when onboarding a new database, business system, API set or customer site, starting a brownfield or greenfield delivery, or when schema / interface drift is suspected — scans read-only, builds an environment fingerprint and an ontology draft, aligns it with a preset domain ontology, and runs nightly drift detection. 接入新环境、扫描库表生成本体、检测环境漂移时使用。
+description: Use when onboarding a new database, business system, API set or customer site, when starting a brownfield or greenfield delivery, or whenever schema / interface drift is suspected. 接入新环境、扫描库表生成本体、检测环境漂移时使用。
 ---
 
 # 环境感知与本体沉淀

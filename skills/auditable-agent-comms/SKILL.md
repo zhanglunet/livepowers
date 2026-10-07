@@ -1,6 +1,6 @@
 ---
 name: auditable-agent-comms
-description: Use whenever multiple agents (dispatcher / executor / reviewer, or agents across teams or organizations) communicate and the exchange must be logged, auditable, replayable and metered — picks direct, switch-relayed or sidecar logging by trust domain, separates coordination from content, uses a shared task id and contract version, and audits receipts. 多个 Agent 互相通信时使用。
+description: Use whenever two or more agents (dispatcher / executor / reviewer, or agents across teams or organizations) exchange messages and the exchange must be logged, auditable, replayable or metered. 多个 Agent 互相通信时使用。
 ---
 
 # 可审计的智能体协作

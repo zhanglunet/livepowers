@@ -1,6 +1,6 @@
 ---
 name: ontology-grounded-spec
-description: Use before implementing any business feature, report, dashboard, query, transactional command or workflow — clarifies one question at a time, classifies the change as interface / parameter / feature / ontology level, treats uncertain user statements as hypotheses, and compiles an ontology-grounded spec with invariants and machine-checkable acceptance samples. 实现任何业务功能之前使用。
+description: Use before implementing any business feature, report, dashboard, query, transactional command or workflow, and whenever a request is ambiguous about scope, definitions or acceptance. 实现任何业务功能之前使用。
 ---
 
 # 本体接地的规格（规格编译）

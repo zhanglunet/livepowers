@@ -1,6 +1,6 @@
 ---
 name: night-loop-planning
-description: Use when a task must run for hours or overnight, should use idle off-peak compute, needs a strong model to plan and cheaper models to execute, or must be split into resumable concurrent jobs — produces a DAG, segments sized to each model's reliable horizon, handoff contracts with actual end states, loop stop rules, checkpoints and next-morning deliverables. 规划夜间 / 长程任务时使用。
+description: Use when a task must run for hours or overnight, should use idle off-peak compute, needs a strong model to plan and cheaper models to execute, or must be split into resumable concurrent jobs. 规划夜间 / 长程任务时使用。
 ---
 
 # 夜间作业 Loop 规划

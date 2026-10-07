@@ -1,6 +1,6 @@
 ---
 name: acceptance-gates
-description: Use when any candidate capability, ontology change, spec implementation or agent-produced result is about to enter production or be reported as done — runs four quality gates (format check, contract test, independent adversarial review, human adoption), enforces separation between generator, reviewer and adopter, and requires real receipts instead of self-claims. 候选能力进入生产、或任何"已完成"需要被确认时使用。
+description: Use when any candidate capability, ontology change, spec implementation or agent-produced result is about to enter production, or whenever an agent or person says "done" and that claim needs to be confirmed. 候选能力进入生产、或任何"已完成"需要被确认时使用。
 ---
 
 # 验收门禁
@@ -11,7 +11,7 @@ description: Use when any candidate capability, ontology change, spec implementa
 
 | # | 门 | 发现什么 | 由谁执行 | 证据 |
 |---|---|---|---|---|
-| 1 | **形式检查** | 结构、类型、必填字段、引用的本体版本存在 | 机器（lint、schema、`lp job validate`） | 检查输出 |
+| 1 | **形式检查** | 结构、类型、必填字段、引用的本体版本存在 | 机器（lint、schema 校验；夜间作业契约用 `lp job validate`） | 检查输出 |
 | 2 | **契约测试** | 约定行为：验收样例、业务不变量、八项检查（OLTP） | 机器（测试集） | 测试报告 |
 | 3 | **独立对抗审查** | 遗漏前提、口径偏差、越权路径、异常路径 | 与生成者分离的审查者 | 反例清单与结论 |
 | 4 | **人工采纳** | 业务意义、未被覆盖的风险 | 有权的业务责任人 | 采纳记录（谁、何时、依据） |

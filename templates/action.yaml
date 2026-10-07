@@ -16,4 +16,5 @@ concurrency: optimistic_lock(opportunity.version)
 approval: none   # 或 required_by: <role>
 audit: [actor, ts, before, after, reason]
 compensation: outbox retry x3 → manual queue
-tests: [precondition_fail, no_permission, duplicate_submit, concurrent_update, downstream_fail, audit_written]
+tests: [precondition_fail, no_permission, transaction_rollback, duplicate_submit, concurrent_update,
+        approval_required, approval_param_change, audit_written, downstream_fail]   # 与八项检查一一对应

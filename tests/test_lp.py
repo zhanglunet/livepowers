@@ -100,6 +100,50 @@ class TestCLI(Workdir):
         state = self.read_json(".livepowers/tasks.json")["tasks"][0]["state"]
         self.assertEqual(state, "takeover")
 
+    def test_takeover_cannot_skip_gates_and_can_reopen(self):
+        self.lp("init")
+        t = self.lp("task", "new", "--title", "loop", "--max-loops", "1").stdout.strip()
+        self.lp("task", "move", t, "explore", "--by", "g", "--reason", "1")
+        self.lp("task", "move", t, "explore", "--by", "g", "--reason", "2", check=4)   # 止损 → 异常接管
+        self.lp("task", "move", t, "running", "--by", "ops", "--reason", "上线", check=1)  # 不能绕过验收
+        self.lp("task", "move", t, "explore", "--by", "h", "--reason", "重开", check=4)   # 轮次未重置仍止损
+        self.lp("task", "move", t, "explore", "--by", "h", "--reason", "重开", "--reset-loops", "--extend-budget", "50")
+        task = self.read_json(".livepowers/tasks.json")["tasks"][0]
+        self.assertEqual(task["state"], "explore")
+        self.assertEqual(task["loops"], 1)
+        self.assertEqual(task["budget"], 50)
+        self.lp("task", "move", t, "closed", "--by", "h", "--reason", "放弃")
+        self.lp("task", "move", t, "takeover", "--by", "h", "--reason", "x", check=1)  # closed 是终态
+
+    def test_registry_supersedes(self):
+        self.lp("init")
+        self.lp("registry", "add", "--name", "Weekly revenue", "--kind", "sql", "--intents", "weekly revenue",
+                "--entry", "v1.sql")
+        self.lp("registry", "add", "--name", "Weekly revenue", "--kind", "sql", "--intents", "weekly revenue",
+                "--entry", "v2.sql", check=1)  # 同 id 仍 active
+        self.lp("registry", "add", "--name", "Weekly revenue", "--id", "cap_weekly_revenue_v2", "--kind", "sql",
+                "--intents", "weekly revenue", "--entry", "v2.sql", "--version", "2.0.0",
+                "--supersedes", "cap_weekly_revenue")
+        caps = {c["id"]: c for c in self.read_json(".livepowers/registry.json")["capabilities"]}
+        self.assertEqual(caps["cap_weekly_revenue"]["status"], "retired")
+        self.assertEqual(caps["cap_weekly_revenue"]["superseded_by"], "cap_weekly_revenue_v2")
+        self.assertIn("v2.sql", self.lp("registry", "find", "weekly revenue").stdout)
+
+    def test_outcome_direction_and_cost_requires_baseline(self):
+        self.lp("init")
+        self.lp("outcome", "cost", "--scenario", "s", "--kind", "human", "--amount", "1", check=1)  # 无基线
+        self.lp("outcome", "baseline", "--scenario", "s", "--metric", "逾期数", "--value", "40", "--target", "10",
+                "--base", "100000", "--direction", "lower")
+        self.lp("outcome", "measure", "--scenario", "s", "--metric", "逾期数", "--value", "22")
+        out = self.lp("outcome", "report").stdout
+        self.assertIn("ΔV = B×u = 100,000×0.4500 = 45,000.00", out)  # 越低越好：u = (40-22)/40
+
+    def test_help_lists_subcommands(self):
+        out = self.lp("--help").stdout
+        for word in ("evidence", "registry", "task", "outcome", "asset", "report", "证据", "看板"):
+            self.assertIn(word, out)
+        self.assertIn("--reset-loops", self.lp("task", "move", "--help").stdout)
+
     def test_outcome_ledger(self):
         self.lp("init")
         self.lp("outcome", "measure", "--scenario", "s", "--metric", "m", "--value", "1", check=1)  # 无基线

@@ -1,6 +1,6 @@
 ---
 name: explore-with-evidence
-description: Use when the registry misses, or a request is new, rare or the environment changed, and the agent must explore with LLM reasoning (write SQL, analyze, trial-and-error, orchestrate tools) — sets exploration boundaries, budget and stop rules, sample-based verification and the evidence record that later crystallization depends on. 注册表未命中、需要 Agent 自主探索时使用。
+description: Use when the capability registry misses, when a request is new, rare or the environment has changed, and the agent must reason it out with the LLM (write SQL, analyze, trial-and-error, orchestrate tools). 注册表未命中、需要 Agent 自主探索时使用。
 ---
 
 # 探索并留证据

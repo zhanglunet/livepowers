@@ -1,6 +1,6 @@
 ---
 name: nightly-crystallization-review
-description: Use at end of day, when a nightly job starts, or when asked "what can be crystallized today" or "is the product getting more skilled" — reviews the day's evidence, picks crystallization candidates, drafts code and tests overnight, re-checks existing capabilities (failures, drift, idle, model change, canary regressions) and produces a morning report for human adoption. 收工 / 夜间回顾证据、挑固化候选、出晨报时使用。
+description: Use at end of day, when a nightly job starts, or when asked "what can be crystallized today" or "is the product getting more skilled". 收工 / 夜间回顾证据、挑固化候选、出晨报时使用。
 ---
 
 # 夜间固化评审

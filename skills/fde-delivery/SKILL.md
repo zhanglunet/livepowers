@@ -1,6 +1,6 @@
 ---
 name: fde-delivery
-description: Use when delivering a domain Live Product at a customer site as a forward-deployed engineer (FDE), for brownfield retrofit or greenfield build — checks base assets, picks value-based pilot scenarios, maps the ontology and customer differences, generates the initial app through the harness, validates and releases, and pushes field innovations back through four asset gates with measured backflow. 把领域产品交付到客户现场时使用。
+description: Use when delivering a domain Live Product at a customer site as a forward-deployed engineer, for a brownfield retrofit or a greenfield build, or when field innovations must flow back into the product. 把领域产品交付到客户现场时使用。
 ---
 
 # FDE 交付

@@ -6,7 +6,7 @@ lp —— Livepowers 命令行工具（只依赖 Python 3.9+ 标准库）
   init                          在当前项目创建 .livepowers/ 工作区
   evidence add ...              追加一条运行证据（JSONL）
   evidence stats                按意图汇总：次数、成功率、S1/S2 占比、平均成本
-  registry add ...              注册一项 System 1 能力（能力包）
+  registry add ...              注册一项 System 1 能力（能力包；--supersedes 发新版本并退役旧版）
   registry find <query>         按意图查找已固化能力（System 1 路由；HIT=0，MISS=2）
   registry list [--all]         列出能力
   registry retire <id>          退役能力（去固化）
@@ -17,10 +17,12 @@ lp —— Livepowers 命令行工具（只依赖 Python 3.9+ 标准库）
   candidates                    从证据中挑出固化候选
 
 任务看板（状态机）
-  task new / move / show / list 待澄清→规格确认→探索→待验证→已注册→生产运行（任何状态可→异常接管）
+  task new / move / show / list 待澄清→规格确认→探索→待验证→已注册→生产运行；任何状态可→异常接管，
+                                接管后重开须 --reset-loops / --extend-budget；已关闭为终态
 
 结果与资产
-  outcome baseline / measure / cost / accept / report   结果台账：基线、增量、单位验收任务成本、首次价值交付时间
+  outcome baseline / measure / cost / accept / report   结果台账：基线（--direction lower 表示越低越好）、增量、
+                                单位验收任务成本、首次价值交付时间
   asset add / gate / list       现场创新入库四道门（可抽象、可版本化、可评测、可复用）与资产回流率
 
 夜间
@@ -207,7 +209,12 @@ def cmd_registry_add(a):
     r = jload(REG, {"capabilities": []})
     cid = a.id or ("cap_" + slug(a.name))
     if any(c["id"] == cid and c["status"] == "active" for c in r["capabilities"]):
-        die(f"能力 {cid} 已存在且为 active；请换 id、发新版本前先 retire 旧版本")
+        die(f"能力 {cid} 已存在且为 active；发新版本请换 --id 并用 --supersedes {cid}，或先 retire 旧版本")
+    old = None
+    if a.supersedes:
+        old = next((c for c in r["capabilities"] if c["id"] == a.supersedes and c["status"] == "active"), None)
+        if not old:
+            die(f"--supersedes 指向的能力 {a.supersedes} 不存在或已非 active")
     if a.writes_state and not a.tests:
         die("写操作能力必须提供 --tests（八项检查测试集），否则不予注册")
     if a.generated_by and a.accepted_by and a.generated_by == a.accepted_by:
@@ -222,11 +229,16 @@ def cmd_registry_add(a):
         "package": a.package, "validated_model": a.validated_model,
         "generated_by": a.generated_by, "accepted_by": a.accepted_by,
         "status": "active", "created": now(), "last_verified": now(),
-        "calls": 0, "fails": 0,
+        "calls": 0, "fails": 0, "supersedes": a.supersedes or None,
     }
+    if old:
+        old["status"] = "retired"
+        old["retired"] = now()
+        old["retire_reason"] = f"被 {cid} v{a.version} 取代"
+        old["superseded_by"] = cid
     r["capabilities"].append(cap)
     jsave(REG, r)
-    print(f"已注册 {cid} v{a.version}")
+    print(f"已注册 {cid} v{a.version}" + (f"（已退役旧版本 {old['id']}，调用方请迁移）" if old else ""))
 
 
 CJK = re.compile(r"[^一-鿿]")
@@ -427,8 +439,8 @@ TRANSITIONS = {
     "verify": {"registered", "explore", "closed"},
     "registered": {"running", "explore"},
     "running": {"explore", "closed"},                  # 去固化：回到探索
-    "takeover": {"clarify", "spec", "explore", "running", "closed"},
-    "closed": set(),
+    "takeover": {"clarify", "spec", "explore", "closed"},   # 重开后仍须经 待验证 → 已注册 才能进生产
+    "closed": set(),                                        # 终态
 }
 
 
@@ -464,14 +476,24 @@ def cmd_task_move(a):
     src, dst = t["state"], a.to
     if dst not in STATES:
         die(f"未知状态 {dst}；可选 {STATES}")
-    if dst == "takeover":
-        pass  # 任何状态都可转入异常接管
+    if dst == "takeover" and src != "closed":
+        pass  # 已关闭之外的任何状态都可转入异常接管
     elif dst not in TRANSITIONS[src]:
         die(f"不允许的迁移 {STATE_CN[src]} → {STATE_CN[dst]}；允许：{[STATE_CN[s] for s in TRANSITIONS[src]] or '无'}")
     if not a.reason:
         die("每次状态迁移都必须写明 --reason（条件或依据）")
     if a.cost:
         t["spent"] = round(t.get("spent", 0) + a.cost, 6)
+    if src == "takeover" and dst == "explore":
+        # 接管后重开：必须显式重置轮次或追加预算，否则止损条件仍然成立
+        if a.reset_loops:
+            t["loops"] = 0
+            t["spent"] = 0.0
+        if a.extend_budget:
+            t["budget"] = (t.get("budget") or 0) + a.extend_budget
+            if a.max_loops:
+                t["max_loops"] = a.max_loops
+        t["executor"] = None  # 接管后换人重开，重新记录执行者
     if dst == "explore":
         t["loops"] += 1
         t["executor"] = t.get("executor") or a.by
@@ -523,7 +545,7 @@ def cmd_outcome_baseline(a):
         die("--confirmed-at 须为 ISO 时间，如 2026-01-15 或 2026-01-15T09:00:00+08:00")
     jsonl_append(OUTCOME, {"ts": now(), "type": "baseline", "scenario": a.scenario, "metric": a.metric,
                            "value": a.value, "target": a.target, "base": a.base, "owner": a.owner,
-                           "confirmed_at": a.confirmed_at or now()})
+                           "direction": a.direction, "confirmed_at": a.confirmed_at or now()})
     print(f"已登记基线 {a.scenario}/{a.metric} = {a.value}")
 
 
@@ -540,8 +562,14 @@ def cmd_outcome_measure(a):
 COST_KINDS = ["human", "inference", "tool", "rework", "ops", "amortization", "takeover"]
 
 
+def has_baseline(scenario):
+    return any(o["type"] == "baseline" and o["scenario"] == scenario for o in jsonl_read(OUTCOME))
+
+
 def cmd_outcome_cost(a):
     ensure()
+    if not has_baseline(a.scenario):
+        die("没有基线的场景不归集成本：先 lp outcome baseline")
     jsonl_append(OUTCOME, {"ts": now(), "type": "cost", "scenario": a.scenario, "kind": a.kind,
                            "amount": a.amount, "note": a.note})
     print("ok")
@@ -601,6 +629,8 @@ def cmd_outcome_report(a):
             if cur is not None:
                 delta = cur - b["value"]
                 rate = delta / b["value"] if b["value"] else 0
+                if b.get("direction") == "lower":  # 越低越好：下降才是正向增量
+                    rate = -rate
                 line += f"；当前 {cur}（Δ {delta:+g}，{rate:+.1%}）"
                 if b.get("base"):
                     line += f"；增量价值 ΔV = B×u = {b['base']:,.10g}×{rate:.4f} = {b['base'] * rate:,.2f}"
@@ -788,174 +818,185 @@ def cmd_report(a):
 
 # ---------------------------------------------------------------- argparse
 def main(argv=None):
-    p = argparse.ArgumentParser(prog="lp", description="Livepowers CLI")
+    p = argparse.ArgumentParser(prog="lp", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--version", action="version", version=f"lp {__version__}")
-    sp = p.add_subparsers(dest="cmd", required=True)
-    sp.add_parser("init").set_defaults(fn=cmd_init)
+    sp = p.add_subparsers(dest="cmd", required=True, metavar="<命令>")
+    sp.add_parser("init", help="在当前项目创建 .livepowers/ 工作区").set_defaults(fn=cmd_init)
 
-    ev = sp.add_parser("evidence").add_subparsers(dest="sub", required=True)
-    e = ev.add_parser("add")
+    ev = sp.add_parser("evidence", help="运行证据：add / stats").add_subparsers(dest="sub", required=True)
+    e = ev.add_parser("add", help="追加一条探索或执行证据（每轮探索结束都记）")
     e.add_argument("--intent", required=True, help="规范化意图，如 'weekly revenue by region'")
-    e.add_argument("--system", choices=["S1", "S2"], required=True)
+    e.add_argument("--system", choices=["S1", "S2"], required=True, help="S1 已固化能力 / S2 Agent 探索")
     e.add_argument("--outcome", choices=["success", "fail", "partial"], required=True)
-    e.add_argument("--tokens", type=int, default=0)
-    e.add_argument("--seconds", type=float, default=0)
-    e.add_argument("--cost", type=float, default=0)
-    e.add_argument("--capability")
+    e.add_argument("--tokens", type=int, default=0, help="消耗 token")
+    e.add_argument("--seconds", type=float, default=0, help="耗时秒")
+    e.add_argument("--cost", type=float, default=0, help="本次成本（任意货币单位，与 score 的 c2 同单位）")
+    e.add_argument("--capability", help="S1 调用的能力 id（自动累计调用 / 失败次数）")
     e.add_argument("--task", help="任务看板 id")
     e.add_argument("--model", help="本次使用的模型标识")
     e.add_argument("--domain", help="OLAP / OLTP / HTAP / 其他")
-    e.add_argument("--writes-state", action="store_true")
+    e.add_argument("--writes-state", action="store_true", help="本次动作写了生产状态")
     e.add_argument("--verifiable", action="store_true", help="结果已被样例/断言自动核验")
     e.add_argument("--note", default="", help="可写 scenario=<场景名> 以归集到结果台账")
     e.set_defaults(fn=cmd_evidence_add)
-    ev.add_parser("stats").set_defaults(fn=cmd_evidence_stats)
+    ev.add_parser("stats", help="按意图汇总次数、成功率、S1/S2 占比、周趋势").set_defaults(fn=cmd_evidence_stats)
 
-    rg = sp.add_parser("registry").add_subparsers(dest="sub", required=True)
-    ra = rg.add_parser("add")
-    ra.add_argument("--name", required=True)
-    ra.add_argument("--id")
-    ra.add_argument("--kind", choices=["cli", "sql", "skill", "script", "mcp", "view", "workflow"], required=True)
+    rg = sp.add_parser("registry", help="System 1 能力注册表：add / find / list / retire / verify / review"
+                       ).add_subparsers(dest="sub", required=True)
+    ra = rg.add_parser("add", help="注册一项已通过验收的能力（写操作必须带 --tests；生成者 ≠ 采纳人）")
+    ra.add_argument("--name", required=True, help="能力名（默认据此生成 id：cap_<slug>）")
+    ra.add_argument("--id", help="自定义 id")
+    ra.add_argument("--kind", choices=["cli", "sql", "skill", "script", "mcp", "view", "workflow"], required=True,
+                    help="能力形态；给业务 Agent 用的剧本请注册为 skill（review 才会检查模型变化）")
     ra.add_argument("--intents", required=True, help="逗号分隔的意图关键字（中英文都写）")
-    ra.add_argument("--entry", required=True)
-    for k in ("inputs", "outputs", "preconditions", "permissions", "owner", "tests"):
-        ra.add_argument(f"--{k}", default="")
-    ra.add_argument("--writes-state", action="store_true")
-    ra.add_argument("--version", default="1.0.0")
-    ra.add_argument("--ontology-version", default="")
+    ra.add_argument("--entry", required=True, help="调用入口（命令 / SQL 文件 / 工作流 id）")
+    for k, h in (("inputs", "输入说明"), ("outputs", "输出说明"), ("preconditions", "前置条件"),
+                 ("permissions", "所需权限"), ("owner", "维护主体"), ("tests", "测试命令或测试集位置")):
+        ra.add_argument(f"--{k}", default="", help=h)
+    ra.add_argument("--writes-state", action="store_true", help="写操作能力（必须带 --tests）")
+    ra.add_argument("--version", default="1.0.0", help="能力版本（语义化）")
+    ra.add_argument("--ontology-version", default="", help="依赖的本体版本")
     ra.add_argument("--package", default="", help="能力包清单路径（templates/capability-package.yaml）")
     ra.add_argument("--validated-model", default="", help="Skill 类能力在哪个模型上验证通过")
-    ra.add_argument("--generated-by", default="")
-    ra.add_argument("--accepted-by", default="")
+    ra.add_argument("--generated-by", default="", help="生成者（Agent 或人）")
+    ra.add_argument("--accepted-by", default="", help="采纳人（必须不同于生成者）")
+    ra.add_argument("--supersedes", default="", help="发新版本：自动退役该旧能力 id 并记录取代关系")
     ra.set_defaults(fn=cmd_registry_add)
-    rf = rg.add_parser("find")
-    rf.add_argument("query")
-    rf.add_argument("--top", type=int, default=3)
+    rf = rg.add_parser("find", help="按意图查找能力（HIT exit 0 / MISS exit 2）；命中后仍要核对前置条件")
+    rf.add_argument("query", help="用户原话或规范化意图，中文可不分词")
+    rf.add_argument("--top", type=int, default=3, help="最多列出几条")
     rf.add_argument("--min-score", type=int, default=2, help="低于此分视为 MISS")
     rf.set_defaults(fn=cmd_registry_find)
-    rl = rg.add_parser("list")
-    rl.add_argument("--all", action="store_true")
+    rl = rg.add_parser("list", help="列出能力（默认只列 active）")
+    rl.add_argument("--all", action="store_true", help="含已退役")
     rl.set_defaults(fn=cmd_registry_list)
-    rr = rg.add_parser("retire")
+    rr = rg.add_parser("retire", help="退役能力（去固化）")
     rr.add_argument("id")
-    rr.add_argument("--reason", required=True)
+    rr.add_argument("--reason", required=True, help="退役原因")
     rr.set_defaults(fn=cmd_registry_retire)
     rv = rg.add_parser("verify", help="记录一次复验（重跑测试集通过）")
     rv.add_argument("id")
-    rv.add_argument("--model", default="")
+    rv.add_argument("--model", default="", help="复验所用模型")
     rv.set_defaults(fn=cmd_registry_verify)
-    rw = rg.add_parser("review")
-    rw.add_argument("--idle-days", type=int, default=60)
-    rw.add_argument("--verify-days", type=int, default=30)
-    rw.add_argument("--current-model", default=os.environ.get("LP_CURRENT_MODEL", ""))
+    rw = rg.add_parser("review", help="复核：近期失败 / 长期闲置 / 验证模型与当前模型不一致 / 久未复验")
+    rw.add_argument("--idle-days", type=int, default=60, help="超过多少天未调用算闲置")
+    rw.add_argument("--verify-days", type=int, default=30, help="超过多少天未复验算久未复验")
+    rw.add_argument("--current-model", default=os.environ.get("LP_CURRENT_MODEL", ""),
+                    help="当前模型（默认环境变量 LP_CURRENT_MODEL）")
     rw.set_defaults(fn=cmd_registry_review)
 
     s = sp.add_parser("score", help="F-V-S-R 评分与盈亏平衡（建议固化 exit 0，否则 3）")
     s.add_argument("--freq", type=float, required=True, help="每月预计调用次数")
-    s.add_argument("--verifiable", type=int, choices=[0, 1, 2], required=True)
-    s.add_argument("--stability", type=int, choices=[0, 1, 2], required=True)
-    s.add_argument("--writes-state", action="store_true")
+    s.add_argument("--verifiable", type=int, choices=[0, 1, 2], required=True, help="可验证性 0-2（0 一票否决）")
+    s.add_argument("--stability", type=int, choices=[0, 1, 2], required=True, help="口径稳定性 0-2")
+    s.add_argument("--writes-state", action="store_true", help="写操作（提高风险系数）")
     s.add_argument("--c2", type=float, required=True, help="System 2 单次成本")
     s.add_argument("--c1", type=float, default=0.0, help="System 1 单次成本")
     s.add_argument("--K", type=float, required=True, help="固化一次性成本")
     s.add_argument("--M", type=float, default=0.0, help="生命周期维护成本")
     s.add_argument("--p", type=float, default=1.0, help="System 2 成功率")
     s.add_argument("--h", type=float, default=0.0, help="失败时人工兜底成本")
-    s.add_argument("--months", type=float, default=6)
+    s.add_argument("--months", type=float, default=6, help="回收期（月）")
     s.set_defaults(fn=cmd_score)
 
-    c = sp.add_parser("candidates")
-    c.add_argument("--min-count", type=int, default=3)
-    c.add_argument("--json", action="store_true")
+    c = sp.add_parser("candidates", help="从证据中挑出固化候选（同一意图多次 S2 成功）")
+    c.add_argument("--min-count", type=int, default=3, help="至少几次成功才算候选")
+    c.add_argument("--json", action="store_true", help="JSON 输出")
     c.set_defaults(fn=cmd_candidates)
 
-    tk = sp.add_parser("task").add_subparsers(dest="sub", required=True)
-    tn = tk.add_parser("new")
-    tn.add_argument("--title", required=True)
-    tn.add_argument("--id")
-    tn.add_argument("--intent", default="")
-    tn.add_argument("--level", choices=["session", "feature", "ontology"], default="feature")
-    tn.add_argument("--owner", default="")
-    tn.add_argument("--contract-version", default="")
+    tk = sp.add_parser("task", help="任务看板状态机：new / move / show / list").add_subparsers(dest="sub", required=True)
+    tn = tk.add_parser("new", help="新建任务（待澄清），设轮次与预算上限")
+    tn.add_argument("--title", required=True, help="任务标题")
+    tn.add_argument("--id", help="自定义 id（默认 t_xxxxxxxx）")
+    tn.add_argument("--intent", default="", help="规范化意图（与 evidence 一致）")
+    tn.add_argument("--level", choices=["session", "feature", "ontology"], default="feature", help="变化层级")
+    tn.add_argument("--owner", default="", help="业务负责人")
+    tn.add_argument("--contract-version", default="", help="契约版本")
     tn.add_argument("--max-loops", type=int, default=5, help="最大探索轮次（止损）")
     tn.add_argument("--budget", type=float, default=0, help="探索预算（0 为不限）")
     tn.set_defaults(fn=cmd_task_new)
-    tm = tk.add_parser("move")
+    tm = tk.add_parser("move", help="迁移状态：" + " → ".join(STATE_CN[x] for x in STATES[:6]) + "；任何状态可 → 异常接管")
     tm.add_argument("id")
     tm.add_argument("to", help="/".join(STATES))
-    tm.add_argument("--by", required=True)
-    tm.add_argument("--reason", default="")
-    tm.add_argument("--evidence", default="")
-    tm.add_argument("--cost", type=float, default=0)
-    tm.add_argument("--contract-version", default="")
+    tm.add_argument("--by", required=True, help="操作者（待验证 → 已注册 不能是执行者本人）")
+    tm.add_argument("--reason", default="", help="迁移依据（必填）")
+    tm.add_argument("--evidence", default="", help="产物 / 验收记录位置（待验证 → 已注册 必填）")
+    tm.add_argument("--cost", type=float, default=0, help="本次花费（累计到预算）")
+    tm.add_argument("--contract-version", default="", help="进入规格确认时记录契约版本")
+    tm.add_argument("--reset-loops", action="store_true", help="接管后重开：轮次与花费归零")
+    tm.add_argument("--extend-budget", type=float, default=0, help="接管后重开：追加预算")
+    tm.add_argument("--max-loops", type=int, default=0, help="接管后重开：改最大轮次（与 --extend-budget 同用）")
     tm.set_defaults(fn=cmd_task_move)
-    ts_ = tk.add_parser("show")
+    ts_ = tk.add_parser("show", help="查看任务与历史")
     ts_.add_argument("id")
     ts_.set_defaults(fn=cmd_task_show)
-    tl = tk.add_parser("list")
-    tl.add_argument("--all", action="store_true")
+    tl = tk.add_parser("list", help="列出任务（默认不含已关闭）")
+    tl.add_argument("--all", action="store_true", help="含已关闭")
     tl.set_defaults(fn=cmd_task_list)
 
-    oc = sp.add_parser("outcome").add_subparsers(dest="sub", required=True)
-    ob = oc.add_parser("baseline")
-    ob.add_argument("--scenario", required=True)
-    ob.add_argument("--metric", required=True)
-    ob.add_argument("--value", type=float, required=True)
-    ob.add_argument("--target", type=float)
+    oc = sp.add_parser("outcome", help="结果台账：baseline / measure / cost / accept / report"
+                       ).add_subparsers(dest="sub", required=True)
+    ob = oc.add_parser("baseline", help="登记基线（承诺任何业务结果之前）")
+    ob.add_argument("--scenario", required=True, help="场景名（evidence --note scenario=<名> 归集到此）")
+    ob.add_argument("--metric", required=True, help="指标名")
+    ob.add_argument("--value", type=float, required=True, help="基线值")
+    ob.add_argument("--target", type=float, help="目标值")
     ob.add_argument("--base", type=float, help="业务基数 B（用于 ΔV = B × u）")
-    ob.add_argument("--owner", default="")
+    ob.add_argument("--direction", choices=["higher", "lower"], default="higher",
+                    help="指标方向：higher 越高越好（默认）/ lower 越低越好（如逾期数、时长）")
+    ob.add_argument("--owner", default="", help="结果负责人")
     ob.add_argument("--confirmed-at", default="", help="范围确认时间（ISO），默认现在")
     ob.set_defaults(fn=cmd_outcome_baseline)
-    om = oc.add_parser("measure")
+    om = oc.add_parser("measure", help="记录一次测量（须已有基线）")
     om.add_argument("--scenario", required=True)
     om.add_argument("--metric", required=True)
     om.add_argument("--value", type=float, required=True)
     om.add_argument("--note", default="")
     om.set_defaults(fn=cmd_outcome_measure)
-    ocost = oc.add_parser("cost")
+    ocost = oc.add_parser("cost", help="归集成本（含失败、返工、接管；须已有基线）")
     ocost.add_argument("--scenario", required=True)
-    ocost.add_argument("--kind", choices=COST_KINDS, required=True)
+    ocost.add_argument("--kind", choices=COST_KINDS, required=True, help="成本类型")
     ocost.add_argument("--amount", type=float, required=True)
     ocost.add_argument("--note", default="")
     ocost.set_defaults(fn=cmd_outcome_cost)
-    oa = oc.add_parser("accept")
+    oa = oc.add_parser("accept", help="记录一次验收采纳 / 拒绝")
     oa.add_argument("--scenario", required=True)
-    oa.add_argument("--task", default="")
+    oa.add_argument("--task", default="", help="任务看板 id")
     oa.add_argument("--by", required=True, help="采纳主体")
-    oa.add_argument("--rejected", action="store_true")
-    oa.add_argument("--first", action="store_true", help="首个生产任务被采纳")
+    oa.add_argument("--rejected", action="store_true", help="未通过验收")
+    oa.add_argument("--first", action="store_true", help="首个生产任务被采纳（计首次价值交付时间）")
     oa.set_defaults(fn=cmd_outcome_accept)
-    oc.add_parser("report").set_defaults(fn=cmd_outcome_report)
+    oc.add_parser("report", help="输出台账：增量、ΔV、验收任务平均成本、首次价值交付时间").set_defaults(fn=cmd_outcome_report)
 
-    asp = sp.add_parser("asset").add_subparsers(dest="sub", required=True)
-    aa = asp.add_parser("add")
+    asp = sp.add_parser("asset", help="现场资产四道门与回流：add / gate / reuse / list").add_subparsers(dest="sub", required=True)
+    aa = asp.add_parser("add", help="登记一项现场创新资产")
     aa.add_argument("--name", required=True)
     aa.add_argument("--id")
     aa.add_argument("--kind", default="skill", help="skill/tool/ontology/spec/template/benchmark/role")
-    aa.add_argument("--origin", choices=["field", "product"], default="field")
-    aa.add_argument("--ownership", choices=["client", "vendor", "joint"], default="vendor")
+    aa.add_argument("--origin", choices=["field", "product"], default="field", help="来源")
+    aa.add_argument("--ownership", choices=["client", "vendor", "joint"], default="vendor", help="归属（client 不入库）")
     aa.set_defaults(fn=cmd_asset_add)
-    ag = asp.add_parser("gate")
+    ag = asp.add_parser("gate", help="通过一道门（须按顺序）")
     ag.add_argument("id")
     ag.add_argument("gate", help="/".join(GATES))
     ag.add_argument("--by", required=True)
     ag.add_argument("--evidence", default="")
     ag.set_defaults(fn=cmd_asset_gate)
-    au = asp.add_parser("reuse")
+    au = asp.add_parser("reuse", help="记录一次跨项目复用")
     au.add_argument("id")
     au.add_argument("--project", required=True)
     au.add_argument("--version", default="")
     au.add_argument("--verified", action="store_true", help="完成适配并重新验证")
     au.set_defaults(fn=cmd_asset_reuse)
-    asp.add_parser("list").set_defaults(fn=cmd_asset_list)
+    asp.add_parser("list", help="列出资产、门禁进度与回流率").set_defaults(fn=cmd_asset_list)
 
-    j = sp.add_parser("job").add_subparsers(dest="sub", required=True)
-    jv = j.add_parser("validate")
+    j = sp.add_parser("job", help="夜间作业契约：validate").add_subparsers(dest="sub", required=True)
+    jv = j.add_parser("validate", help="校验作业契约 JSON（必填字段、悬空依赖、环、单段时长）")
     jv.add_argument("file")
     jv.set_defaults(fn=cmd_job_validate)
 
-    rp = sp.add_parser("report")
-    rp.add_argument("--min-count", type=int, default=3)
+    rp = sp.add_parser("report", help="生成晨间报告 Markdown（固化候选、能力复核、看板、台账、待决事项）")
+    rp.add_argument("--min-count", type=int, default=3, help="固化候选的最少成功次数")
     rp.add_argument("--idle-days", type=int, default=60)
     rp.add_argument("--verify-days", type=int, default=30)
     rp.add_argument("--current-model", default=os.environ.get("LP_CURRENT_MODEL", ""))
