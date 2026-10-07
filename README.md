@@ -175,6 +175,7 @@ K 是固化成本，M 是维护成本，c1 和 c2 是单次执行成本，p 是 
 - [问题报告](https://github.com/zhanglunet/livepowers/issues/new?template=bug_report.md)：技能没触发、脚本出错、规则被绕过
 - [技能提议](https://github.com/zhanglunet/livepowers/issues/new?template=skill_proposal.md)：先写下没有这个技能时 Agent 怎么失败
 - [Discussions](https://github.com/zhanglunet/livepowers/discussions)：场景交流、落地经验
+- [路线图](https://github.com/zhanglunet/livepowers/issues?q=is%3Aissue+is%3Aopen+label%3Aroadmap)：每项都是可独立领取的小项目，从[总览](https://github.com/zhanglunet/livepowers/issues/10)开始
 
 提 PR 前请先读 `skills/writing-livepowers-skills/SKILL.md`，并运行：
 

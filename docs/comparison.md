@@ -84,6 +84,8 @@ Superpowers 的 `requesting-code-review` 评审子 Agent 充当 `acceptance-gate
 
 ## 值得借鉴、已列入路线图
 
+每项对应一个可领取的 Issue，见 [路线图总览](https://github.com/zhanglunet/livepowers/issues/10)。
+
 - ~~hook 自动采集证据，给能力加随成功 / 失败升降的置信度（借 continuous-learning v2）。~~ v1.3.0 已做。
 - 技能触发率自动评测，替代纯手工压力情境（借 Anthropic skill-creator / superpowers-evals）。
 - ~~意图同义词表~~ v1.4.0 已做（确定性、可审计的别名表；不引入向量检索，保持零依赖）。语义检索仍在路线图。
