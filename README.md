@@ -2,6 +2,9 @@
 
 [![test](https://github.com/zhanglunet/livepowers/actions/workflows/test.yml/badge.svg)](https://github.com/zhanglunet/livepowers/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![网站](https://img.shields.io/badge/网站-livepowers.pages.dev-f38020)](https://livepowers.pages.dev)
+
+**官网：<https://livepowers.pages.dev>**（介绍与安装）
 
 **Livepowers 是一套给智能体用的工作方法。**它让业务智能体按「活产品（Live Product）」范式工作：在本体划定的业务世界里行动；能复用的直接复用；不能复用的先探索，并留下证据；把成功路径固化成经过测试的能力；所有成果都要过独立验收。用得越多，产品越熟练。
 
