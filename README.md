@@ -130,6 +130,7 @@ K 是固化成本，M 是维护成本，c1 和 c2 是单次执行成本，p 是 
 
 ## 文档
 
+- [docs/index.html](docs/index.html)：图文说明页（启用 GitHub Pages 后可在线浏览）
 - [docs/paradigm.md](docs/paradigm.md)：范式要点（一页纸）
 - [docs/testing.md](docs/testing.md)：如何测试脚本与技能
 - [CHANGELOG.md](CHANGELOG.md)：版本记录
