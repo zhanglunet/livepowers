@@ -51,8 +51,8 @@ class TestSwitch(Workdir):
             url = f"http://127.0.0.1:{port}"
             for _ in range(50):
                 try:
-                    request.urlopen(url + "/health")
-                    break
+                    with request.urlopen(url + "/health"):
+                        break
                 except OSError:
                     time.sleep(0.1)
             sw = lambda *a, check=0: self.run_script("agent_switch.py", *a, check=check)
@@ -64,7 +64,8 @@ class TestSwitch(Workdir):
                "--url", url, check=1)
             sw("send", "--from", "exe", "--to", "rev", "--type", "result", "--body", "done", "--trace", "t1",
                "--url", url)
-            inbox = json.loads(request.urlopen(url + "/inbox/exe").read())
+            with request.urlopen(url + "/inbox/exe") as resp:
+                inbox = json.loads(resp.read())
             self.assertEqual(inbox[0]["task_id"], "t_1")
         finally:
             srv.terminate()
@@ -79,11 +80,13 @@ class TestSwitch(Workdir):
         audit = sw("audit", "--log", log).stdout
         self.assertIn("被拒绝 2 条", audit)
         self.assertIn("无产物引用 1 条", audit)
-        lines = open(log, encoding="utf-8").read().splitlines()
+        with open(log, encoding="utf-8") as f:
+            lines = f.read().splitlines()
         rec = json.loads(lines[0])
         rec["body"] = "tampered"
         lines[0] = json.dumps(rec, ensure_ascii=False)
-        open(log, "w", encoding="utf-8").write("\n".join(lines) + "\n")
+        with open(log, "w", encoding="utf-8") as f:
+            f.write("\n".join(lines) + "\n")
         self.assertIn("哈希链断裂", sw("verify", "--log", log, check=1).stdout)
 
 

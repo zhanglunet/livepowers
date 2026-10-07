@@ -148,7 +148,9 @@ def cmd_sidecar(a):
 
 def cmd_replay(a):
     prev_t = None
-    for line in open(a.log, encoding="utf-8"):
+    with open(a.log, encoding="utf-8") as f:
+        lines = f.readlines()
+    for line in lines:
         if not line.strip():
             continue
         r = json.loads(line)
@@ -165,7 +167,9 @@ def cmd_replay(a):
 
 def cmd_verify(a):
     prev = "0" * 64
-    for i, line in enumerate(open(a.log, encoding="utf-8"), 1):
+    with open(a.log, encoding="utf-8") as f:
+        lines = f.readlines()
+    for i, line in enumerate(lines, 1):
         if not line.strip():
             continue
         r = json.loads(line)
@@ -178,7 +182,8 @@ def cmd_verify(a):
 
 
 def cmd_audit(a):
-    recs = [json.loads(l) for l in open(a.log, encoding="utf-8") if l.strip()]
+    with open(a.log, encoding="utf-8") as f:
+        recs = [json.loads(l) for l in f if l.strip()]
     denied = [r for r in recs if r["policy"]["decision"] != "allow"]
     traces = {}
     for r in recs:

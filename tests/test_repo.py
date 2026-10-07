@@ -10,8 +10,13 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SKILLS = os.path.join(REPO, "skills")
 
 
+def read(path):
+    with open(path, encoding="utf-8") as f:
+        return f.read()
+
+
 def frontmatter(path):
-    text = open(path, encoding="utf-8").read()
+    text = read(path)
     m = re.match(r"---\n(.*?)\n---\n", text, re.S)
     assert m, f"{path} 缺少 frontmatter"
     fm = {}
@@ -36,8 +41,8 @@ class TestSkills(unittest.TestCase):
             self.assertGreater(len(body.strip()), 200, n)
 
     def test_router_and_readme_cover_all(self):
-        router = open(os.path.join(SKILLS, "using-livepowers", "SKILL.md"), encoding="utf-8").read()
-        readme = open(os.path.join(REPO, "README.md"), encoding="utf-8").read()
+        router = read(os.path.join(SKILLS, "using-livepowers", "SKILL.md"))
+        readme = read(os.path.join(REPO, "README.md"))
         for n in self.names:
             if n != "using-livepowers":
                 self.assertIn(f"`{n}`", router, f"路由表缺 {n}")
@@ -46,7 +51,7 @@ class TestSkills(unittest.TestCase):
     def test_cross_references_exist(self):
         allow = {"model-a", "model-b"}
         for n in self.names:
-            text = open(os.path.join(SKILLS, n, "SKILL.md"), encoding="utf-8").read()
+            text = read(os.path.join(SKILLS, n, "SKILL.md"))
             for ref in re.findall(r"`([a-z0-9]+(?:-[a-z0-9]+)+)`", text):
                 if ref not in allow:
                     self.assertIn(ref, self.names, f"{n} 引用了不存在的技能 {ref}")
@@ -56,13 +61,13 @@ class TestManifests(unittest.TestCase):
     def test_versions_consistent(self):
         vs = set()
         for p in (".claude-plugin/plugin.json", ".codex-plugin/plugin.json", ".cursor-plugin/plugin.json"):
-            vs.add(json.load(open(os.path.join(REPO, p)))["version"])
-        vs.add(json.load(open(os.path.join(REPO, ".claude-plugin/marketplace.json")))["plugins"][0]["version"])
+            vs.add(json.loads(read(os.path.join(REPO, p)))["version"])
+        vs.add(json.loads(read(os.path.join(REPO, ".claude-plugin/marketplace.json")))["plugins"][0]["version"])
         sys.path.insert(0, os.path.join(REPO, "scripts"))
         import lp
         vs.add(lp.__version__)
         self.assertEqual(len(vs), 1, vs)
-        self.assertIn(f"## [{vs.pop()}]", open(os.path.join(REPO, "CHANGELOG.md"), encoding="utf-8").read())
+        self.assertIn(f"## [{vs.pop()}]", read(os.path.join(REPO, "CHANGELOG.md")))
 
     def test_session_start_hook(self):
         for env, key in (({"CLAUDE_PLUGIN_ROOT": REPO}, "hookSpecificOutput"),
@@ -98,7 +103,7 @@ class TestNoIdentifyingInfo(unittest.TestCase):
             for f in files:
                 p = os.path.join(root, f)
                 try:
-                    text = open(p, encoding="utf-8").read()
+                    text = read(p)
                 except (UnicodeDecodeError, OSError):
                     continue
                 hits += [(os.path.relpath(p, REPO), w) for w in words if w in text]
