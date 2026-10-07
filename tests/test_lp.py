@@ -266,6 +266,51 @@ class TestCLI(Workdir):
         self.assertIn("置信度", self.lp("registry", "find", "flaky thing").stdout)
         self.assertIn("置信度 0.40", self.lp("registry", "review").stdout)
 
+    def test_intents_alias_merges_evidence_and_routing(self):
+        self.lp("init")
+        self.lp("registry", "add", "--name", "Weekly revenue", "--kind", "sql", "--intents", "weekly revenue by region",
+                "--entry", "w.sql")
+        self.lp("registry", "find", "按区域的每周营收", check=2)                      # 别名登记前 MISS
+        self.lp("evidence", "add", "--intent", "按区域的每周营收", "--system", "S2", "--outcome", "success")
+        self.lp("evidence", "add", "--intent", "各地区周收入", "--system", "S2", "--outcome", "success")
+        self.lp("intents", "alias", "weekly revenue by region", "按区域的每周营收", "--by", "ops")
+        self.lp("intents", "alias", "weekly revenue by region", "各地区周收入")
+        self.lp("intents", "alias", "按区域的每周营收", "x", check=1)               # 别名不能再当规范名
+        out = self.lp("intents", "list").stdout
+        self.assertIn("weekly revenue by region", out)
+        self.assertIn("按区域的每周营收", out)
+        self.assertIn("证据 2", out)
+        # 路由：别名命中整组同义词
+        self.assertIn("HIT", self.lp("registry", "find", "按区域的每周营收").stdout)
+        self.assertIn("HIT", self.lp("registry", "find", "各地区周收入怎么样").stdout)
+        # 新证据：别名落盘为规范名，原话保留
+        self.lp("evidence", "add", "--intent", "各地区周收入", "--system", "S2", "--outcome", "success", "--verifiable")
+        last = self.evidence()[-1]
+        self.assertEqual((last["intent"], last["intent_raw"]), ("weekly revenue by region", "各地区周收入"))
+        # 旧记录读取时归并：stats 与 candidates 按规范名
+        stats = self.lp("evidence", "stats").stdout
+        self.assertIn("weekly revenue by region", stats)
+        self.assertNotIn("按区域的每周营收", stats.split("总计")[0])
+        self.assertRegex(stats, r"weekly revenue by region\s+3\b")                 # 2 条旧别名记录 + 1 条新记录
+        self.assertEqual(json.loads(self.lp("candidates", "--json").stdout), [])  # 已固化的意图不再是候选
+        # task / pending 也规范化
+        t = self.lp("task", "new", "--title", "t", "--intent", "各地区周收入").stdout.strip()
+        self.assertEqual(self.read_json(".livepowers/tasks.json")["tasks"][0]["intent"], "weekly revenue by region")
+        self.lp("pending", "add", "--intent", "各地区周收入", "--score", "8", "--n-star", "5", "--tests", "t",
+                "--result", "pass", "--location", "l", "--generated-by", "g")
+        self.assertIn("weekly revenue by region", self.lp("pending", "list").stdout)
+
+    def test_intents_suggest(self):
+        self.lp("init")
+        for i in ("weekly revenue by region", "weekly revenue per region", "逾期商机移交", "转交逾期商机", "客户流失预警"):
+            self.lp("evidence", "add", "--intent", i, "--system", "S2", "--outcome", "success")
+        out = self.lp("intents", "suggest").stdout
+        self.assertIn("weekly revenue by region", out)
+        self.assertIn("weekly revenue per region", out)
+        self.assertIn("逾期商机移交", out)
+        self.assertNotIn("客户流失预警", out)
+        self.assertIn("lp intents alias", out)
+
     def test_outcome_ledger(self):
         self.lp("init")
         self.lp("outcome", "measure", "--scenario", "s", "--metric", "m", "--value", "1", check=1)  # 无基线

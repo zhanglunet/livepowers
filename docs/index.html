@@ -85,12 +85,12 @@ footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);font-si
 
 <section class="hero">
   <div>
-    <div class="kicker">Skills for the Live Product paradigm · v1.3.0 · MIT</div>
+    <div class="kicker">Skills for the Live Product paradigm · v1.4.0 · MIT</div>
     <h1>Live<span>powers</span><br>活产品范式技能包</h1>
     <p class="lead">业务智能体每次都从零推理，同一件事做一千次就付一千次的钱，结果还是概率性的；用 AI 更快写出的软件，业务含义仍然写死在代码里，交付即冻结。Livepowers 是一套装进 Claude Code、Codex、Cursor 的工作方法，让智能体<b>先复用已固化的能力，没有才去探索并留下证据，把成功路径固化成经测试的代码，一切成果过独立验收</b>——越用越熟练。</p>
     <div class="formula">Agentic AI = Agent + Ontology + Harness</div>
     <div class="install"><pre><span class="k">npx livepowers install</span>   <span class="c"># Claude Code · Cursor · Codex</span></pre><a class="btn" href="#demo">五分钟 demo</a><a class="btn ghost" href="#install">其他安装方式</a></div>
-    <div class="badges"><span class="badge">18 个技能</span><span class="badge">4 个零依赖脚本</span><span class="badge">8 个模板</span><span class="badge">3 个命令</span><span class="badge">SessionStart 自动注入</span><span class="badge">钩子自动采集证据</span><span class="badge">npx 一键安装</span><span class="badge">12 个场景</span><span class="badge">44 项自动化测试</span><span class="badge">结构借鉴 obra/superpowers</span></div>
+    <div class="badges"><span class="badge">18 个技能</span><span class="badge">4 个零依赖脚本</span><span class="badge">8 个模板</span><span class="badge">3 个命令</span><span class="badge">SessionStart 自动注入</span><span class="badge">钩子自动采集证据</span><span class="badge">npx 一键安装</span><span class="badge">12 个场景</span><span class="badge">47 项自动化测试</span><span class="badge">结构借鉴 obra/superpowers</span></div>
     <div class="badges"><a class="badge" href="https://github.com/zhanglunet/livepowers">github.com/zhanglunet/livepowers</a><a class="badge" href="https://www.npmjs.com/package/livepowers">npm: livepowers</a><a class="badge" href="#feedback">提反馈</a></div>
   </div>
   <figure>
@@ -561,7 +561,7 @@ ls livepowers/dist/skills/</pre></div>
 │                             tool-card · capability-package
 │                             digital-role · job-contract
 ├── examples/walkthrough.sh   五分钟完整体验
-├── tests/                    44 项测试（CI）
+├── tests/                    47 项测试（CI）
 ├── docs/                     范式 · 场景 · 对比 · 开发日志 · 测试 · 本站
 ├── package.json  AGENTS.md  CHANGELOG.md  LICENSE (MIT)
 └── README.md</div>
@@ -609,6 +609,7 @@ ls livepowers/dist/skills/</pre></div>
 <details><summary>Agent 会不会"自己说完成"就算完成？</summary><p>不会，这正是它要解决的问题。完成与否由验收条件决定：看板拒绝执行者把任务迁到已注册，注册要求生成者 ≠ 采纳人，夜间产物清单拒绝自我验收，交换机审计会点名"声称完成却无回执"的消息。</p></details>
 <details><summary>Agent 忘了记证据怎么办？</summary><p>Claude Code 插件自带 <code>PostToolUse</code> / <code>Stop</code> 钩子：<code>lp registry find</code> 命中后每次调用该能力都自动记一条 S1 证据（失败也记，能力置信度随之升降）；未命中而本轮结束前没有 <code>lp evidence add</code>，钩子补记一条 <code>partial</code> 的 S2 证据，晨报单列"自动采集待确认"。显式记录仍然优先——它有可验证标记、成本和说明；自动记录只是兜底，<code>LP_HOOK_CAPTURE=0</code> 可关闭。</p></details>
 <details><summary>固化会不会把错误也固化进去？</summary><p>可验证度 V=0 一票否决；候选要 3 次成功且被样例核对过；固化物必须带测试；写操作缺测试拒绝注册；早晨由人采纳；运行期连续失败、口径变化、环境漂移、换模型都会触发复核或去固化。自动固化并不可靠，所以夜间产出的永远是"草稿 + 测试证据"，最终决定权在人。</p></details>
+<details><summary>同一件事换个说法，会不会被当成新需求重复探索？</summary><p>用同义词表解决：<code>lp intents alias "weekly revenue by region" "各地区周收入"</code> 登记后，这个别名记的证据自动归到规范名，<code>lp registry find</code> 也按整组同义词匹配。夜间 <code>lp intents suggest</code> 会列出"长得像"的意图对让人确认——只建议，不自动合并，合错口径比多探索一次代价高。</p></details>
 <details><summary>只有 SQLite 扫描脚本，我的库是 PostgreSQL / MySQL 怎么办？</summary><p><code>scan_sqlite.py</code> 是示例：按同样的输出结构（对象、属性、外键、状态取值抽样、指纹）查你数据库的 information_schema 即可，其余流程不变。欢迎提 PR 补其他数据库的扫描器。</p></details>
 
 <h2 id="steps">落地三步</h2>
@@ -621,6 +622,7 @@ ls livepowers/dist/skills/</pre></div>
 <h2 id="devlog">开发日志</h2>
 <p class="sub">做了什么、为什么、放弃了什么。全文见 <a href="https://github.com/zhanglunet/livepowers/blob/main/docs/devlog.md">docs/devlog.md</a>；版本条目见 <a href="https://github.com/zhanglunet/livepowers/blob/main/CHANGELOG.md">CHANGELOG</a>。</p>
 <ul class="log">
+  <li><span class="d">2026-10-07 · v1.4.0</span>意图同义词表：<code>lp intents alias / list / suggest</code>。别名落盘为规范名、历史证据读取时归并、路由按整组同义词匹配，同一件事不再因为换了说法而重复探索。取舍：只建议不自动合并；不引入向量检索，保持零依赖和可审计。</li>
   <li><span class="d">2026-10-07 · v1.3.0</span>钩子自动采集证据：命中能力后的每次调用记 S1（失败也记，置信度随之升降）；探索后忘了记的在回合结束时补一条 partial 的 S2，晨报列为待确认。取舍：补记而不是只提醒（频率不能漏）；显式记录永远优先；钩子永不阻塞、未 init 不写文件、可关闭；只做 Claude Code。</li>
   <li><span class="d">2026-10-07 · v1.2.0</span>独立评审后的修正与补强：17 个技能描述改为只写触发条件；任务看板堵住"接管直达生产"和"接管后无法重开"两个漏洞；台账支持越低越好的指标；<code>registry add --supersedes</code>；新增 <code>takeover-handling</code> 技能、<code>lp pending</code> 夜间产物清单、<code>lp canary</code> 金丝雀；入口技能写清三种安装方式下脚本与模板的位置；网站加场景、demo、对比、FAQ、开发日志与反馈入口。推迟：hook 自动采集证据、意图同义词表、触发率自动评测。</li>
   <li><span class="d">2026-10-07 · v1.1.0</span>npm 安装包：<code>npx livepowers install</code> 装进 Claude Code / Cursor / Codex，<code>lp</code> 命令随包安装；官网上线。</li>
@@ -637,7 +639,7 @@ ls livepowers/dist/skills/</pre></div>
 <p class="sub" style="margin-top:12px">场景交流与落地经验请到 <a href="https://github.com/zhanglunet/livepowers/discussions">Discussions</a>。提 PR 前先读 <code>writing-livepowers-skills</code>，并运行 <code>python -m unittest discover -s tests -v</code>。</p>
 
 <footer>
-  Livepowers v1.3.0 · MIT · <a href="https://github.com/zhanglunet/livepowers">github.com/zhanglunet/livepowers</a> · <a href="https://www.npmjs.com/package/livepowers">npm</a> · <a href="#feedback">反馈</a>。仓库结构与"技能即强制工作流"的设计借鉴自 obra/superpowers。脚本已通过 44 项自动化测试：评分与盈亏平衡、中文路由、看板规则与止损、结果台账、资产四道门、作业契约、扫描与漂移、交换机的中转 / 拒绝 / 回放 / 篡改检测 / 审计、技能结构、钩子输出、示例流程、npm 安装器、接管重开、夜间产物清单、金丝雀。
+  Livepowers v1.4.0 · MIT · <a href="https://github.com/zhanglunet/livepowers">github.com/zhanglunet/livepowers</a> · <a href="https://www.npmjs.com/package/livepowers">npm</a> · <a href="#feedback">反馈</a>。仓库结构与"技能即强制工作流"的设计借鉴自 obra/superpowers。脚本已通过 47 项自动化测试：评分与盈亏平衡、中文路由、看板规则与止损、结果台账、资产四道门、作业契约、扫描与漂移、交换机的中转 / 拒绝 / 回放 / 篡改检测 / 审计、技能结构、钩子输出、示例流程、npm 安装器、接管重开、夜间产物清单、金丝雀。
 </footer>
 </div>
 <script>

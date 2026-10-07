@@ -6,6 +6,7 @@ lp —— Livepowers 命令行工具（只依赖 Python 3.9+ 标准库）
   init                          在当前项目创建 .livepowers/ 工作区
   evidence add ...              追加一条运行证据（JSONL）
   evidence stats                按意图汇总：次数、成功率、S1/S2 占比、平均成本、自动补记数
+  intents alias / list / suggest 意图同义词表：别名落盘为规范名、读取时归并、路由按整组同义词匹配；suggest 找相似意图
   hook post-tool | stop         由 Claude Code 钩子调用（stdin 为钩子 JSON）：自动采集 S1 调用与 S2 探索证据
   registry add ...              注册一项 System 1 能力（能力包；--supersedes 发新版本并退役旧版）
   registry find <query>         按意图查找已固化能力（System 1 路由；HIT=0，MISS=2）
@@ -45,7 +46,7 @@ import uuid
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 
 ROOT = os.environ.get("LIVEPOWERS_HOME", ".livepowers")
 EVID = os.path.join(ROOT, "evidence.jsonl")
@@ -57,6 +58,7 @@ REPORTS = os.path.join(ROOT, "reports")
 CANARY = os.path.join(ROOT, "canary.jsonl")
 PENDING = os.path.join(ROOT, "pending")
 SESSIONS = os.path.join(ROOT, "sessions")
+INTENTS = os.path.join(ROOT, "intents.json")
 
 
 # ---------------------------------------------------------------- utils
@@ -139,16 +141,139 @@ def cmd_init(a):
 
 
 # ---------------------------------------------------------------- evidence
+# ---------------------------------------------------------------- intents（同义词表）
+def load_intents():
+    return jload(INTENTS, {"version": 1, "intents": {}})["intents"]
+
+
+def alias_index(intents=None):
+    """别名（小写）→ 规范意图。规范意图自身也映射到自己。"""
+    intents = load_intents() if intents is None else intents
+    idx = {}
+    for canon_name, g in intents.items():
+        idx[canon_name.lower()] = canon_name
+        for al in g.get("aliases", []):
+            idx[al.lower()] = canon_name
+    return idx
+
+
+def canon(intent, idx=None):
+    if not intent:
+        return intent
+    idx = alias_index() if idx is None else idx
+    return idx.get(intent.strip().lower(), intent)
+
+
+def read_evidence():
+    """读取证据并把别名归并到规范意图（不改写追加式日志）。"""
+    idx = alias_index()
+    out = []
+    for e in jsonl_read(EVID):
+        c = canon(e.get("intent"), idx)
+        if c != e.get("intent"):
+            e = {**e, "intent": c, "intent_raw": e.get("intent")}
+        out.append(e)
+    return out
+
+
+def intent_group(name, intents=None):
+    intents = load_intents() if intents is None else intents
+    c = canon(name, alias_index(intents))
+    g = intents.get(c)
+    return [c] + list(g.get("aliases", [])) if g else [c]
+
+
+LATIN = re.compile(r"[a-z0-9]+")
+
+
+def intent_sim(a, b):
+    """意图相似度 0–1：英文看词集 Jaccard，中文看二元组重叠率，取大者。"""
+    a, b = a.lower(), b.lower()
+    ta, tb = set(LATIN.findall(a)), set(LATIN.findall(b))
+    s1 = len(ta & tb) / len(ta | tb) if ta and tb else 0
+    ba, bb = bigrams(a), bigrams(b)
+    s2 = len(ba & bb) / min(len(ba), len(bb)) if ba and bb else 0
+    return max(s1, s2)
+
+
+def cmd_intents_alias(a):
+    ensure()
+    db = jload(INTENTS, {"version": 1, "intents": {}})
+    intents = db["intents"]
+    idx = alias_index(intents)
+    c, al = a.canonical.strip(), a.alias.strip()
+    if c.lower() == al.lower():
+        die("别名与规范意图相同")
+    owner = idx.get(c.lower())
+    if owner and owner != c:
+        die(f"{c} 已是 {owner} 的别名；别名不能再当规范名，请改用 lp intents alias \"{owner}\" \"{al}\"")
+    g = intents.setdefault(c, {"aliases": [], "history": []})
+    merged = []
+    if al in intents:  # 把另一个规范意图整组并入
+        merged = intents.pop(al).get("aliases", [])
+    for x in [al] + merged:
+        if x.lower() not in {y.lower() for y in g["aliases"]} and x.lower() != c.lower():
+            g["aliases"].append(x)
+    g["history"].append({"ts": now(), "by": a.by, "alias": al, "merged": merged})
+    jsave(INTENTS, db)
+    print(f"已登记：{al}" + (f"（含其别名 {merged}）" if merged else "") + f" → {c}；历史证据读取时自动归并")
+
+
+def cmd_intents_list(a):
+    intents = load_intents()
+    if not intents:
+        print("同义词表为空。lp intents suggest 可找出相似意图，lp intents alias 登记。")
+        return
+    ev = read_evidence()
+    counts = defaultdict(int)
+    for e in ev:
+        counts[e.get("intent")] += 1
+    r = jload(REG, {"capabilities": []})
+    covered = {i.lower() for c in r["capabilities"] if c["status"] == "active" for i in c["intents"]}
+    for c, g in sorted(intents.items()):
+        reg = " [已固化]" if c.lower() in covered else ""
+        print(f"- {c}{reg}  证据 {counts.get(c, 0)}  别名：{', '.join(g.get('aliases', [])) or '—'}")
+
+
+def cmd_intents_suggest(a):
+    intents = load_intents()
+    idx = alias_index(intents)
+    names = {e.get("intent") for e in jsonl_read(EVID) if e.get("intent")}
+    r = jload(REG, {"capabilities": []})
+    for c in r["capabilities"]:
+        if c["status"] == "active":
+            names.update(c["intents"])
+    names = sorted(n for n in names if n)
+    pairs = []
+    for i, x in enumerate(names):
+        for y in names[i + 1:]:
+            if canon(x, idx) == canon(y, idx):
+                continue
+            sim = intent_sim(x, y)
+            if sim >= a.threshold:
+                pairs.append((sim, x, y))
+    if not pairs:
+        print("没有发现相似的意图。")
+        return
+    print("可能是同一件事的意图（请人工确认后登记；规范名放前面）：")
+    for sim, x, y in sorted(pairs, reverse=True):
+        print(f"- {x}  ≈  {y}（相似度 {sim:.2f}）  →  lp intents alias \"{x}\" \"{y}\"")
+
+
+# ---------------------------------------------------------------- evidence
 def cmd_evidence_add(a):
     ensure()
+    intent = canon(a.intent)
     rec = {
         "id": "ev_" + uuid.uuid4().hex[:10], "ts": now(),
-        "intent": a.intent, "system": a.system, "outcome": a.outcome,
+        "intent": intent, "system": a.system, "outcome": a.outcome,
         "tokens": a.tokens, "seconds": a.seconds, "cost": a.cost,
         "capability": a.capability, "task": a.task, "model": a.model,
         "domain": a.domain, "writes_state": a.writes_state, "verifiable": a.verifiable,
         "note": a.note,
     }
+    if intent != a.intent:
+        rec["intent_raw"] = a.intent
     jsonl_append(EVID, rec)
     if a.capability:
         r = jload(REG, {"capabilities": []})
@@ -175,7 +300,7 @@ def avg(xs, k):
 
 
 def cmd_evidence_stats(a):
-    ev = jsonl_read(EVID)
+    ev = read_evidence()
     rows = []
     for intent, es in group_by(ev, "intent").items():
         n = len(es)
@@ -278,9 +403,24 @@ def score_match(q, cap):
     return s
 
 
+def expand_query(q):
+    """查询命中同义词表里的任何名字（互为子串或二元组重叠 ≥ 0.6）时，把整组同义词并入查询。"""
+    intents = load_intents()
+    ql = q.lower()
+    extra = []
+    for c, g in intents.items():
+        for name in [c] + g.get("aliases", []):
+            nl = name.lower()
+            if nl in ql or ql in nl or intent_sim(nl, ql) >= 0.6:
+                extra += [c] + g.get("aliases", [])
+                break
+    return q + (" " + " ".join(extra) if extra else "")
+
+
 def cmd_registry_find(a):
     r = jload(REG, {"capabilities": []})
-    hits = sorted(((score_match(a.query, c), c) for c in r["capabilities"] if c["status"] == "active"),
+    q = expand_query(a.query)
+    hits = sorted(((score_match(q, c), c) for c in r["capabilities"] if c["status"] == "active"),
                   key=lambda x: -x[0])
     hits = [h for h in hits if h[0] >= a.min_score]
     if not hits:
@@ -410,7 +550,7 @@ def cmd_score(a):
 
 # ---------------------------------------------------------------- candidates
 def candidates(min_count):
-    ev = jsonl_read(EVID)
+    ev = read_evidence()
     r = jload(REG, {"capabilities": []})
     covered = {i.lower() for c in r["capabilities"] if c["status"] == "active" for i in c["intents"]}
     out = []
@@ -479,7 +619,7 @@ def cmd_task_new(a):
     tid = a.id or "t_" + uuid.uuid4().hex[:8]
     if any(t["id"] == tid for t in db["tasks"]):
         die(f"任务 {tid} 已存在")
-    t = {"id": tid, "title": a.title, "intent": a.intent, "level": a.level, "owner": a.owner,
+    t = {"id": tid, "title": a.title, "intent": canon(a.intent), "level": a.level, "owner": a.owner,
          "contract_version": a.contract_version, "max_loops": a.max_loops, "budget": a.budget,
          "loops": 0, "spent": 0.0, "state": "clarify", "executor": None,
          "history": [{"ts": now(), "to": "clarify", "by": a.owner or "?", "reason": "created"}]}
@@ -790,7 +930,7 @@ def cmd_job_validate(a):
 # ---------------------------------------------------------------- report
 def cmd_report(a):
     ensure()
-    ev = jsonl_read(EVID)
+    ev = read_evidence()
     r = jload(REG, {"capabilities": []})
     tot = len(ev)
     s2n = sum(1 for e in ev if e.get("system") == "S2")
@@ -878,6 +1018,7 @@ def pending_list():
 
 def cmd_pending_add(a):
     ensure()
+    a.intent = canon(a.intent)
     d = pending_dir(a.intent)
     mp = os.path.join(d, "manifest.json")
     if os.path.isfile(mp) and jload(mp, {}).get("status", "pending") == "pending":
@@ -902,6 +1043,7 @@ def cmd_pending_list(a):
 
 
 def cmd_pending_done(a):
+    a.intent = canon(a.intent)
     mp = os.path.join(pending_dir(a.intent), "manifest.json")
     if not os.path.isfile(mp):
         die(f"未找到 {a.intent} 的待验收产物")
@@ -1024,6 +1166,9 @@ def _auto_evidence(**kw):
            "capability": None, "task": None, "model": None, "domain": None, "writes_state": False,
            "verifiable": False, "note": "", "auto": True}
     rec.update(kw)
+    c = canon(rec.get("intent"))
+    if c != rec.get("intent"):
+        rec["intent_raw"], rec["intent"] = rec["intent"], c
     jsonl_append(EVID, rec)
     if rec.get("capability"):
         r = jload(REG, {"capabilities": []})
@@ -1327,6 +1472,17 @@ def main(argv=None):
     jv = j.add_parser("validate", help="校验作业契约 JSON（必填字段、悬空依赖、环、单段时长）")
     jv.add_argument("file")
     jv.set_defaults(fn=cmd_job_validate)
+
+    it = sp.add_parser("intents", help="意图同义词表：alias / list / suggest").add_subparsers(dest="sub", required=True)
+    ia = it.add_parser("alias", help="登记别名（别名若本身是规范意图，整组并入）")
+    ia.add_argument("canonical", help="规范意图")
+    ia.add_argument("alias", help="别名（用户常见说法）")
+    ia.add_argument("--by", default="", help="登记人")
+    ia.set_defaults(fn=cmd_intents_alias)
+    it.add_parser("list", help="列出规范意图、别名、归并后的证据数").set_defaults(fn=cmd_intents_list)
+    isg = it.add_parser("suggest", help="从证据与注册表里找出相似的意图对，供人工确认")
+    isg.add_argument("--threshold", type=float, default=0.5, help="相似度阈值（英文词集 Jaccard / 中文二元组重叠）")
+    isg.set_defaults(fn=cmd_intents_suggest)
 
     hk = sp.add_parser("hook", help="钩子入口（Claude Code PostToolUse / Stop 调用；stdin 为钩子 JSON）")
     hk.add_argument("event", choices=["post-tool", "stop"])

@@ -20,7 +20,12 @@ description: Use at end of day, when a nightly job starts, or when asked "what c
    ```bash
    lp candidates --min-count 3
    ```
-   对每个候选：读 `.livepowers/explorations/` 对应记录，合并同义意图；用 `lp score` 过 F-V-S-R 与盈亏平衡；写操作候选标"需 oltp-action-safety"。
+   先合并同义意图，否则同一件事会被几个名字稀释、凑不够次数：
+   ```bash
+   lp intents suggest                 # 列出"长得像"的意图对，附登记命令
+   lp intents alias "<规范意图>" "<别名>" --by <你>   # 人工确认后登记；历史证据读取时自动归并
+   ```
+   再对每个候选：读 `.livepowers/explorations/` 对应记录；用 `lp score` 过 F-V-S-R 与盈亏平衡；写操作候选标"需 oltp-action-safety"。
 
 4. **夜间生成。**对通过门禁的候选，按 `crystallize-to-system1` 生成测试、实现与能力包草稿，在隔离环境运行测试。**不要在夜间注册**——注册要等早晨人工采纳。产物放分支或 `.livepowers/pending/<意图>/`，并登记清单：
    ```bash

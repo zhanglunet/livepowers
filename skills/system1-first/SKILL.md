@@ -12,6 +12,7 @@ description: Use when handling any business request (query, report, dashboard, b
 1. **规范化意图。**把请求改写成简短、稳定、不含参数值的意图：
    - "帮我看看华东上周收入掉了多少" → `weekly revenue by region`（参数：region=华东，weeks=1）
    - "把超过 30 天没跟进的重点商机转给区域主管" → `transfer stale opportunity`
+   先 `lp intents list` 看已有的规范意图与别名；用户的说法是已登记的别名时，直接用规范名。`lp registry find` 会按整组同义词匹配，所以别名也能命中。
 2. **查注册表。**
    ```bash
    lp registry find "<规范化意图 + 关键词>"     # 退出码 0 = HIT，2 = MISS

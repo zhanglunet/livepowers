@@ -2,6 +2,17 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循[语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.4.0] - 2026-10-07
+
+### 新增
+
+- **意图同义词表** `lp intents alias / list / suggest`：`.livepowers/intents.json` 存规范意图与别名。
+  - `evidence add`、`task new`、`pending add` 与钩子自动采集：别名落盘为规范名，原话保留在 `intent_raw`。
+  - `evidence stats`、`candidates`、晨报：读取时按规范名归并，历史记录无需改写。
+  - `registry find`：查询命中任何同义词时按整组同义词打分，别名也能 HIT。
+  - `suggest` 用英文词集 Jaccard / 中文二元组重叠找相似意图对，只建议不自动合并。
+- `nightly-crystallization-review` 的"合并同义意图"、`system1-first` 与 `explore-with-evidence` 的意图命名改为使用这些命令。
+
 ## [1.3.0] - 2026-10-07
 
 ### 新增

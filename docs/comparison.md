@@ -86,7 +86,7 @@ Superpowers 的 `requesting-code-review` 评审子 Agent 充当 `acceptance-gate
 
 - ~~hook 自动采集证据，给能力加随成功 / 失败升降的置信度（借 continuous-learning v2）。~~ v1.3.0 已做。
 - 技能触发率自动评测，替代纯手工压力情境（借 Anthropic skill-creator / superpowers-evals）。
-- 意图同义词表与语义检索，降低 `registry find` 误判（借 Ruflo / Voyager skill library）。
+- ~~意图同义词表~~ v1.4.0 已做（确定性、可审计的别名表；不引入向量检索，保持零依赖）。语义检索仍在路线图。
 - 规格产物链与稳定任务 ID，让夜间 DAG 直接引用（借 spec-kit）。
 - 工具卡补后置条件与禁止动作字段（借 Devin Playbook）。
 - 上架 skills.sh；为 Cursor 生成 `.mdc` 入口规则。
