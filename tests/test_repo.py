@@ -4,6 +4,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 import unittest
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -87,6 +88,28 @@ class TestManifests(unittest.TestCase):
             data = json.loads(out)
             self.assertIn(key, data)
             self.assertIn("七条铁律", json.dumps(data, ensure_ascii=False))
+
+
+    def test_evidence_capture_hook(self):
+        hooks = json.loads(read(os.path.join(REPO, "hooks", "hooks.json")))["hooks"]
+        self.assertEqual(hooks["PostToolUse"][0]["matcher"], "Bash")
+        self.assertIn("evidence-capture.sh", json.dumps(hooks["PostToolUse"]))
+        self.assertIn("evidence-capture.sh", json.dumps(hooks["Stop"]))
+        script = os.path.join(REPO, "hooks", "evidence-capture.sh")
+        self.assertTrue(os.access(script, os.X_OK))
+        with tempfile.TemporaryDirectory() as d:
+            subprocess.run([sys.executable, os.path.join(REPO, "scripts", "lp.py"), "init"], cwd=d, check=True,
+                           capture_output=True)
+            payload = {"session_id": "h", "cwd": d, "tool_name": "Bash", "tool_input": {"command": 'lp registry find "q"'},
+                       "tool_response": {"stdout": "MISS", "stderr": "", "exit_code": 2}}
+            env = {**os.environ, "CLAUDE_PLUGIN_ROOT": REPO}
+            p = subprocess.run(["bash", script, "post-tool"], cwd=d, input=json.dumps(payload), capture_output=True,
+                               text=True, env=env)
+            self.assertEqual(p.returncode, 0)
+            p = subprocess.run(["bash", script, "stop"], cwd=d, input=json.dumps({"session_id": "h", "cwd": d}),
+                               capture_output=True, text=True, env=env)
+            self.assertEqual((p.returncode, p.stdout.strip()), (0, ""))
+            self.assertIn('"auto": true', read(os.path.join(d, ".livepowers", "evidence.jsonl")))
 
 
 class TestExample(unittest.TestCase):

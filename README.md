@@ -61,7 +61,7 @@
 
 | 脚本 | 能做什么 |
 |---|---|
-| `scripts/lp.py` | 证据记录、能力注册表与 System 1 路由（支持中文无空格匹配）、F-V-S-R 评分与盈亏平衡 n*、固化候选、**任务看板状态机**（非法迁移、止损、生成者不能自验）、**结果台账**、**资产四道门与回流率**、作业契约校验（含单段时长与交接契约）、**能力复核**、晨报 |
+| `scripts/lp.py` | 证据记录（含钩子自动采集）、能力注册表与 System 1 路由（支持中文无空格匹配、置信度）、F-V-S-R 评分与盈亏平衡 n*、固化候选、**任务看板状态机**（非法迁移、止损、接管重开、生成者不能自验）、**结果台账**、**资产四道门与回流率**、夜间产物清单、金丝雀评测、作业契约校验、**能力复核**、晨报 |
 | `scripts/agent_switch.py` | 智能体交换机：HTTP 中转 / 旁路记录、策略拦截（未知类型、超长消息、拦截词）、哈希链防篡改、回放、审计 |
 | `scripts/scan_sqlite.py` | 环境扫描示例：本体草稿、状态取值抽样、敏感字段跳过、环境指纹、漂移比对 |
 | `scripts/package-skills.sh` | 把每个技能打成单独 zip，便于在网页端上传 |
@@ -89,7 +89,7 @@ npm i -g livepowers                               # 全局安装后可直接用 
 /plugin install livepowers@livepowers-marketplace
 ```
 
-插件自带 `SessionStart` 钩子，自动注入 `using-livepowers`；另带三个命令：`/lp-route`、`/lp-nightly`、`/lp-morning`。
+插件自带 `SessionStart` 钩子，自动注入 `using-livepowers`；`PostToolUse` / `Stop` 钩子自动采集证据（命中能力后的每次调用记 S1；探索后忘了记的补一条 `partial` 的 S2，晨报列为待确认；`LP_HOOK_CAPTURE=0` 关闭）；另带三个命令：`/lp-route`、`/lp-nightly`、`/lp-morning`。
 
 **Claude Code（仅技能）**：把 `skills/*` 复制到 `~/.claude/skills/`（个人）或项目的 `.claude/skills/`（团队）。
 

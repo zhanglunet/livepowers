@@ -30,7 +30,7 @@ System 2 昂贵，所以每次探索都要"值回票价"：要么解决了问题
      --tokens <估计> --seconds <耗时> --cost <估计成本> --model <模型> --task <任务id> \
      --domain OLAP|OLTP|HTAP [--writes-state] [--verifiable] --note "exploration: <路径>; scenario=<场景名>"
    ```
-   `--verifiable` 仅在结果被样例或断言自动核对过时才加。
+   `--verifiable` 仅在结果被样例或断言自动核对过时才加。在 Claude Code 插件里，若本轮忘了记，钩子会在回合结束时补记一条 `outcome partial` 的自动证据——它没有结论和可验证标记，不能替代这一步。
 6. **提示固化。**同一意图已是第 3 次探索，或用户说"以后每周都要"，在回复末尾提示："该路径已满足固化候选条件，建议今晚纳入固化评审。"
 
 ## 意图命名

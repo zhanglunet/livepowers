@@ -68,6 +68,8 @@ Livepowers 让智能体按「活产品（Live Product）」范式工作：
 
 需要 Python 3.9+。找不到 `lp` 时先 `lp --help` 确认，不要凭记忆拼命令。
 
+**证据自动采集（Claude Code 插件）。**插件的 `PostToolUse` / `Stop` 钩子会观测你的 Bash 命令：`lp registry find` 命中后每次调用该能力的 entry 都自动记一条 S1 证据（exit 非 0 或有 stderr 记 fail）；未命中而本轮结束前没有 `lp evidence add`，钩子会补记一条 S2 证据，结论标 `partial`、带 `auto: true`。**这只是兜底**：显式 `lp evidence add` 更准（有 verifiable、cost、note），探索结束仍要自己记；自动补记的记录会出现在晨报"自动采集待确认"里。能力的置信度 =（成功 + 1）/（调用 + 2），随 S1 调用升降，`registry find / list` 显示，低于 0.6 会进复核。`LP_HOOK_CAPTURE=0` 关闭采集。
+
 首次在项目中使用：`lp init`，创建 `.livepowers/`。
 
 ## 项目目录约定

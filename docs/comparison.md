@@ -71,7 +71,7 @@ Superpowers 的 `requesting-code-review` 评审子 Agent 充当 `acceptance-gate
 | **claude-flow / Ruflo** | 企业级多 Agent 编排平台 | 向量记忆、从成功轨迹学习、信任评分、自动路由 | "从成功轨迹学习 + 路由" ≈ System 1 优先 + 固化 | 独有：固化物是可测试的确定性代码，有人工采纳门，显式算盈亏。缺失：向量检索、自动学习、信任评分量化 |
 | **Palantir AIP / Ontology** | 商业企业平台，本体即语义层 + 动能层 | Action Types 走审批与审计；Agent 用本体工具 | Agent + Ontology 公式本身；原子行动 + 审计 ≈ `oltp-action-safety` | 独有：开源、零依赖、装进任意编码 Agent。缺失：真正的本体运行时（对象存储、权限传播、行动引擎） |
 | **Devin Playbooks / Knowledge** | 可复用的多步流程 prompt 与组织知识 | Playbook 含后置条件与禁止动作；Knowledge 按触发词匹配 | Playbook ≈ 工具卡 + 剧本；Knowledge 自动建议 ≈ 固化候选 | 独有：固化物是代码而非 prompt，有评分、独立验收、台账。缺失：从会话自动生成 playbook 的产品化流程 |
-| **Voyager 式自增长技能库**（continuous-learning、MUSE-Autoskill、Trace2Skill、SkillRL） | 自动从轨迹蒸馏技能并评估 | hook 观测 → 抽取模式 → 置信度评分 → 提升 | 最像"探索留证据 → 固化" | 独有：显式经济学 n*、生成者 ≠ 采纳人、去固化信号。缺失：hook 自动采集证据（`lp evidence add` 需 Agent 主动调用） |
+| **Voyager 式自增长技能库**（continuous-learning、MUSE-Autoskill、Trace2Skill、SkillRL） | 自动从轨迹蒸馏技能并评估 | hook 观测 → 抽取模式 → 置信度评分 → 提升 | 最像"探索留证据 → 固化"；v1.3 起同样用 hook 自动采集证据并给能力算置信度 | 独有：显式经济学 n*、生成者 ≠ 采纳人、去固化信号、固化物是代码。缺失：从轨迹自动生成技能草稿（Livepowers 的夜间生成仍由 Agent 按技能执行） |
 | **skills.sh / Cursor rules 生态** | 技能与规则的分发渠道 | `npx skills` 市场；`.cursor/rules/*.mdc` | `npx livepowers install` 对应这些渠道 | 缺失：未上架 skills.sh；Cursor 侧不生成 `.mdc` 规则 |
 
 ## Livepowers 的差异化
@@ -84,7 +84,7 @@ Superpowers 的 `requesting-code-review` 评审子 Agent 充当 `acceptance-gate
 
 ## 值得借鉴、已列入路线图
 
-- hook 自动采集证据，给能力加随成功 / 失败升降的置信度（借 continuous-learning v2）。
+- ~~hook 自动采集证据，给能力加随成功 / 失败升降的置信度（借 continuous-learning v2）。~~ v1.3.0 已做。
 - 技能触发率自动评测，替代纯手工压力情境（借 Anthropic skill-creator / superpowers-evals）。
 - 意图同义词表与语义检索，降低 `registry find` 误判（借 Ruflo / Voyager skill library）。
 - 规格产物链与稳定任务 ID，让夜间 DAG 直接引用（借 spec-kit）。

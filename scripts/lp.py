@@ -5,7 +5,8 @@ lp —— Livepowers 命令行工具（只依赖 Python 3.9+ 标准库）
 证据与路由
   init                          在当前项目创建 .livepowers/ 工作区
   evidence add ...              追加一条运行证据（JSONL）
-  evidence stats                按意图汇总：次数、成功率、S1/S2 占比、平均成本
+  evidence stats                按意图汇总：次数、成功率、S1/S2 占比、平均成本、自动补记数
+  hook post-tool | stop         由 Claude Code 钩子调用（stdin 为钩子 JSON）：自动采集 S1 调用与 S2 探索证据
   registry add ...              注册一项 System 1 能力（能力包；--supersedes 发新版本并退役旧版）
   registry find <query>         按意图查找已固化能力（System 1 路由；HIT=0，MISS=2）
   registry list [--all]         列出能力
@@ -44,7 +45,7 @@ import uuid
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 
 ROOT = os.environ.get("LIVEPOWERS_HOME", ".livepowers")
 EVID = os.path.join(ROOT, "evidence.jsonl")
@@ -55,6 +56,7 @@ ASSETS = os.path.join(ROOT, "assets.json")
 REPORTS = os.path.join(ROOT, "reports")
 CANARY = os.path.join(ROOT, "canary.jsonl")
 PENDING = os.path.join(ROOT, "pending")
+SESSIONS = os.path.join(ROOT, "sessions")
 
 
 # ---------------------------------------------------------------- utils
@@ -188,7 +190,11 @@ def cmd_evidence_stats(a):
     tot = len(ev)
     if tot:
         s2n = sum(1 for e in ev if e.get("system") == "S2")
+        auto = [e for e in ev if e.get("auto")]
+        pend = sum(1 for e in auto if e.get("outcome") == "partial")
         print(f"\n总计 {tot} 次；System 2 调用占比 {s2n / tot:.0%}（健康的活产品应随时间下降）")
+        if auto:
+            print(f"钩子自动采集 {len(auto)} 条，其中自动补记、待确认结论 {pend} 条")
         weekly = s2_share_by_week(ev)
         if len(weekly) > 1:
             print("按周 S2 占比：" + "  ".join(f"{w}:{v:.0%}" for w, v in weekly))
@@ -283,9 +289,15 @@ def cmd_registry_find(a):
     print("HIT —— 命中已固化能力 → 走 System 1 执行：")
     for s, c in hits[: a.top]:
         flag = "  [写操作]" if c.get("writes_state") else ""
-        print(f"  [{s}] {c['id']} v{c['version']} ({c['kind']}) entry: {c['entry']}{flag}")
+        print(f"  [{s}] {c['id']} v{c['version']} ({c['kind']}) entry: {c['entry']}{flag}  置信度 {confidence(c):.2f}")
         if c.get("preconditions"):
             print(f"       前置条件: {c['preconditions']}")
+
+
+def confidence(c):
+    """拉普拉斯平滑的成功率：(成功 + 1) / (调用 + 2)。新能力 0.5，随 S1 调用的成功 / 失败升降。"""
+    calls, fails = c.get("calls", 0), c.get("fails", 0)
+    return (calls - fails + 1) / (calls + 2)
 
 
 def cmd_registry_list(a):
@@ -293,7 +305,7 @@ def cmd_registry_list(a):
     for c in r["capabilities"]:
         if a.all or c["status"] == "active":
             print(f"{c['status']:8} {c['id']:36} v{c['version']:6} {c['kind']:7} calls={c.get('calls', 0):<4} "
-                  f"intents={','.join(c['intents'])}")
+                  f"置信度={confidence(c):.2f} intents={','.join(c['intents'])}")
 
 
 def cmd_registry_retire(a):
@@ -340,6 +352,8 @@ def review_findings(caps, ev, idle_days, verify_days, current_model):
             continue
         if recent_fail[c["id"]] >= 2:
             out.append((c["id"], f"连续失败 {recent_fail[c['id']]} 次 → 去固化信号，改走 System 2 并复核"))
+        elif c.get("calls", 0) >= 3 and confidence(c) < 0.6:
+            out.append((c["id"], f"置信度 {confidence(c):.2f}（{c.get('fails', 0)}/{c['calls']} 失败）→ 复核或去固化"))
         last = parse_ts(c.get("last_called") or c.get("created"))
         if last and t_now - last > timedelta(days=idle_days):
             out.append((c["id"], f"超过 {idle_days} 天无调用 → 考虑退役，避免能力库变成新的死软件"))
@@ -812,6 +826,15 @@ def cmd_report(a):
                      f"生成者 {m.get('generated_by')}；采纳人须不同于生成者")
     else:
         L.append("暂无（夜间 Agent 用 lp pending add 登记产物）")
+    auto_pend = [e for e in ev if e.get("auto") and e.get("outcome") == "partial"]
+    L += ["", "## 自动采集待确认", ""]
+    if auto_pend:
+        L.append(f"钩子补记了 {len(auto_pend)} 条未显式记录的 S2 探索（结论暂记 partial）。请核对后用 "
+                 "`lp evidence add` 补一条带结论的记录，或忽略：")
+        for e in auto_pend[-10:]:
+            L.append(f"- {e['ts'][:16]} `{e['intent']}` tokens={e.get('tokens', 0)} {e.get('note', '')}")
+    else:
+        L.append("无")
     L += ["", "## 固化候选（来自证据）", "",
           capture(cmd_candidates, argparse.Namespace(min_count=a.min_count, json=False)) or "暂无",
           "", "## 金丝雀", "",
@@ -953,6 +976,139 @@ def cmd_canary_list(a):
         return
     for n, runs in sorted(by.items()):
         print(f"- {n}: {len(runs)} 次；" + " → ".join(f"{r['passed']}/{r['total']}" for r in runs[-6:]))
+
+
+# ---------------------------------------------------------------- hook（自动采集证据）
+FIND_RE = re.compile(r"(?:^|[\s;&|])(?:lp|lp\.py|python3?\s+\S*lp\.py)\s+registry\s+find\s+(.+)", re.S)
+EVIDENCE_RE = re.compile(r"(?:^|[\s;&|])(?:lp|lp\.py|python3?\s+\S*lp\.py)\s+evidence\s+add\b")
+CAP_RE = re.compile(r"\b(cap_[^\s]+?)\s+v\S+")
+
+
+def _session_path(sid):
+    return os.path.join(SESSIONS, re.sub(r"[^A-Za-z0-9_.-]", "_", sid or "default") + ".json")
+
+
+def _entry_prefix(entry):
+    """取 entry 里参数占位符之前的固定部分，用于识别 Agent 是否调用了该能力。"""
+    pre = entry.split("{")[0].strip()
+    toks = pre.split()
+    return " ".join(toks[:3]) if toks else ""
+
+
+def _turn_tokens(transcript_path):
+    """累加 transcript 里最后一个用户提问之后所有 assistant 消息的 token。"""
+    try:
+        lines = []
+        with open(transcript_path, encoding="utf-8") as f:
+            for line in f:
+                try:
+                    lines.append(json.loads(line))
+                except ValueError:
+                    continue
+    except OSError:
+        return 0
+    start = 0
+    for i, d in enumerate(lines):
+        if d.get("type") == "user" and not d.get("toolUseResult"):
+            start = i
+    tot = 0
+    for d in lines[start:]:
+        if d.get("type") == "assistant":
+            u = (d.get("message") or {}).get("usage") or {}
+            tot += int(u.get("input_tokens", 0) or 0) + int(u.get("output_tokens", 0) or 0)
+    return tot
+
+
+def _auto_evidence(**kw):
+    rec = {"id": "ev_" + uuid.uuid4().hex[:10], "ts": now(), "tokens": 0, "seconds": 0, "cost": 0,
+           "capability": None, "task": None, "model": None, "domain": None, "writes_state": False,
+           "verifiable": False, "note": "", "auto": True}
+    rec.update(kw)
+    jsonl_append(EVID, rec)
+    if rec.get("capability"):
+        r = jload(REG, {"capabilities": []})
+        for c in r["capabilities"]:
+            if c["id"] == rec["capability"]:
+                c["calls"] = c.get("calls", 0) + 1
+                c["last_called"] = rec["ts"]
+                if rec["outcome"] == "fail":
+                    c["fails"] = c.get("fails", 0) + 1
+                jsave(REG, r)
+                break
+    return rec
+
+
+def hook_post_tool(d, st):
+    if d.get("tool_name") != "Bash":
+        return
+    cmd = (d.get("tool_input") or {}).get("command") or ""
+    resp = d.get("tool_response") or {}
+    if isinstance(resp, str):
+        resp = {"stdout": resp}
+    stdout, stderr = str(resp.get("stdout", "")), str(resp.get("stderr", ""))
+    code = resp.get("exit_code")
+    m = FIND_RE.search(cmd)
+    if m:
+        q = m.group(1).strip().split("\n")[0].strip().strip("\"'")
+        q = re.sub(r"\s+--\S+.*$", "", q).strip().strip("\"'")
+        hit = stdout.lstrip().startswith("HIT") or code == 0 and "HIT" in stdout
+        cm = CAP_RE.search(stdout) if hit else None
+        st["pending"] = {"intent": q, "hit": bool(hit), "capability": cm.group(1) if cm else None,
+                         "ts": now(), "s1_calls": 0}
+        st["explicit"] = False
+        return
+    if EVIDENCE_RE.search(cmd):
+        st["explicit"] = True
+        return
+    pend = st.get("pending")
+    if pend and pend.get("hit") and pend.get("capability"):  # 命中后每次调用 entry 都记一条 S1
+        r = jload(REG, {"capabilities": []})
+        cap = next((c for c in r["capabilities"] if c["id"] == pend["capability"]), None)
+        prefix = _entry_prefix(cap["entry"]) if cap else ""
+        if prefix and prefix in cmd:
+            failed = (code not in (None, 0)) or bool(stderr.strip())
+            _auto_evidence(intent=pend["intent"], system="S1", outcome="fail" if failed else "success",
+                           capability=pend["capability"], writes_state=bool(cap.get("writes_state")),
+                           note=f"auto: hook 观测到调用 {prefix}" + (f"；exit={code}" if code not in (None, 0) else ""))
+            pend["s1_calls"] = pend.get("s1_calls", 0) + 1
+
+
+def hook_stop(d, st):
+    pend = st.get("pending")
+    if pend and not pend.get("hit") and not st.get("explicit"):
+        tokens = _turn_tokens(d.get("transcript_path") or "")
+        _auto_evidence(intent=pend["intent"], system="S2", outcome="partial", tokens=tokens,
+                       note=f"auto: registry find MISS 后本轮未显式记证据，钩子补记；session={d.get('session_id', '')}")
+    st["pending"] = None
+    st["explicit"] = False
+
+
+def cmd_hook(a):
+    """永不阻塞 Agent：任何异常都吞掉并 exit 0；未 init 的项目不创建文件。"""
+    try:
+        if os.environ.get("LP_HOOK_CAPTURE", "1") == "0":
+            return
+        d = json.loads(sys.stdin.read() or "{}")
+        cwd = d.get("cwd")
+        if cwd and os.path.isdir(cwd):
+            os.chdir(cwd)
+        if not os.path.isdir(ROOT):
+            return
+        os.makedirs(SESSIONS, exist_ok=True)
+        sp = _session_path(d.get("session_id"))
+        st = jload(sp, {"pending": None, "explicit": False})
+        if a.event == "post-tool":
+            hook_post_tool(d, st)
+        elif a.event == "stop":
+            hook_stop(d, st)
+        jsave(sp, st)
+    except Exception as e:  # noqa: BLE001 —— 钩子里不允许任何失败外溢
+        try:
+            os.makedirs(ROOT, exist_ok=True) if os.path.isdir(ROOT) else None
+            with open(os.path.join(ROOT, "hook-errors.log"), "a", encoding="utf-8") as f:
+                f.write(f"{now()} {a.event}: {e!r}\n")
+        except Exception:  # noqa: BLE001
+            pass
 
 
 # ---------------------------------------------------------------- argparse
@@ -1171,6 +1327,10 @@ def main(argv=None):
     jv = j.add_parser("validate", help="校验作业契约 JSON（必填字段、悬空依赖、环、单段时长）")
     jv.add_argument("file")
     jv.set_defaults(fn=cmd_job_validate)
+
+    hk = sp.add_parser("hook", help="钩子入口（Claude Code PostToolUse / Stop 调用；stdin 为钩子 JSON）")
+    hk.add_argument("event", choices=["post-tool", "stop"])
+    hk.set_defaults(fn=cmd_hook)
 
     rp = sp.add_parser("report", help="生成晨间报告 Markdown（固化候选、能力复核、看板、台账、待决事项）")
     rp.add_argument("--min-count", type=int, default=3, help="固化候选的最少成功次数")

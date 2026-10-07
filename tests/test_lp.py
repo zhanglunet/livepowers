@@ -1,10 +1,11 @@
 import json
 import os
+import subprocess
 import sys
 import unittest
 
 sys.path.insert(0, os.path.dirname(__file__))
-from helpers import Workdir  # noqa: E402
+from helpers import SCRIPTS, Workdir  # noqa: E402
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(__file__)), "scripts"))
 import lp  # noqa: E402
@@ -175,6 +176,95 @@ class TestCLI(Workdir):
                 "--result", "fail", "--location", "x", "--generated-by", "g", check=1)  # 已存在
         self.lp("pending", "done", "weekly revenue", "--by", "owner", "--accepted")
         self.assertNotIn("weekly revenue", self.lp("pending", "list").stdout)
+
+    # ---- hook 自动采集证据
+    def hook(self, event, payload, check=0, env=None):
+        e = {**os.environ, "LIVEPOWERS_HOME": ".livepowers", **(env or {})}
+        p = subprocess.run([sys.executable, os.path.join(SCRIPTS, "lp.py"), "hook", event], cwd=self.dir,
+                           input=json.dumps(payload), capture_output=True, text=True, env=e)
+        self.assertEqual(p.returncode, check, p.stderr)
+        return p
+
+    def bash_event(self, command, stdout="", stderr="", exit_code=0, sid="s1"):
+        return {"session_id": sid, "cwd": self.dir, "hook_event_name": "PostToolUse", "tool_name": "Bash",
+                "tool_input": {"command": command},
+                "tool_response": {"stdout": stdout, "stderr": stderr, "exit_code": exit_code}}
+
+    def write_transcript(self, out_tokens=100, in_tokens=50):
+        path = os.path.join(self.dir, "transcript.jsonl")
+        lines = [{"type": "user", "message": {"role": "user", "content": "帮我看周收入"}, "timestamp": "2026-10-07T10:00:00Z"},
+                 {"type": "assistant", "message": {"role": "assistant", "usage": {"input_tokens": in_tokens, "output_tokens": out_tokens,
+                  "cache_read_input_tokens": 999}}, "timestamp": "2026-10-07T10:00:05Z"},
+                 {"type": "assistant", "message": {"role": "assistant", "usage": {"input_tokens": 1, "output_tokens": 1}},
+                  "timestamp": "2026-10-07T10:00:09Z"}]
+        with open(path, "w", encoding="utf-8") as f:
+            f.write("\n".join(json.dumps(x) for x in lines) + "\n")
+        return path
+
+    def evidence(self):
+        with open(os.path.join(self.dir, ".livepowers", "evidence.jsonl"), encoding="utf-8") as f:
+            return [json.loads(l) for l in f if l.strip()]
+
+    def test_hook_captures_s1_call_and_s2_miss(self):
+        self.lp("init")
+        self.lp("registry", "add", "--name", "Weekly revenue", "--kind", "cli", "--intents", "weekly revenue",
+                "--entry", "python w.py --region {region}")
+        # HIT：记下命中的能力；随后调用 entry → 自动记 S1 证据
+        self.hook("post-tool", self.bash_event('lp registry find "weekly revenue"',
+                  stdout="HIT —— 命中已固化能力\n  [5] cap_weekly_revenue v1.0.0 (cli) entry: python w.py", exit_code=0))
+        self.hook("post-tool", self.bash_event("python w.py --region east", stdout="ok"))
+        ev = self.evidence()
+        self.assertEqual(len(ev), 1)
+        self.assertEqual((ev[0]["system"], ev[0]["outcome"], ev[0]["capability"], ev[0]["auto"]),
+                         ("S1", "success", "cap_weekly_revenue", True))
+        caps = self.read_json(".livepowers/registry.json")["capabilities"]
+        self.assertEqual(caps[0]["calls"], 1)
+        # entry 调用报错 → fail
+        self.hook("post-tool", self.bash_event("python w.py --region west", stderr="Traceback", exit_code=1))
+        self.assertEqual(self.evidence()[-1]["outcome"], "fail")
+        # MISS 后 Agent 没记证据 → Stop 自动补记 S2 partial，token 来自 transcript
+        self.hook("post-tool", self.bash_event('lp registry find "transfer stale"', stdout="MISS —— 未命中", exit_code=2))
+        self.hook("stop", {"session_id": "s1", "cwd": self.dir, "transcript_path": self.write_transcript(),
+                           "hook_event_name": "Stop"})
+        last = self.evidence()[-1]
+        self.assertEqual((last["intent"], last["system"], last["outcome"], last["auto"]), ("transfer stale", "S2", "partial", True))
+        self.assertEqual(last["tokens"], 152)
+        self.assertIn("auto", last["note"])
+        n = len(self.evidence())
+        # 同一会话再次 Stop 不重复补记
+        self.hook("stop", {"session_id": "s1", "cwd": self.dir, "transcript_path": self.write_transcript()})
+        self.assertEqual(len(self.evidence()), n)
+        # MISS 后 Agent 自己记了证据 → Stop 不补记
+        self.hook("post-tool", self.bash_event('lp registry find "another thing"', stdout="MISS", exit_code=2))
+        self.hook("post-tool", self.bash_event('lp evidence add --intent "another thing" --system S2 --outcome success', stdout="ev_x"))
+        self.hook("stop", {"session_id": "s1", "cwd": self.dir, "transcript_path": self.write_transcript()})
+        self.assertEqual(len(self.evidence()), n)
+        # 晨报与 stats 标出自动补记
+        self.assertIn("自动补记", self.lp("evidence", "stats").stdout)
+        path = self.lp("report").stdout.strip()
+        with open(os.path.join(self.dir, path), encoding="utf-8") as f:
+            self.assertIn("自动采集", f.read())
+
+    def test_hook_is_harmless(self):
+        # 未 init 的项目：不创建任何文件；坏输入：仍 exit 0
+        self.hook("post-tool", self.bash_event('lp registry find "x"', stdout="MISS", exit_code=2))
+        self.assertFalse(os.path.exists(os.path.join(self.dir, ".livepowers")))
+        p = subprocess.run([sys.executable, os.path.join(SCRIPTS, "lp.py"), "hook", "stop"], cwd=self.dir,
+                           input="not json", capture_output=True, text=True)
+        self.assertEqual(p.returncode, 0)
+        self.lp("init")
+        self.hook("post-tool", self.bash_event('lp registry find "x"', stdout="MISS", exit_code=2), env={"LP_HOOK_CAPTURE": "0"})
+        self.hook("stop", {"session_id": "s1", "cwd": self.dir}, env={"LP_HOOK_CAPTURE": "0"})
+        self.assertEqual(self.evidence(), [])
+
+    def test_confidence_shown_and_reviewed(self):
+        self.lp("init")
+        self.lp("registry", "add", "--name", "Flaky", "--id", "cap_f", "--kind", "cli", "--intents", "flaky thing", "--entry", "f")
+        for o in ("fail", "success", "fail"):
+            self.lp("evidence", "add", "--intent", "flaky thing", "--system", "S1", "--outcome", o, "--capability", "cap_f")
+        self.assertIn("置信度=0.40", self.lp("registry", "list").stdout)
+        self.assertIn("置信度", self.lp("registry", "find", "flaky thing").stdout)
+        self.assertIn("置信度 0.40", self.lp("registry", "review").stdout)
 
     def test_outcome_ledger(self):
         self.lp("init")

@@ -2,6 +2,17 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循[语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.3.0] - 2026-10-07
+
+### 新增
+
+- **钩子自动采集证据**（Claude Code 插件）：`hooks/evidence-capture.sh` 注册为 `PostToolUse`（Bash）与 `Stop` 钩子，调用 `lp hook post-tool | stop`。
+  - `lp registry find` 命中后，每次调用该能力 entry 的命令自动记一条 S1 证据（exit 非 0 或有 stderr 记 fail），能力的 `calls / fails` 随之更新。
+  - 未命中且本轮结束前没有 `lp evidence add`，补记一条 S2 证据：`outcome partial`、`auto: true`，token 从 transcript 累加。
+  - 显式记录优先；未 `lp init` 的项目不写任何文件；任何异常都不外溢（记到 `.livepowers/hook-errors.log`）；`LP_HOOK_CAPTURE=0` 关闭。
+- 能力置信度 =（成功 + 1）/（调用 + 2）：`registry find / list` 显示；`registry review` 对 ≥3 次调用且置信度 < 0.6 的能力提复核。
+- `evidence stats` 统计自动采集与待确认数；晨报新增"自动采集待确认"段；`nightly-crystallization-review` 第一步先清这些记录。
+
 ## [1.2.0] - 2026-10-07
 
 独立评审（只读仓库、实跑 60 多条命令；并调研 Superpowers 与 9 个同类产品）之后的修正与补强。决策记录见 [docs/devlog.md](docs/devlog.md)。
