@@ -1,0 +1,28 @@
+# 能力包清单：把一项 System 1 能力需要的一切绑定在一起
+package: weekly-revenue-by-region
+version: 1.2.0
+scope: domain            # domain 领域共性 / client 客户扩展 / config 运行配置
+ontology:
+  version: 1.3.0
+  rules: [R-NET-REVENUE, R-KEY-CUSTOMER]
+spec: specs/weekly-revenue-by-region.md
+implementation:
+  kind: sql              # cli / sql / script / workflow / view / mcp
+  entry: "python tools/weekly_revenue.py --region {region} --weeks {weeks}"
+  deterministic: true    # 关键计算与事务不调用大模型
+skill: skills/weekly-revenue-analysis/SKILL.md   # 何时用、何时不要用、证据、停止与升级
+ui: dashboards/weekly-revenue.json
+evals:
+  normal: tests/weekly_revenue/normal/
+  boundary: tests/weekly_revenue/boundary/
+  error: tests/weekly_revenue/error/
+  holdout: (held by reviewer)                       # 保留测试集，生成方不可见
+  command: "pytest tests/weekly_revenue -q"
+dependencies: [tables.revenue_fact, tables.customer_tier_snapshot]
+refresh: "every Monday 06:00"
+owner: analytics-team
+validated_model: ""      # Skill 类能力：在哪个模型上验证通过
+provenance:
+  generated_by: nightly-agent
+  accepted_by: business-owner
+  evidence: .livepowers/pending/weekly-revenue-by-region/acceptance.md

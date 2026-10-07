@@ -1,0 +1,109 @@
+"""仓库结构检查：技能格式、路由表覆盖、清单版本一致、钩子输出、示例可运行、无敏感信息。"""
+import json
+import os
+import re
+import subprocess
+import sys
+import unittest
+
+REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SKILLS = os.path.join(REPO, "skills")
+
+
+def frontmatter(path):
+    text = open(path, encoding="utf-8").read()
+    m = re.match(r"---\n(.*?)\n---\n", text, re.S)
+    assert m, f"{path} 缺少 frontmatter"
+    fm = {}
+    for line in m.group(1).splitlines():
+        k, _, v = line.partition(":")
+        fm[k.strip()] = v.strip()
+    return fm, text[m.end():]
+
+
+class TestSkills(unittest.TestCase):
+    def setUp(self):
+        self.names = sorted(d for d in os.listdir(SKILLS) if os.path.isdir(os.path.join(SKILLS, d)))
+
+    def test_frontmatter(self):
+        for n in self.names:
+            fm, body = frontmatter(os.path.join(SKILLS, n, "SKILL.md"))
+            self.assertEqual(fm.get("name"), n)
+            d = fm.get("description", "")
+            self.assertTrue(d.startswith("Use when") or d.startswith("Use before") or d.startswith("Use at")
+                            or d.startswith("Use whenever"), f"{n}: description 应以触发条件开头")
+            self.assertLessEqual(len(d), 1024, n)
+            self.assertGreater(len(body.strip()), 200, n)
+
+    def test_router_and_readme_cover_all(self):
+        router = open(os.path.join(SKILLS, "using-livepowers", "SKILL.md"), encoding="utf-8").read()
+        readme = open(os.path.join(REPO, "README.md"), encoding="utf-8").read()
+        for n in self.names:
+            if n != "using-livepowers":
+                self.assertIn(f"`{n}`", router, f"路由表缺 {n}")
+            self.assertIn(f"`{n}`", readme, f"README 缺 {n}")
+
+    def test_cross_references_exist(self):
+        allow = {"model-a", "model-b"}
+        for n in self.names:
+            text = open(os.path.join(SKILLS, n, "SKILL.md"), encoding="utf-8").read()
+            for ref in re.findall(r"`([a-z0-9]+(?:-[a-z0-9]+)+)`", text):
+                if ref not in allow:
+                    self.assertIn(ref, self.names, f"{n} 引用了不存在的技能 {ref}")
+
+
+class TestManifests(unittest.TestCase):
+    def test_versions_consistent(self):
+        vs = set()
+        for p in (".claude-plugin/plugin.json", ".codex-plugin/plugin.json", ".cursor-plugin/plugin.json"):
+            vs.add(json.load(open(os.path.join(REPO, p)))["version"])
+        vs.add(json.load(open(os.path.join(REPO, ".claude-plugin/marketplace.json")))["plugins"][0]["version"])
+        sys.path.insert(0, os.path.join(REPO, "scripts"))
+        import lp
+        vs.add(lp.__version__)
+        self.assertEqual(len(vs), 1, vs)
+        self.assertIn(f"## [{vs.pop()}]", open(os.path.join(REPO, "CHANGELOG.md"), encoding="utf-8").read())
+
+    def test_session_start_hook(self):
+        for env, key in (({"CLAUDE_PLUGIN_ROOT": REPO}, "hookSpecificOutput"),
+                         ({"CURSOR_PLUGIN_ROOT": REPO}, "additional_context"),
+                         ({}, "additionalContext")):
+            e = {k: v for k, v in os.environ.items() if k not in ("CLAUDE_PLUGIN_ROOT", "CURSOR_PLUGIN_ROOT")}
+            e.update(env)
+            out = subprocess.run(["bash", os.path.join(REPO, "hooks", "session-start.sh")], env=e,
+                                 capture_output=True, text=True, check=True).stdout
+            data = json.loads(out)
+            self.assertIn(key, data)
+            self.assertIn("七条铁律", json.dumps(data, ensure_ascii=False))
+
+
+class TestExample(unittest.TestCase):
+    def test_walkthrough(self):
+        p = subprocess.run(["bash", os.path.join(REPO, "examples", "walkthrough.sh")], capture_output=True, text=True)
+        self.assertEqual(p.returncode, 0, p.stderr)
+        self.assertIn("HIT", p.stdout)
+        self.assertIn("环境漂移", p.stdout)
+
+
+class TestNoIdentifyingInfo(unittest.TestCase):
+    """发布内容不得包含具体组织、人员、客户或内部项目信息。黑名单从环境变量 LP_DENYLIST（逗号分隔）读取。"""
+
+    def test_denylist(self):
+        words = [w for w in os.environ.get("LP_DENYLIST", "").split(",") if w]
+        if not words:
+            self.skipTest("未设置 LP_DENYLIST")
+        hits = []
+        for root, dirs, files in os.walk(REPO):
+            dirs[:] = [d for d in dirs if d not in (".git", "__pycache__")]
+            for f in files:
+                p = os.path.join(root, f)
+                try:
+                    text = open(p, encoding="utf-8").read()
+                except (UnicodeDecodeError, OSError):
+                    continue
+                hits += [(os.path.relpath(p, REPO), w) for w in words if w in text]
+        self.assertEqual(hits, [])
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -1,0 +1,4 @@
+- [ ] 改动的技能已按 `writing-livepowers-skills` 做过基线与复测
+- [ ] `python -m unittest discover -s tests -v` 通过
+- [ ] 新技能已加入 `using-livepowers` 路由表与 README 技能表
+- [ ] 不含任何具体组织、人员、客户或项目信息

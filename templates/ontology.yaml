@@ -1,0 +1,31 @@
+# 本体模板（描述面 + 运行面）
+ontology: crm-core
+ontology_version: 1.0.0
+objects:
+  - name: Opportunity
+    description: 商机——一次有明确金额与阶段的潜在成交
+    identity: [opportunity_id]
+    table: opportunities            # 运行面：规范表
+    attributes:
+      - {name: stage, type: enum, values: [lead, qualified, proposal, won, lost]}
+      - {name: amount, type: decimal, unit: CNY}
+      - {name: last_followup_at, type: timestamp}
+    states:                          # 状态机
+      transitions:
+        - {from: lead, to: qualified, action: qualify}
+        - {from: [qualified, proposal], to: lost, action: close_lost}
+relations:
+  - {from: Opportunity.customer_id, to: Customer.customer_id, cardinality: many_to_one}
+  - {from: Opportunity.owner_id, to: Owner.owner_id, cardinality: many_to_one}
+rules:
+  - id: R-KEY-OPP
+    text: 重点商机 = 金额 ≥ 100 万 或 客户等级 = A
+    params: {amount_threshold: 1000000}     # 可参数化 → 客户配置
+  - id: R-STALE
+    text: 逾期 = 距上次跟进 > N 天
+    params: {days: 30}
+permissions:
+  - {role: sales, can: [read_own, followup]}
+  - {role: region_manager, can: [read_region, transfer]}
+actions:                               # 原子行动（见 action.yaml）
+  - transfer_opportunity

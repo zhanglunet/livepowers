@@ -1,0 +1,29 @@
+{
+  "model_horizon_minutes": {"small-local": 30, "medium": 60, "strong": 180},
+  "jobs": [
+    {
+      "job_id": "doc-parse-001", "tenant": "knowledge_batch", "stage_id": "parse",
+      "dependency": [], "priority": 3, "earliest_start": "20:00", "deadline": "08:00",
+      "model_capability": "small-local", "quality_floor": "ocr_accuracy>=0.98",
+      "expected_minutes": 25,
+      "resources": {"gpu": 1, "cpu": 8, "memory_gb": 32, "expected_tokens": 2000000},
+      "max_cost": 50, "retry_limit": 2, "stop_condition": "3 consecutive failures or cost>max_cost",
+      "checkpoint": "artifacts/jobs/doc-parse-001/", "preemptible": true, "resume_policy": "from_checkpoint",
+      "data_classification": "internal", "allowed_location": "on-prem",
+      "handoff": {"actual_end_state": "artifacts/jobs/doc-parse-001/manifest.json", "checker": "parse-checker"},
+      "acceptance": "all docs parsed; failed list delivered"
+    },
+    {
+      "job_id": "wiki-build-001", "tenant": "knowledge_batch", "stage_id": "build",
+      "dependency": ["doc-parse-001"], "priority": 3, "earliest_start": "20:00", "deadline": "08:00",
+      "model_capability": "medium", "quality_floor": "citation_valid>=0.95",
+      "expected_minutes": 50,
+      "resources": {"gpu": 2, "expected_tokens": 8000000},
+      "max_cost": 200, "retry_limit": 2, "stop_condition": "citation_valid<0.8 after 2 loops",
+      "checkpoint": "artifacts/jobs/wiki-build-001/", "preemptible": true, "resume_policy": "from_checkpoint",
+      "data_classification": "internal", "allowed_location": "on-prem",
+      "handoff": {"actual_end_state": "git:wiki/build-001", "checker": "citation-checker"},
+      "acceptance": "citation check >=95%, expert sample 20 entries"
+    }
+  ]
+}

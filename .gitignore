@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.livepowers/
+.DS_Store
+*.tmp
+/dist/

@@ -1,0 +1,22 @@
+{
+  "name": "livepowers",
+  "version": "1.0.0",
+  "description": "Live Product paradigm skills for agents: Agent + Ontology + Harness. System 1 first, explore with evidence, crystallize proven paths into tested capabilities, accept through independent gates; night loops, auditable agent comms, FDE delivery and outcome ledger. 活产品范式技能包。",
+  "author": {"name": "Livepowers contributors", "url": "https://github.com/zhanglunet"},
+  "homepage": "https://github.com/zhanglunet/livepowers",
+  "repository": "https://github.com/zhanglunet/livepowers",
+  "license": "MIT",
+  "keywords": ["agentic", "ontology", "harness", "live-product", "skills"],
+  "skills": "./skills/",
+  "hooks": {},
+  "interface": {
+    "displayName": "Livepowers",
+    "shortDescription": "Live Product workflows: System 1 first, evidence, crystallization, acceptance gates",
+    "longDescription": "Use Livepowers to make business agents work inside an ontology, reuse crystallized capabilities, explore with evidence, crystallize proven paths into tested capability packages, pass independent acceptance gates, plan night loops and deliver at customer sites.",
+    "developerName": "Livepowers contributors",
+    "category": "Productivity",
+    "capabilities": ["Interactive", "Read", "Write"],
+    "defaultPrompt": ["帮我看一下各地区的周收入", "把这个探索结果固化成能力"],
+    "websiteURL": "https://github.com/zhanglunet/livepowers"
+  }
+}
