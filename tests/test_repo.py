@@ -39,6 +39,8 @@ class TestSkills(unittest.TestCase):
             self.assertTrue(d.startswith("Use when") or d.startswith("Use before") or d.startswith("Use at")
                             or d.startswith("Use whenever"), f"{n}: description 应以触发条件开头")
             self.assertLessEqual(len(d), 1024, n)
+            # 未加引号的 YAML 值里出现 ": " 或 " #" 会解析失败，skills CLI 等严格解析器会跳过该技能
+            self.assertNotRegex(d, r": | #", f"{n}: description 不要含 ': ' 或 ' #'（YAML 非法）")
             # 只写触发条件：不概括流程（writing-livepowers-skills 的规则）
             self.assertNotRegex(d, r"\s—\s", f"{n}: description 不要用破折号接流程摘要")
             self.assertNotRegex(d, r"\b(runs|produces|enforces|turns|builds|specifies|evolves|compiles|registers|"
