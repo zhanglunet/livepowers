@@ -20,7 +20,7 @@ description: Use when a business application shows fixed pages and the user asks
    ```bash
    lp surface validate <surface.json>     # 格式、组件、本体引用、只读查询、无可执行代码、不引用写操作能力
    ```
-3. 宿主按 query 计算数据并渲染，界面上标"次抛，未经验收"。
+3. 宿主按 query 计算数据并渲染，界面上标"次抛，未经验收"。宿主支持 A2UI 的，用 `lp surface a2ui <surface.json> --db <sqlite>` 转成 A2UI v0.9.1 消息下发。
 4. 记录（同时写一条 S2 证据）：
    ```bash
    lp surface record <surface.json> --intent "<规范化意图>" [--db <sqlite>]

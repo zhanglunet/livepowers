@@ -7,27 +7,25 @@
 <link rel="stylesheet" href="/app.css">
 </head>
 <body>
-<header><h1>活软件演示</h1><p>固定页由数据库按公式计算；智能体面板出次抛展示，可申请固化，长成新的固定页。</p></header>
+<aside>
+  <div class="brand">活软件</div>
+  <p class="muted">固定页由数据库按公式计算，CPU 直接算出，准确、快、便宜。</p>
+  <h2>固定页</h2>
+  <ul id="pages"></ul>
+  <p id="pages-empty" class="muted">还没有固定页。</p>
+  <div class="grow">
+    <button id="grow" type="button" disabled>模拟生长</button>
+    <p class="muted">申请固化后可用：模拟智能体生成视图 → 孪生对账 → 评审采纳 → 生产部署 → 注册为固定页。</p>
+  </div>
+</aside>
 <main>
-  <nav aria-label="固定页目录">
-    <h2>固定页</h2>
-    <ul id="pages"></ul>
-    <p id="pages-empty" class="muted" hidden>还没有固定页。先在右侧提问，申请固化后运行 grow.sh。</p>
-  </nav>
-  <section>
-    <form id="ask">
-      <label for="q">问智能体</label>
-      <div class="row"><input id="q" name="q" placeholder="例如：各地区在途商机金额" autocomplete="off"><button type="submit">提问</button></div>
-    </form>
-    <p id="route" class="muted"></p>
-    <article id="surface" hidden>
-      <div class="titlebar"><h2 id="title"></h2><span id="badge" class="badge"></span></div>
-      <p id="provenance" class="muted"></p>
-      <div id="components"></div>
-      <div id="promote-row" hidden><button id="promote" type="button">申请固化</button><span id="promote-msg" class="muted"></span></div>
-    </article>
-  </section>
+  <div id="thread" aria-live="polite"></div>
+  <form id="ask">
+    <input id="q" name="q" placeholder="问业务问题，例如：各地区在途商机金额" autocomplete="off">
+    <button type="submit">发送</button>
+  </form>
 </main>
+<script src="/a2ui.js"></script>
 <script src="/app.js"></script>
 </body>
 </html>

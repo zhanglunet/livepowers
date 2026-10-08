@@ -10,7 +10,7 @@
 - 次抛只记元数据：行数、哈希、合计。对账靠重跑记录的查询，而不是保存的明细——明细一旦进 git 就删不掉。
 - 注册前必须有生产部署回执：`lp registry add` 只登记信息，不建表；没有回执就注册，固定页背后会是空的。孪生回执不算。
 - 本体解析按行读 YAML（只取 `objects` 的 name / table 和 `views`），保持零依赖；复杂本体请把可引用的视图列进 `views:`。
-- 放弃：直接实现 A2UI 协议的消息流（createSurface / updateDataModel 等）。版本还在变，先用兼容子集，宿主可以自己做映射。
+- A2UI：内部格式保持 `livepowers-surface/1`（便于校验与对账），由 `lp surface a2ui` 转成 A2UI v0.9.1 消息下发。基础组件库没有图表，KPI / 表格 / 柱状图 / 折线图 / 筛选放在自定义组件库 `urn:livepowers:a2ui-catalog:surface:1`；协议还在演进（v1.0 候选中），转换器集中在一处，跟版本时只改这里。
 
 ## 2026-10-07 · v1.4.0：意图同义词表
 

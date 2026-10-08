@@ -15,7 +15,8 @@
   - `lp surface deploy`：执行 DDL、核验结构与查询、失败自动回滚，写部署回执；`--twin` 演练，`--external --verified-by` 记录外部迁移。
   - `lp registry add --ui`：没有生产部署回执拒绝注册；`lp registry find` 命中时提示固定页；`lp pages list` 输出固定页目录。
   - 新技能 `living-surface`；能力包增加 `ddl`、`rollback`、`materialization`、`deployment` 字段，`ui` 指向固化展示面。
-  - 参考宿主 `examples/living_app/`（零依赖：`http.server` + 原生 JS）与 `grow.sh`；walkthrough 增加活软件一段。
+  - `lp surface a2ui`：把展示面转成 A2UI v0.9.1 消息流（createSurface / updateComponents / updateDataModel；Column / Row / Card / Text / Button 同 A2UI 基础组件，图表、表格、KPI、筛选为自定义组件库）。
+  - 参考宿主 `examples/living_app/`（零依赖：`http.server` + 原生 JS）：对话式页面，智能体回答以 A2UI 展示面嵌在对话里，「申请固化」是 A2UI Button 事件，「模拟生长」运行 `grow.sh`；walkthrough 增加活软件一段。
 
 ## [1.4.0] - 2026-10-07
 

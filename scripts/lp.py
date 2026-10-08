@@ -32,6 +32,7 @@ lp —— Livepowers 命令行工具（只依赖 Python 3.9+ 标准库）
   surface record <file>         记录一次次抛展示（只记元数据：查询、行数、哈希、合计）并写 S2 证据
   surface promote <record>      把一次次抛申请固化：建看板任务、登记为固化候选
   surface reconcile <record> <fixed>  按记录的查询重算，与固化结构逐项对账
+  surface a2ui <file>           转成 A2UI v0.9.1 消息流（结构与数据分开下发，宿主用自己的组件渲染）
   surface deploy <fixed>        执行 DDL（失败回滚），核验结构与查询，留部署回执
   pages list                    固定页目录：带展示面且有生产部署回执的 active 能力（JSON）
 
@@ -1532,6 +1533,68 @@ def cmd_surface_deploy(a):
     print(f"✓ 已部署 {s['id']} → {a.env}{'（孪生演练）' if a.twin else ''}；回执 {path}")
 
 
+A2UI_VERSION = "v0.9.1"
+A2UI_CATALOG = "urn:livepowers:a2ui-catalog:surface:1"   # Column / Row / Card / Text / Button 同 A2UI 基础组件；其余为自定义
+A2UI_KIND = {"kpi": "Kpi", "table": "Table", "bar": "BarChart", "line": "LineChart", "filter": "Filter"}
+
+
+def surface_to_a2ui(s, data=None, surface_id="", promotable=False, version=""):
+    """把展示面转成 A2UI v0.9.1 消息：createSurface → updateComponents → updateDataModel（每个数据源一条）。
+    结构与数据分开下发；数据是行对象数组，组件用 JSON Pointer 绑定；不含任何可执行代码。"""
+    sid = surface_id or s["id"]
+    eph = s["tier"] == "ephemeral"
+    prov = s.get("provenance") or {}
+    comps = [
+        {"id": "root", "component": "Card", "child": "body"},
+        {"id": "title", "component": "Text", "text": s.get("title") or s["id"], "variant": "h2"},
+        {"id": "badge", "component": "Badge", "tone": s["tier"],
+         "text": "次抛，未经验收" if eph else f"固化 v{version or '?'}"},
+        {"id": "provenance", "component": "Text", "variant": "caption",
+         "text": f"本体 {prov.get('ontology_version') or '?'} · 数字由数据库按查询计算"},
+    ]
+    body = ["title", "badge", "provenance"]
+    for i, c in enumerate(s["components"]):
+        cid = f"c{i}-{c.get('id') or c['type']}"
+        comp = {"id": cid, "component": A2UI_KIND[c["type"]], "label": c.get("label", "")}
+        if c["type"] == "filter":
+            comp.update(param=c["param"], options=c.get("options", []), value={"path": f"/_filters/{c['param']}"})
+        else:
+            comp["rows"] = {"path": f"/{c['data']}"}
+            for k in ("value", "x", "y", "columns"):
+                if k in c:
+                    comp[k] = c[k]
+            if c["type"] == "kpi":
+                comp["aggregate"] = "sum"
+        comps.append(comp)
+        body.append(cid)
+    if eph and promotable:
+        comps += [{"id": "promote-text", "component": "Text", "text": "申请固化"},
+                  {"id": "promote", "component": "Button", "child": "promote-text",
+                   "action": {"event": {"name": "promote_surface"}}}]
+        body.append("promote")
+    comps.insert(1, {"id": "body", "component": "Column", "children": body})
+    msgs = [{"version": A2UI_VERSION, "createSurface": {"surfaceId": sid, "catalogId": A2UI_CATALOG}},
+            {"version": A2UI_VERSION, "updateComponents": {"surfaceId": sid, "components": comps}}]
+    for name, d in (data or {}).items():
+        rows = [dict(zip(d["columns"], r)) for r in d["rows"]]
+        msgs.append({"version": A2UI_VERSION, "updateDataModel": {"surfaceId": sid, "path": f"/{name}", "value": rows}})
+    return msgs
+
+
+def cmd_surface_a2ui(a):
+    s = load_surface(a.file)
+    errs = surface_problems(s, a.ontology)
+    if errs:
+        die("展示面未通过校验：\n  - " + "\n  - ".join(errs))
+    data = {}
+    if a.db:
+        for name, d in s["data"].items():
+            cols, rows = readonly_rows(a.db, d["query"], d.get("params"))
+            data[name] = {"columns": cols, "rows": rows}
+    for m in surface_to_a2ui(s, data, a.surface_id, a.promotable, a.version):
+        print(json.dumps(m, ensure_ascii=False, default=str))
+
+
 def cmd_pages_list(a):
     r = jload(REG, {"capabilities": []})
     pages = []
@@ -1912,7 +1975,7 @@ def main(argv=None):
     isg.add_argument("--threshold", type=float, default=0.5, help="相似度阈值（英文词集 Jaccard / 中文二元组重叠）")
     isg.set_defaults(fn=cmd_intents_suggest)
 
-    sf = sp.add_parser("surface", help="活软件展示面：validate / record / promote / reconcile / deploy").add_subparsers(
+    sf = sp.add_parser("surface", help="活软件展示面：validate / record / promote / reconcile / deploy / a2ui").add_subparsers(
         dest="sub", required=True)
     sv = sf.add_parser("validate", help="校验展示面（格式、组件、本体引用、只读查询、无代码；不通过 exit 1）")
     sv.add_argument("file")
@@ -1951,6 +2014,14 @@ def main(argv=None):
     sd.add_argument("--external", action="store_true", help="已用外部迁移工具执行，只记录回执")
     sd.add_argument("--verified-by", default="", help="--external 时的核验人（不能是执行人）")
     sd.set_defaults(fn=cmd_surface_deploy)
+    sa = sf.add_parser("a2ui", help="把展示面转成 A2UI v0.9.1 消息（JSONL：createSurface / updateComponents / updateDataModel）")
+    sa.add_argument("file")
+    sa.add_argument("--db", default="", help="SQLite：只读计算数据并下发 updateDataModel")
+    sa.add_argument("--surface-id", default="", help="本次渲染的 surfaceId（默认用展示面 id）")
+    sa.add_argument("--promotable", action="store_true", help="次抛展示面附带「申请固化」按钮（A2UI Button 事件）")
+    sa.add_argument("--version", default="", help="固化版本号（显示在标识上）")
+    sa.add_argument("--ontology", default="")
+    sa.set_defaults(fn=cmd_surface_a2ui)
     pg = sp.add_parser("pages", help="固定页目录").add_subparsers(dest="sub", required=True)
     pgl = pg.add_parser("list", help="带展示面且有生产部署回执的 active 能力（JSON）")
     pgl.set_defaults(fn=cmd_pages_list)

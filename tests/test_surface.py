@@ -197,24 +197,69 @@ class TestLivingApp(Workdir):
             with e:
                 return e.code, json.loads(e.read())
 
+    @staticmethod
+    def rows(res):
+        return [m["updateDataModel"]["value"] for m in res["messages"] if "updateDataModel" in m]
+
     def test_ephemeral_promote_grow_then_fixed(self):
         self.assertEqual(self.call("/api/pages"), (200, []))
         code, r = self.call("/api/ask", {"q": "各地区在途商机金额"})
-        self.assertEqual((code, r["tier"]), (200, "ephemeral"))
-        self.assertEqual(r["data"]["pipeline"]["rows"], [["east", 3000000.0, 4], ["south", 2400000.0, 4]])
-        self.assertEqual(self.call("/api/promote", {"record": "../../etc/passwd"})[0], 400)
-        code, p = self.call("/api/promote", {"record": r["record"]})
+        self.assertEqual((code, r["kind"]), (200, "ephemeral"))
+        msgs = r["messages"]
+        self.assertEqual([next(k for k in m if k != "version") for m in msgs],
+                         ["createSurface", "updateComponents", "updateDataModel"])
+        self.assertTrue(all(m["version"] == "v0.9.1" for m in msgs))
+        comps = msgs[1]["updateComponents"]["components"]
+        self.assertIn("root", [c["id"] for c in comps])
+        button = next(c for c in comps if c["component"] == "Button")
+        self.assertEqual(button["action"]["event"]["name"], "promote_surface")
+        self.assertEqual(self.rows(r), [[{"region": "east", "amount": 3000000.0, "n": 4},
+                                         {"region": "south", "amount": 2400000.0, "n": 4}]])
+        sid = msgs[0]["createSurface"]["surfaceId"]
+        self.assertEqual(self.call("/api/action", {"surfaceId": "nope", "name": "promote_surface"})[0], 400)
+        self.assertEqual(self.call("/api/action", {"surfaceId": sid, "name": "delete_all"})[0], 400)
+        code, p = self.call("/api/action", {"surfaceId": sid, "name": "promote_surface"})
         self.assertEqual(code, 200)
         self.assertTrue(p["task"].startswith("t_"))
-        g = subprocess.run(["bash", os.path.join(APP, "grow.sh"), self.dir], capture_output=True, text=True)
-        self.assertEqual(g.returncode, 0, g.stdout + g.stderr)
+        code, g = self.call("/api/grow", {})
+        self.assertEqual(code, 200, g)
         code, r2 = self.call("/api/ask", {"q": "各地区在途商机金额"})
-        self.assertEqual((r2["tier"], r2["capability"]), ("fixed", "cap_pipeline_by_region"))
-        self.assertEqual(r2["data"], r["data"])  # 固化结构与次抛结果一致
-        self.assertEqual(self.call("/api/pages/cap_pipeline_by_region")[1]["tier"], "fixed")
+        self.assertEqual((r2["kind"], r2["capability"]), ("fixed", "cap_pipeline_by_region"))
+        self.assertEqual(self.rows(r2), self.rows(r))  # 固化结构与次抛结果一致
+        self.assertNotIn("Button", [c["component"] for m in r2["messages"] if "updateComponents" in m
+                                    for c in m["updateComponents"]["components"]])
+        self.assertEqual(self.call("/api/pages/cap_pipeline_by_region")[1]["kind"], "fixed")
+
+    def test_grow_without_promotion_fails_cleanly(self):
+        code, g = self.call("/api/grow", {})
+        self.assertEqual(code, 409)
 
     def test_frontend_never_executes_surface_content(self):
-        with open(os.path.join(APP, "static", "app.js"), encoding="utf-8") as f:
-            js = f.read()
+        js = ""
+        for fn in ("app.js", "a2ui.js"):
+            with open(os.path.join(APP, "static", fn), encoding="utf-8") as f:
+                js += f.read()
         for bad in ("innerHTML", "eval(", "new Function", "insertAdjacentHTML", "document.write"):
             self.assertNotIn(bad, js)
+
+
+class TestA2UI(Workdir):
+    def test_surface_to_a2ui_messages(self):
+        subprocess.run([sys.executable, os.path.join(REPO, "examples", "make_demo_db.py"), "demo.sqlite"],
+                       cwd=self.dir, check=True, capture_output=True)
+        self.lp("init")
+        with open(os.path.join(self.dir, ".livepowers", "ontology.draft.yaml"), "w", encoding="utf-8") as f:
+            f.write(self.run_script("scan_sqlite.py", "demo.sqlite", check=0).stdout)
+        out = self.lp("surface", "a2ui", EPH, "--db", "demo.sqlite", "--surface-id", "s1").stdout
+        msgs = [json.loads(x) for x in out.splitlines()]
+        self.assertEqual(msgs[0]["createSurface"]["surfaceId"], "s1")
+        comps = {c["id"]: c for c in msgs[1]["updateComponents"]["components"]}
+        self.assertEqual(comps["root"]["component"], "Card")
+        self.assertEqual(comps["body"]["component"], "Column")
+        self.assertTrue(all(cid in comps for cid in comps["body"]["children"]))
+        self.assertNotIn("promote", comps)  # 没有 --promotable 就不带按钮
+        self.assertEqual(msgs[2]["updateDataModel"]["path"], "/pipeline")
+        self.assertEqual(len(msgs[2]["updateDataModel"]["value"]), 2)
+        # 结构里不含查询文本与任何结果数据（数据只在 updateDataModel 里）
+        self.assertNotIn("SELECT", json.dumps(msgs[:2]))
+        self.assertNotIn("3000000", json.dumps(msgs[:2]))
