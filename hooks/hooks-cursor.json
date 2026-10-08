@@ -4,8 +4,11 @@
     "sessionStart": [
       {"command": "./hooks/session-start.sh"}
     ],
-    "afterCommand": [
+    "afterShellExecution": [
       {"command": "./hooks/evidence-capture.sh post-tool"}
+    ],
+    "stop": [
+      {"command": "./hooks/evidence-capture.sh stop"}
     ],
     "sessionEnd": [
       {"command": "./hooks/evidence-capture.sh stop"}

@@ -1696,25 +1696,50 @@ def _auto_evidence(**kw):
 
 def hook_post_tool(d, st):
     tool_name = d.get("tool_name") or d.get("tool")
-    if tool_name and tool_name not in ("Bash", "bash", "sh", "terminal", "Command", "command"):
+    if tool_name and tool_name not in ("Bash", "bash", "sh", "terminal", "Command", "command", "Shell"):
         return
     cmd = (d.get("tool_input") or {}).get("command") or d.get("command") or d.get("cmd") or ""
     if not cmd:
         return
-    resp = d.get("tool_response") or d.get("response") or d.get("result") or {}
+    raw_resp = d.get("tool_output")
+    if raw_resp is None:
+        raw_resp = d.get("output")
+    if raw_resp is not None and isinstance(raw_resp, str):
+        try:
+            parsed = json.loads(raw_resp)
+            resp = parsed if isinstance(parsed, dict) else {"stdout": raw_resp}
+        except (TypeError, ValueError):
+            resp = {"stdout": raw_resp}
+    else:
+        resp = d.get("tool_response") or d.get("response") or d.get("result") or raw_resp or {}
     if isinstance(resp, str):
         resp = {"stdout": resp}
+    if not isinstance(resp, dict):
+        resp = {"stdout": str(resp)}
     stdout = str(resp.get("stdout") if "stdout" in resp else d.get("stdout", ""))
     stderr = str(resp.get("stderr") if "stderr" in resp else d.get("stderr", ""))
     code = resp.get("exit_code") if "exit_code" in resp else resp.get("exitCode", d.get("exit_code", d.get("exitCode")))
+    if code is None:
+        exit_match = re.search(r"(?:Process exited with code|exit(?:ed)? code)\s*[:=]?\s*(-?\d+)", stdout, re.I)
+        if exit_match:
+            code = int(exit_match.group(1))
+    try:
+        duration_ms = float(d.get("duration", 0) or 0)
+    except (TypeError, ValueError):
+        duration_ms = 0
+    st["duration_ms"] = st.get("duration_ms", 0) + duration_ms
+    if d.get("sandbox") is not None:
+        st["sandbox"] = d.get("sandbox")
     m = FIND_RE.search(cmd)
     if m:
         q = m.group(1).strip().split("\n")[0].strip().strip("\"'")
         q = re.sub(r"\s+--\S+.*$", "", q).strip().strip("\"'")
-        hit = stdout.lstrip().startswith("HIT") or code == 0 and "HIT" in stdout
+        hit = (stdout.lstrip().startswith("HIT") or "HIT" in stdout) and "MISS" not in stdout and code in (None, 0)
         cm = CAP_RE.search(stdout) if hit else None
         st["pending"] = {"intent": q, "hit": bool(hit), "capability": cm.group(1) if cm else None,
-                         "ts": now(), "s1_calls": 0}
+                         "ts": now(), "s1_calls": 0, "duration_ms": duration_ms,
+                         "sandbox": d.get("sandbox")}
+        st["duration_ms"] = duration_ms
         st["explicit"] = False
         return
     if EVIDENCE_RE.search(cmd):
@@ -1729,7 +1754,10 @@ def hook_post_tool(d, st):
             failed = (code not in (None, 0)) or bool(stderr.strip())
             _auto_evidence(intent=pend["intent"], system="S1", outcome="fail" if failed else "success",
                            capability=pend["capability"], writes_state=bool(cap.get("writes_state")),
-                           note=f"auto: hook 观测到调用 {prefix}" + (f"；exit={code}" if code not in (None, 0) else ""))
+                           seconds=duration_ms / 1000,
+                           note=f"auto: hook 观测到调用 {prefix}" +
+                                (f"；sandbox={d.get('sandbox')}" if d.get("sandbox") is not None else "") +
+                                (f"；exit={code}" if code not in (None, 0) else ""))
             pend["s1_calls"] = pend.get("s1_calls", 0) + 1
 
 
@@ -1738,11 +1766,14 @@ def hook_stop(d, st):
     if pend and not pend.get("hit") and not st.get("explicit"):
         t_path = d.get("transcript_path") or d.get("transcriptPath") or ""
         tokens = _turn_tokens(t_path)
-        sid = d.get("session_id") or d.get("sessionId") or ""
+        sid = d.get("session_id") or d.get("sessionId") or d.get("conversation_id") or ""
+        sandbox = f"；sandbox={pend['sandbox']}" if pend.get("sandbox") is not None else ""
         _auto_evidence(intent=pend["intent"], system="S2", outcome="partial", tokens=tokens,
-                       note=f"auto: registry find MISS 后本轮未显式记证据，钩子补记；session={sid}")
+                       seconds=st.get("duration_ms", 0) / 1000,
+                       note=f"auto: registry find MISS 后本轮未显式记证据，钩子补记；session={sid}{sandbox}")
     st["pending"] = None
     st["explicit"] = False
+    st["duration_ms"] = 0
 
 
 def cmd_hook_watch(a):
@@ -1781,6 +1812,30 @@ def cmd_hook_watch(a):
                     continue
                 if obj.get("type") == "user" and not obj.get("toolUseResult") and not obj.get("tool_use_id"):
                     hook_stop({"session_id": sid, "transcript_path": tpath}, st)
+                elif obj.get("type") == "response_item" and isinstance(obj.get("payload"), dict):
+                    payload = obj["payload"]
+                    if payload.get("type") == "function_call" and payload.get("name") in ("exec_command", "shell_command"):
+                        arguments = payload.get("arguments") or {}
+                        if isinstance(arguments, str):
+                            try:
+                                arguments = json.loads(arguments)
+                            except (TypeError, ValueError):
+                                arguments = {}
+                        if isinstance(arguments, dict) and arguments.get("cmd"):
+                            calls = st.setdefault("codex_calls", {})
+                            calls[payload.get("call_id", "")] = {
+                                "command": arguments["cmd"], "cwd": arguments.get("workdir", "")}
+                    elif payload.get("type") == "function_call_output":
+                        call = st.setdefault("codex_calls", {}).pop(payload.get("call_id", ""), None)
+                        if call:
+                            output = str(payload.get("output", ""))
+                            ev = {"command": call["command"], "output": output, "session_id": sid}
+                            workdir = call.get("cwd")
+                            if workdir:
+                                ev["cwd"] = workdir if os.path.isabs(workdir) else os.path.abspath(os.path.join(cwd, workdir))
+                            hook_post_tool(ev, st)
+                elif obj.get("type") == "event_msg" and isinstance(obj.get("payload"), dict) and obj["payload"].get("type") == "task_complete":
+                    hook_stop({"session_id": sid, "transcript_path": tpath}, st)
                 else:
                     ev = None
                     if "command" in obj or "cmd" in obj or obj.get("tool_name") or obj.get("tool"):
@@ -1811,7 +1866,8 @@ def cmd_hook_watch(a):
             process_file()
             time.sleep(getattr(a, "interval", 1.0))
     except KeyboardInterrupt:
-        pass
+        hook_stop({"session_id": sid, "transcript_path": tpath}, st)
+        jsave(sp, st)
 
 
 def cmd_hook(a):
@@ -1823,13 +1879,13 @@ def cmd_hook(a):
             cmd_hook_watch(a)
             return
         d = json.loads(sys.stdin.read() or "{}")
-        cwd = d.get("cwd")
+        cwd = d.get("cwd") or ((d.get("workspace_roots") or [None])[0]) or os.environ.get("CURSOR_PROJECT_DIR")
         if cwd and os.path.isdir(cwd):
             os.chdir(cwd)
         if not os.path.isdir(ROOT):
             return
         os.makedirs(SESSIONS, exist_ok=True)
-        sid = d.get("session_id") or d.get("sessionId")
+        sid = d.get("session_id") or d.get("sessionId") or d.get("conversation_id")
         sp = _session_path(sid)
         st = jload(sp, {"pending": None, "explicit": False})
         if a.event == "post-tool":

@@ -107,7 +107,7 @@ npm i -g livepowers                               # 全局安装后可直接用 
 
 **Codex**：仓库带 `.codex-plugin/plugin.json`，可作为插件安装；或把 `skills/*` 复制到 `~/.agents/skills/`。Codex 插件不带会话启动钩子，请把本仓库 `AGENTS.md` 的内容合并进项目根目录的 `AGENTS.md`，让 Agent 在开始时读取 `using-livepowers`。无钩子环境下可通过 `lp hook watch --transcript <path>` 轮询自动采集证据，或在回合结束时显式运行 `lp evidence add`。
 
-**Cursor**：仓库带 `.cursor-plugin/plugin.json` 与 `hooks/hooks-cursor.json`（支持 `sessionStart` 初始化、`afterCommand` 命令后自动采集与 `sessionEnd` 兜底补记）。
+**Cursor**：仓库带 `.cursor-plugin/plugin.json` 与 `hooks/hooks-cursor.json`（使用 `afterShellExecution` 采集命令结果、`stop` 与 `sessionEnd` 补记；按 Cursor 的 `command` / `output` / `duration` / `sandbox` / `conversation_id` 字段映射）。
 
 **其他支持 Agent Skills 标准的客户端**：把 `skills/*` 放进客户端的技能目录。
 
