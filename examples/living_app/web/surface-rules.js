@@ -14,6 +14,7 @@
   const SQL_REF = /\b(?:from|join)\s+([A-Za-z_][\w.]*)/gi;
   const SQL_CTE = /(?:\bwith|,)\s*([A-Za-z_]\w*)\s+as\s*\(/gi;
   const SENSITIVE = /\b(phone|mobile|email|password|id_?card|address|salary)\b/i;
+  const WILDCARD = /\bselect\s+(?:distinct\s+)?\*|[\w"\]]\.\*|,\s*\*/i;   // 不允许 SELECT * / t.*（count(*) 不受影响）
 
   function sqlProblems(sql, allowed) {
     const errs = [];
@@ -23,6 +24,7 @@
     const w = s.match(SQL_WRITE);
     if (w) errs.push(`查询含不允许的关键字 ${w[1].toUpperCase()}`);
     if (SENSITIVE.test(s)) errs.push("查询读取了敏感字段");
+    if (WILDCARD.test(s)) errs.push("不允许 SELECT *，请列出需要的列（避免带出敏感字段）");
     const ctes = new Set([...s.matchAll(SQL_CTE)].map((m) => m[1].toLowerCase()));
     for (const m of s.matchAll(SQL_REF)) {
       const name = m[1].toLowerCase().split(".").pop();
@@ -65,10 +67,15 @@
     }
     const comps = Array.isArray(s.components) ? s.components : [];
     if (!comps.length || comps.length > 6) errs.push("components 需要 1–6 个组件");
+    const strList = (v) => Array.isArray(v) && v.length <= 20 && v.every((x) => typeof x === "string");
     comps.forEach((c, i) => {
       const need = COMPONENTS[c && c.type];
       if (!need) { errs.push(`components[${i}].type 不支持：${c && c.type}`); return; }
       for (const f of need) if (!c[f]) errs.push(`components[${i}]（${c.type}）缺少 ${f}`);
+      for (const f of ["data", "value", "x", "y", "param", "label", "id"])
+        if (f in c && typeof c[f] !== "string") errs.push(`components[${i}].${f} 必须是字符串`);
+      for (const f of ["columns", "options"])
+        if (f in c && !strList(c[f])) errs.push(`components[${i}].${f} 必须是字符串数组`);
       if (c.data && !(c.data in data)) errs.push(`components[${i}] 引用了未定义的数据 ${c.data}`);
     });
     return errs;
@@ -90,5 +97,11 @@
     return n / q.size;
   }
 
-  return { validate, sqlProblems, coverage, tokens, COMPONENTS };
+  // 执行后再查一遍结果列：别名或其他写法绕过了查询文本检查时，在下发前拦下
+  function resultProblems(columns) {
+    const bad = (columns || []).filter((c) => SENSITIVE.test(String(c)));
+    return bad.length ? [`结果包含敏感字段：${bad.join(", ")}`] : [];
+  }
+
+  return { validate, sqlProblems, resultProblems, coverage, tokens, COMPONENTS };
 });

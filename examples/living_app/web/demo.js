@@ -102,6 +102,8 @@ function showEphemeral(s, key, route, text) {
   if (err) return assistant({ route, kind: "none", text: `展示面未通过校验，没有执行：${err}` });
   let data;
   try { data = computeData(state.db, s); } catch (e) { return assistant({ route, kind: "none", text: `查询执行失败：${e.message}` }); }
+  const leak = Object.values(data).flatMap((d) => SurfaceRules.resultProblems(d.columns));
+  if (leak.length) return assistant({ route, kind: "none", text: `结果没有展示：${leak.join("；")}` });
   const sid = `${s.id}-${++state.counter}`;
   state.records[sid] = { key, intent: s.intent, stats: data };   // 只记摘要：演示里直接保留计算结果用于对账
   state.evidence++;

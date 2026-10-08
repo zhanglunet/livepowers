@@ -3,7 +3,8 @@
 //   LP_MODEL_BASE_URL   接口地址，如 https://api.example.com/v1
 //   LP_MODEL_NAME       模型名
 //   LP_MODEL_API_KEY    密钥（只在服务端，永远不下发给页面）
-//   LP_RATE             KV 绑定：限流计数（必需；临时不要限流时设 LP_ALLOW_NO_RATE_LIMIT=1）
+//   LP_LIMITS           D1 数据库绑定：限流计数（必需；临时不要限流时设 LP_ALLOW_NO_RATE_LIMIT=1）。
+//                       用单条 upsert 原子加一，并发请求不会丢计数（KV 的读改写做不到，且同一键每秒只能写一次）
 //   LP_RATE_PER_HOUR    每个 IP 每小时次数，默认 20
 //   LP_RATE_PER_DAY     全站每天次数，默认 300
 //   LP_MODEL_JSON_MODE  设为 1 时请求 response_format=json_object（接口支持时再开）
@@ -42,19 +43,33 @@ export async function onRequestGet({ env }) {
   return json({ configured: configured(env) });
 }
 
+let tableReady = false;
+
+// 原子加一并返回新值：先计数再判断，被拒的请求也计入，宁可保守
+async function bump(db, key, now) {
+  const row = await db.prepare("INSERT INTO lp_rate (k, n, ts) VALUES (?1, 1, ?2) " +
+    "ON CONFLICT(k) DO UPDATE SET n = n + 1 RETURNING n").bind(key, now).first();
+  return Number(row && row.n);
+}
+
 async function rateLimited(env, ip) {
-  if (!env.LP_RATE) return env.LP_ALLOW_NO_RATE_LIMIT === "1" ? null : "服务端未配置限流存储（LP_RATE），暂不开放";
-  const now = new Date();
-  const hourKey = `ip:${ip}:${now.toISOString().slice(0, 13)}`;
-  const dayKey = `day:${now.toISOString().slice(0, 10)}`;
-  const [h, d] = await Promise.all([env.LP_RATE.get(hourKey), env.LP_RATE.get(dayKey)]);
-  if (Number(h || 0) >= Number(env.LP_RATE_PER_HOUR || 20)) return "提问太频繁了，请一小时后再试";
-  if (Number(d || 0) >= Number(env.LP_RATE_PER_DAY || 300)) return "今天的演示额度已用完，请明天再试";
-  await Promise.all([
-    env.LP_RATE.put(hourKey, String(Number(h || 0) + 1), { expirationTtl: 3600 * 2 }),
-    env.LP_RATE.put(dayKey, String(Number(d || 0) + 1), { expirationTtl: 86400 * 2 }),
-  ]);
-  return null;
+  const db = env.LP_LIMITS;
+  if (!db) return env.LP_ALLOW_NO_RATE_LIMIT === "1" ? null : "服务端未配置限流存储（LP_LIMITS），暂不开放";
+  try {
+    if (!tableReady) {
+      await db.exec("CREATE TABLE IF NOT EXISTS lp_rate (k TEXT PRIMARY KEY, n INTEGER NOT NULL, ts INTEGER NOT NULL)");
+      tableReady = true;
+    }
+    const now = Date.now(), iso = new Date(now).toISOString();
+    const h = await bump(db, `ip:${ip}:${iso.slice(0, 13)}`, now);
+    if (h > Number(env.LP_RATE_PER_HOUR || 20)) return "提问太频繁了，请一小时后再试";
+    const d = await bump(db, `day:${iso.slice(0, 10)}`, now);
+    if (d > Number(env.LP_RATE_PER_DAY || 300)) return "今天的演示额度已用完，请明天再试";
+    if (Math.random() < 0.02) await db.prepare("DELETE FROM lp_rate WHERE ts < ?1").bind(now - 2 * 86400000).run();
+    return null;
+  } catch {
+    return "限流存储暂时不可用，请稍后再试";   // 拿不到计数就不放行，避免绕过上限
+  }
 }
 
 export function extractJson(text) {
