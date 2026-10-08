@@ -14,6 +14,62 @@ EXAMPLES = os.path.join(REPO, "examples")
 
 
 class TestScan(Workdir):
+    def test_scan_sql_identifier_quoting_and_mysql_auth(self):
+        sys.path.insert(0, SCRIPTS)
+        import scan_sql
+        self.assertEqual(scan_sql.quote_identifier('order`items', 'mysql'), '`order``items`')
+        self.assertEqual(scan_sql.quote_identifier('order"items', 'postgres'), '"order""items"')
+
+        calls = []
+        def fake_run(cmd, **kwargs):
+            calls.append((cmd, kwargs))
+            return subprocess.CompletedProcess(cmd, 0, stdout='value\n1\n', stderr='')
+        old_which, old_run = scan_sql.shutil.which, scan_sql.subprocess.run
+        try:
+            scan_sql.shutil.which = lambda name: '/usr/bin/mysql' if name == 'mysql' else None
+            scan_sql.subprocess.run = fake_run
+            info = scan_sql.parse_dsn('mysql://user:secret@localhost/db')
+            self.assertEqual(scan_sql.run_query(info, 'SELECT 1'), (['value'], [['1']]))
+            cmd, kwargs = calls[-1]
+            self.assertFalse(any(arg == '-p' or arg.startswith('-p') for arg in cmd))
+            self.assertNotIn('secret', cmd)
+            self.assertEqual(kwargs['env']['MYSQL_PWD'], 'secret')
+
+            calls.clear()
+            info = scan_sql.parse_dsn('mysql://user@localhost/db')
+            scan_sql.run_query(info, 'SELECT 1')
+            cmd, kwargs = calls[-1]
+            self.assertFalse(any(arg == '-p' or arg.startswith('-p') for arg in cmd))
+            self.assertEqual(kwargs['env']['MYSQL_PWD'], '')
+            self.assertIn('--connect-timeout=10', cmd)
+        finally:
+            scan_sql.shutil.which, scan_sql.subprocess.run = old_which, old_run
+
+    def test_scan_sql_postgres_composite_foreign_key_pairing(self):
+        sys.path.insert(0, SCRIPTS)
+        import scan_sql
+        observed_fk_sql = []
+        def executor(info, sql, params=None):
+            clean = ' '.join(sql.split())
+            if 'information_schema.tables' in clean:
+                return ['table_name'], [['parents'], ['children']]
+            if 'information_schema.columns' in clean:
+                return [], [
+                    ['parents', 'a', 'integer', 'NO', 1], ['parents', 'b', 'integer', 'NO', 1],
+                    ['children', 'a', 'integer', 'NO', 0], ['children', 'b', 'integer', 'NO', 0],
+                ]
+            if 'information_schema.constraint_column_usage' in clean:
+                observed_fk_sql.append(clean)
+                # Simulate the rows after ordinal pairing; the old unconstrained join produces 4.
+                return [], [['children', 'a', 'parents', 'b'], ['children', 'b', 'parents', 'a']]
+            if 'count(*)' in clean:
+                return [], [['0']]
+            return [], []
+        fp = scan_sql.scan('postgres://user@localhost/db', query_executor=executor)
+        self.assertEqual(fp['tables']['children']['fks'], [['a', 'parents', 'b'], ['b', 'parents', 'a']])
+        self.assertIn('position_in_unique_constraint', observed_fk_sql[0])
+        self.assertIn('ordinal_position', observed_fk_sql[0])
+
     def test_draft_fingerprint_and_drift(self):
         db = os.path.join(self.dir, "d.sqlite")
         subprocess.run([sys.executable, os.path.join(EXAMPLES, "make_demo_db.py"), db], check=True, capture_output=True)

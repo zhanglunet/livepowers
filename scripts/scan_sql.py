@@ -58,8 +58,24 @@ def run_query(dsn_info, sql, params=None):
             val_escaped = "'" + str(p).replace("'", "''") + "'" if isinstance(p, str) else str(p)
             sql = sql.replace("%s", val_escaped, 1).replace("?", val_escaped, 1)
 
-    # 1. 尝试 Python 驱动
+    # 先尝试命令行工具，再回退到可选 Python 驱动。
     if db_type == "postgres":
+        if shutil.which("psql"):
+            env = dict(os.environ)
+            env["PGOPTIONS"] = (env.get("PGOPTIONS", "") + " -c default_transaction_read_only=on").strip()
+            if dsn_info["password"]:
+                env["PGPASSWORD"] = dsn_info["password"]
+            cmd = ["psql", "-h", dsn_info["host"], "-p", str(dsn_info["port"]),
+                   "-U", dsn_info["user"], "-d", dsn_info["database"],
+                   "-A", "-F", "\t", "--pset", "footer=off", "-c", sql]
+            res = subprocess.run(cmd, env=env, capture_output=True, text=True)
+            if res.returncode != 0:
+                raise RuntimeError(f"psql 执行失败: {res.stderr.strip()}")
+            lines = [l for l in res.stdout.strip().splitlines() if l]
+            if not lines:
+                return [], []
+            return lines[0].split("\t"), [line.split("\t") for line in lines[1:]]
+
         try:
             import psycopg  # psycopg v3
             with psycopg.connect(
@@ -88,29 +104,22 @@ def run_query(dsn_info, sql, params=None):
         except ImportError:
             pass
 
-        # 2. 尝试 psql 命令行
-        if shutil.which("psql"):
-            env = dict(os.environ)
-            if dsn_info["password"]:
-                env["PGPASSWORD"] = dsn_info["password"]
-            cmd = [
-                "psql", "-h", dsn_info["host"], "-p", str(dsn_info["port"]),
-                "-U", dsn_info["user"], "-d", dsn_info["database"],
-                "-A", "-F", "\t", "--pset", "footer=off", "-c", sql
-            ]
-            res = subprocess.run(cmd, env=env, capture_output=True, text=True)
-            if res.returncode != 0:
-                raise RuntimeError(f"psql 执行失败: {res.stderr.strip()}")
-            lines = [l for l in res.stdout.strip().splitlines() if l]
-            if not lines:
-                return [], []
-            cols = lines[0].split("\t")
-            rows = [line.split("\t") for line in lines[1:]]
-            return cols, rows
-
         raise RuntimeError("未找到 PostgreSQL 客户端驱动或 psql 命令行工具（请安装 psql 或 psycopg/psycopg2）")
 
     elif db_type == "mysql":
+        if shutil.which("mysql"):
+            env = dict(os.environ)
+            env["MYSQL_PWD"] = dsn_info["password"]
+            cmd = ["mysql", "--connect-timeout=10", "-h", dsn_info["host"], "-P", str(dsn_info["port"]),
+                   "-u", dsn_info["user"], "-D", dsn_info["database"], "-B", "-e", sql]
+            res = subprocess.run(cmd, env=env, capture_output=True, text=True)
+            if res.returncode != 0:
+                raise RuntimeError(f"mysql 执行失败: {res.stderr.strip()}")
+            lines = [l for l in res.stdout.strip().splitlines() if l]
+            if not lines:
+                return [], []
+            return lines[0].split("\t"), [line.split("\t") for line in lines[1:]]
+
         try:
             import pymysql
             conn = pymysql.connect(
@@ -149,6 +158,12 @@ def q(name):
     return '"' + name.replace('"', '""') + '"'
 
 
+def quote_identifier(name, db_type):
+    if db_type == "mysql":
+        return '`' + name.replace('`', '``') + '`'
+    return q(name)
+
+
 def scan(dsn, sample=20, query_executor=run_query):
     dsn_info = parse_dsn(dsn)
     db_type = dsn_info["db_type"]
@@ -185,12 +200,13 @@ def scan(dsn, sample=20, query_executor=run_query):
         ORDER BY c.table_name, c.ordinal_position;
         """
         fks_sql = """
-        SELECT tc.table_name, kcu.column_name, ccu.table_name AS foreign_table_name, ccu.column_name AS foreign_column_name
+        SELECT kcu.table_name, kcu.column_name, ccu.table_name AS foreign_table_name, ccu.column_name AS foreign_column_name
         FROM information_schema.table_constraints tc
         JOIN information_schema.key_column_usage kcu
           ON tc.constraint_name = kcu.constraint_name AND tc.table_schema = kcu.table_schema
         JOIN information_schema.constraint_column_usage ccu
-          ON ccu.constraint_name = tc.constraint_name AND ccu.table_schema = tc.table_schema
+          ON ccu.constraint_name = kcu.constraint_name AND ccu.constraint_schema = kcu.constraint_schema
+         AND ccu.ordinal_position = kcu.position_in_unique_constraint
         WHERE tc.constraint_type = 'FOREIGN KEY' AND tc.table_schema = 'public';
         """
     else:
@@ -227,7 +243,7 @@ def scan(dsn, sample=20, query_executor=run_query):
     fp = {"source": f"{db_type}:{db_name}", "tables": {}}
     for t in tables:
         # 行数统计
-        cnt_sql = f"SELECT count(*) FROM {q(t)};"
+        cnt_sql = f"SELECT count(*) FROM {quote_identifier(t, db_type)};"
         try:
             _, cnt_res = query_executor(dsn_info, cnt_sql)
             rows_cnt = int(cnt_res[0][0])
@@ -251,7 +267,9 @@ def scan(dsn, sample=20, query_executor=run_query):
             if SENSITIVE.search(name):
                 col_info["sensitive"] = True
             elif STATUS.search(name):
-                sample_sql = f"SELECT DISTINCT {q(name)} FROM {q(t)} WHERE {q(name)} IS NOT NULL LIMIT {sample};"
+                qi = quote_identifier(name, db_type)
+                qt = quote_identifier(t, db_type)
+                sample_sql = f"SELECT DISTINCT {qi} FROM {qt} WHERE {qi} IS NOT NULL LIMIT {sample};"
                 try:
                     _, s_rows = query_executor(dsn_info, sample_sql)
                     col_info["status_values"] = sorted(str(sr[0]) for sr in s_rows if sr[0] is not None)
