@@ -50,6 +50,11 @@ class TestSurface(Workdir):
     def test_examples_validate(self):
         self.lp("surface", "validate", EPH)
         self.lp("surface", "validate", FIXED)
+        self.lp("surface", "validate", os.path.join(APP, "surfaces", "followup-by-month.ephemeral.json"))
+
+    def test_site_demo_in_sync(self):
+        p = subprocess.run([sys.executable, os.path.join(APP, "build_site.py"), "--check"], capture_output=True)
+        self.assertEqual(p.returncode, 0, "docs/demo/index.html 与源文件不同步：运行 python3 examples/living_app/build_site.py")
 
     def test_validate_rejects_code_outside_objects_writes_and_inline_rows(self):
         base = self.load(EPH)

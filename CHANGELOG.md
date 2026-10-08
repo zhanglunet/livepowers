@@ -17,6 +17,7 @@
   - 新技能 `living-surface`；能力包增加 `ddl`、`rollback`、`materialization`、`deployment` 字段，`ui` 指向固化展示面。
   - `lp surface a2ui`：把展示面转成 A2UI v0.9.1 消息流（createSurface / updateComponents / updateDataModel；Column / Row / Card / Text / Button 同 A2UI 基础组件，图表、表格、KPI、筛选为自定义组件库）。
   - 参考宿主 `examples/living_app/`（零依赖：`http.server` + 原生 JS）：对话式页面，智能体回答以 A2UI 展示面嵌在对话里，「申请固化」是 A2UI Button 事件，「模拟生长」运行 `grow.sh`；walkthrough 增加活软件一段。
+  - 网站新增在线演示页 `/demo/`（`docs/demo/index.html`，由 `examples/living_app/build_site.py` 生成）：对话式页面，浏览器内 SQLite（sql.js，带 SRI 校验）跑真实查询，演示次抛 → 申请固化 → 生长 → 命中固定页。
 
 ## [1.4.0] - 2026-10-07
 
