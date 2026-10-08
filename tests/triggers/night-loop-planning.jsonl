@@ -1,0 +1,5 @@
+{"prompt": "规划夜间长程任务，按模型可稳定时长切段并设置止损契约", "expect": ["night-loop-planning"], "reject": ["nightly-crystallization-review"]}
+{"prompt": "长程任务夜间运行，利用离峰算力拆成并发 DAG", "expect": ["night-loop-planning"], "reject": ["agent-harness-for-tools"]}
+{"prompt": "Task must run overnight, needs strong model to plan and cheaper models to execute", "expect": ["night-loop-planning"], "reject": ["explore-with-evidence"]}
+{"prompt": "早晨人工审核待验收的产物清单", "expect": ["nightly-crystallization-review"], "reject": ["night-loop-planning"]}
+{"prompt": "修改已有技能的描述 frontmatter", "expect": ["writing-livepowers-skills"], "reject": ["night-loop-planning"]}

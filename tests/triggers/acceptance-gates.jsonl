@@ -1,0 +1,5 @@
+{"prompt": "候选能力进入生产，或任何已完成需要被确认", "expect": ["acceptance-gates"], "reject": ["fde-delivery"]}
+{"prompt": "Agent 自行声明完成，需要独立审查与四道门禁", "expect": ["acceptance-gates"], "reject": ["crystallize-to-system1"]}
+{"prompt": "A candidate capability or spec implementation is about to enter production, need acceptance gates", "expect": ["acceptance-gates"], "reject": ["system1-first"]}
+{"prompt": "收到用户的一个通用分析问题，准备开始探索", "expect": ["system1-first"], "reject": ["acceptance-gates"]}
+{"prompt": "请帮我写一个新技能", "expect": ["writing-livepowers-skills"], "reject": ["acceptance-gates"]}

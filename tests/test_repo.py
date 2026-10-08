@@ -65,6 +65,43 @@ class TestSkills(unittest.TestCase):
                 if ref not in allow:
                     self.assertIn(ref, self.names, f"{n} 引用了不存在的技能 {ref}")
 
+    def test_triggers_coverage_and_ranking(self):
+        sys.path.insert(0, os.path.join(REPO, "scripts"))
+        import lp
+        descs = {}
+        for n in self.names:
+            fm, _ = frontmatter(os.path.join(SKILLS, n, "SKILL.md"))
+            descs[n] = fm.get("description", "")
+
+        triggers_dir = os.path.join(REPO, "tests", "triggers")
+        self.assertTrue(os.path.isdir(triggers_dir), "缺少 tests/triggers 目录")
+
+        for n in self.names:
+            path = os.path.join(triggers_dir, f"{n}.jsonl")
+            self.assertTrue(os.path.isfile(path), f"缺少技能评测集: {path}")
+            lines = [json.loads(line) for line in read(path).splitlines() if line.strip()]
+            pos = [l for l in lines if n in l["expect"]]
+            neg = [l for l in lines if n in l.get("reject", [])]
+            self.assertGreaterEqual(len(pos), 3, f"{n} 正例数量少于 3 条")
+            self.assertGreaterEqual(len(neg), 2, f"{n} 反例数量少于 2 条")
+
+            # 校验正例必须命中 top 2
+            for item in pos:
+                prompt, expect = item["prompt"], item["expect"]
+                scores = sorted([(name, lp.intent_sim(prompt, desc)) for name, desc in descs.items()],
+                                key=lambda x: -x[1])
+                top2 = [x[0] for x in scores[:2]]
+                self.assertTrue(any(e in top2 for e in expect),
+                                f"{n} 正例 '{prompt}' 未能排进 top 2: {scores[:2]}")
+
+            # 校验反例不能被排在 top 1
+            for item in neg:
+                prompt = item["prompt"]
+                scores = sorted([(name, lp.intent_sim(prompt, desc)) for name, desc in descs.items()],
+                                key=lambda x: -x[1])
+                self.assertNotEqual(scores[0][0], n, f"{n} 反例 '{prompt}' 误触发为 top 1")
+
+
 
 class TestManifests(unittest.TestCase):
     def test_versions_consistent(self):

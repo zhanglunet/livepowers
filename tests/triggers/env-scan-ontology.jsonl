@@ -1,0 +1,5 @@
+{"prompt": "接入新环境或新数据库，扫描库表生成本体并检测环境漂移", "expect": ["env-scan-ontology"], "reject": ["fde-delivery"]}
+{"prompt": "检测数据库表结构与字段状态是否发生 schema 漂移", "expect": ["env-scan-ontology"], "reject": ["ontology-grounded-spec"]}
+{"prompt": "Onboarding a new database, scan schema drift is suspected", "expect": ["env-scan-ontology"], "reject": ["oltp-action-safety"]}
+{"prompt": "向用户汇报本周的业务增量价值", "expect": ["outcome-ledger"], "reject": ["env-scan-ontology"]}
+{"prompt": "规范一个写操作的事务与幂等键", "expect": ["oltp-action-safety"], "reject": ["env-scan-ontology"]}

@@ -1,0 +1,5 @@
+{"prompt": "需要新增或修改本体定义、规则变更时提出 Delta", "expect": ["ontology-evolution"], "reject": ["ontology-grounded-spec"]}
+{"prompt": "缺对象或指标口径变更，需要演进本体并修改规则", "expect": ["ontology-evolution"], "reject": ["env-scan-ontology"]}
+{"prompt": "Needs an object, relation, state or metric definition the ontology does not have", "expect": ["ontology-evolution"], "reject": ["outcome-ledger"]}
+{"prompt": "收到任何业务请求、准备动手前先查注册表看有没有现成能力", "expect": ["system1-first"], "reject": ["ontology-evolution"]}
+{"prompt": "配置两个 Agent 之间通信的网络端口", "expect": ["auditable-agent-comms"], "reject": ["ontology-evolution"]}

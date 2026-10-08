@@ -1,0 +1,5 @@
+{"prompt": "任务被止损转入异常接管、Agent 反复失败、人要接手", "expect": ["takeover-handling"], "reject": ["explore-with-evidence"]}
+{"prompt": "探索超过最大轮次或预算超限触发止损，进行接管归因与换人重开", "expect": ["takeover-handling"], "reject": ["night-loop-planning"]}
+{"prompt": "Task stopped by budget limit and moved to takeover, agent keeps failing", "expect": ["takeover-handling"], "reject": ["system1-first"]}
+{"prompt": "注册表命中能力并正常执行", "expect": ["system1-first"], "reject": ["takeover-handling"]}
+{"prompt": "从存量 SQLite 中导出表结构信息", "expect": ["env-scan-ontology"], "reject": ["takeover-handling"]}

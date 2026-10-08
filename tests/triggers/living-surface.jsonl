@@ -1,0 +1,5 @@
+{"prompt": "活软件里固定页没有覆盖用户的统计需求，需要出次抛分析展示", "expect": ["living-surface"], "reject": ["explore-with-evidence"]}
+{"prompt": "把次抛临时分析页面长成固化表结构和固定页", "expect": ["living-surface"], "reject": ["crystallize-to-system1"]}
+{"prompt": "Business application needs a one-off ephemeral chart or promote a surface to permanent page", "expect": ["living-surface"], "reject": ["system1-first"]}
+{"prompt": "把探索成功的路径固化为 System 1 能力包", "expect": ["crystallize-to-system1"], "reject": ["living-surface"]}
+{"prompt": "业务请求先查注册表是否有已固化能力", "expect": ["system1-first"], "reject": ["living-surface"]}

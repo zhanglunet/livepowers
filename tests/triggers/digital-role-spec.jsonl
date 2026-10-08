@@ -1,0 +1,5 @@
+{"prompt": "把一个岗位的工作交给人加智能体团队共同承担", "expect": ["digital-role-spec"], "reject": ["fde-delivery"]}
+{"prompt": "定义数字岗位规格，测算岗位自动化与经济账", "expect": ["digital-role-spec"], "reject": ["outcome-ledger"]}
+{"prompt": "A job role is to be carried by humans plus an agent team as a digital role spec", "expect": ["digital-role-spec"], "reject": ["acceptance-gates"]}
+{"prompt": "直接执行 SQL 查询上周收入", "expect": ["system1-first"], "reject": ["digital-role-spec"]}
+{"prompt": "编写夜间长时间运行的 DAG 契约", "expect": ["night-loop-planning"], "reject": ["digital-role-spec"]}

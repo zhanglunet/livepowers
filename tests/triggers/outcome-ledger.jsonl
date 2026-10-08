@@ -1,0 +1,5 @@
+{"prompt": "衡量业务结果、核算单位成本、论证价值时使用", "expect": ["outcome-ledger"], "reject": ["fde-delivery"]}
+{"prompt": "承诺业务结果前先登记基线，核算验收任务平均成本", "expect": ["outcome-ledger"], "reject": ["digital-role-spec"]}
+{"prompt": "Committing to a business outcome, reporting value, outcome-based pricing", "expect": ["outcome-ledger"], "reject": ["acceptance-gates"]}
+{"prompt": "排查任务为什么在第 3 轮探索时报错", "expect": ["takeover-handling"], "reject": ["outcome-ledger"]}
+{"prompt": "写一个测试验证两个智能体之间的消息通道", "expect": ["auditable-agent-comms"], "reject": ["outcome-ledger"]}

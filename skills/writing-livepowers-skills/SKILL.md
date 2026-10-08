@@ -37,9 +37,13 @@ description: Use when <触发条件>... <中文一句话>
 
 ## 验证
 
+每个技能必须在 `tests/triggers/<name>.jsonl` 提供至少 3 条正例与 2 条反例（`{"prompt": "...", "expect": ["<name>"], "reject": ["..."]}`），并在 CI 中验证确定性打分排序。也可以运行评测脚本 `scripts/eval_triggers.py` 测量触发率与混淆表现。
+
 ```bash
-python -m unittest discover -s tests -v    # 含技能结构检查：名称、描述长度、路由表覆盖
+python -m unittest discover -s tests -v    # 含技能结构检查与 tests/triggers/ 触发率用例集
+python scripts/eval_triggers.py           # 输出所有技能的触发率与混淆评估
 ```
+
 
 ## 固化的类比
 

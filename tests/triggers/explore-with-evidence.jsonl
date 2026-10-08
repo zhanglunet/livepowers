@@ -1,0 +1,5 @@
+{"prompt": "注册表未命中、需要 Agent 自主探索并记录证据", "expect": ["explore-with-evidence"], "reject": ["system1-first"]}
+{"prompt": "新需求无现成工具，准备写脚本探索，必须保留探索证据", "expect": ["explore-with-evidence"], "reject": ["crystallize-to-system1"]}
+{"prompt": "Capability registry misses, agent must reason it out and explore with evidence", "expect": ["explore-with-evidence"], "reject": ["acceptance-gates"]}
+{"prompt": "收到任何业务请求、准备动手前先查已固化能力注册表", "expect": ["system1-first"], "reject": ["explore-with-evidence"]}
+{"prompt": "把探索好的功能固化为 Python 脚本", "expect": ["crystallize-to-system1"], "reject": ["explore-with-evidence"]}
