@@ -30,10 +30,23 @@ class TestMath(unittest.TestCase):
         self.assertGreaterEqual(lp.score_match("帮我看一下各地区的周收入", cap), 2)
         self.assertLess(lp.score_match("合同审批进度", cap), 2)
 
+    def test_concept_similarity_is_opt_in_and_conservative_aliases(self):
+        # Broad semantic concepts are available only to semantic probe, not strict routing/suggestions.
+        self.assertLess(lp.intent_sim("delete customer", "删除系统用户"), 0.6)
+        self.assertLess(lp.semantic_sim("每月客户报表", "每周客户报表"), 0.65)
+        self.assertLess(lp.semantic_sim("生日提醒", "每日收入"), 0.65)
+        self.assertLess(lp.semantic_sim("code review", "审批"), 0.65)
+        self.assertGreaterEqual(lp.concept_sim("各地区周收入", "各省份周营收"), 0.5)
+        self.assertNotIn("日", lp.extract_concepts("生日提醒"))
+        positives = [("各地区周收入", "各省份周营收"), ("transfer stale lead", "handover overdue opportunity")]
+        negatives = [("每月客户报表", "每周客户报表"), ("生日提醒", "每日收入"), ("code review", "审批")]
+        self.assertTrue(all(lp.semantic_sim(a, b) >= 0.65 for a, b in positives))
+        self.assertTrue(all(lp.semantic_sim(a, b) < 0.65 for a, b in negatives))
+
     def test_intent_sim_with_synonyms(self):
         # 常见同义表达即使没有字面交集，也能通过近义归一获得高相似度
-        self.assertGreaterEqual(lp.intent_sim("各地区周收入", "各省份周营收"), 0.5)
-        self.assertGreaterEqual(lp.intent_sim("transfer stale lead", "handover overdue opportunity"), 0.5)
+        self.assertGreaterEqual(lp.concept_sim("各地区周收入", "各省份周营收"), 0.5)
+        self.assertGreaterEqual(lp.concept_sim("transfer stale lead", "handover overdue opportunity"), 0.5)
         self.assertLess(lp.intent_sim("各地区周收入", "合同审批流程"), 0.3)
 
 
@@ -47,6 +60,43 @@ class TestCLI(Workdir):
         self.assertIn("HIT", out)
         self.lp("registry", "retire", "cap_weekly_revenue", "--reason", "口径变更")
         self.lp("registry", "find", "各地区的周收入", check=2)
+
+    def test_semantic_similarity_cannot_expand_strict_write_match(self):
+        self.lp("init")
+        self.lp("intents", "alias", "delete customer", "删除客户")
+        self.lp("registry", "add", "--name", "Delete customer", "--kind", "cli",
+                "--intents", "delete customer,删除客户", "--entry", "crm customer delete {id}",
+                "--writes-state", "--tests", "t.py", "--generated-by", "dev", "--accepted-by", "qa")
+        self.lp("registry", "find", "删除系统用户", check=2)
+        self.lp("registry", "add", "--name", "Transfer stale lead", "--kind", "cli",
+                "--intents", "transfer stale lead", "--entry", "crm lead transfer {id}",
+                "--writes-state", "--tests", "t.py", "--generated-by", "dev", "--accepted-by", "qa")
+        self.lp("registry", "find", "移交超期商机", "--semantic", check=3)
+
+    def test_semantic_concepts_are_configurable_in_livepowers_home(self):
+        self.lp("init")
+        self.lp("registry", "add", "--name", "Alpha", "--kind", "cli", "--intents", "alpha", "--entry", "run")
+        with open(os.path.join(self.dir, ".livepowers", "concepts.json"), encoding="utf-8") as f:
+            config = json.load(f)
+        config["groups"] = [["alpha", "beta"]]
+        with open(os.path.join(self.dir, ".livepowers", "concepts.json"), "w", encoding="utf-8") as f:
+            json.dump(config, f)
+        self.lp("registry", "find", "beta", check=2)
+        self.lp("registry", "find", "beta", "--semantic", check=3)
+
+    def test_maybe_hit_fixed_page_requires_confirmation(self):
+        self.lp("init")
+        self.lp("registry", "add", "--name", "Weekly revenue", "--kind", "sql",
+                "--intents", "weekly revenue by region", "--entry", "python w.py")
+        # Force a semantic candidate with a fixed-page reference in registry fixture.
+        reg = self.read_json(".livepowers/registry.json")
+        reg["capabilities"][0]["ui"] = "fixed.json"
+        with open(os.path.join(self.dir, ".livepowers", "registry.json"), "w", encoding="utf-8") as f:
+            json.dump(reg, f)
+        res = self.lp("registry", "find", "每星期的营业额", "--semantic", check=3)
+        self.assertIn("候选固定页", res.stdout)
+        self.assertIn("确认适用后再打开", res.stdout)
+        self.assertNotIn("直接打开，不必重新分析", res.stdout)
 
     def test_registry_semantic_find_maybe_hit_and_exit_codes(self):
         self.lp("init")
@@ -336,7 +386,9 @@ class TestCLI(Workdir):
         out = self.lp("intents", "suggest").stdout
         self.assertIn("weekly revenue by region", out)
         self.assertIn("weekly revenue per region", out)
-        self.assertIn("逾期商机移交", out)
+        self.assertNotIn("逾期商机移交", out)
+        self.assertNotIn("每月客户报表", out)
+        self.assertLess(lp.intent_sim("每月客户报表", "每周客户报表"), 0.5)
         self.assertNotIn("客户流失预警", out)
         self.assertIn("lp intents alias", out)
 
