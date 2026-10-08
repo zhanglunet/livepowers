@@ -1,0 +1,29 @@
+{
+  "$schema": "https://skills.sh/schema.json",
+  "name": "livepowers",
+  "version": "1.4.0",
+  "description": "Live Product paradigm skills for agents: Agent + Ontology + Harness. 活产品范式技能包。",
+  "homepage": "https://livepowers.pages.dev",
+  "repository": "https://github.com/zhanglunet/livepowers",
+  "skills": [
+    "acceptance-gates",
+    "agent-harness-for-tools",
+    "auditable-agent-comms",
+    "crystallize-to-system1",
+    "digital-role-spec",
+    "env-scan-ontology",
+    "explore-with-evidence",
+    "fde-delivery",
+    "living-surface",
+    "night-loop-planning",
+    "nightly-crystallization-review",
+    "oltp-action-safety",
+    "ontology-evolution",
+    "ontology-grounded-spec",
+    "outcome-ledger",
+    "system1-first",
+    "takeover-handling",
+    "using-livepowers",
+    "writing-livepowers-skills"
+  ]
+}

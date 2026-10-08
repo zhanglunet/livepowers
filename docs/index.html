@@ -513,7 +513,7 @@ ok
 <div class="grid g2">
   <div>
     <div class="tabs" role="tablist">
-      <button class="on" data-p="i0">npm</button><button data-p="i1">Claude Code</button><button data-p="i2">仅技能</button><button data-p="i3">Codex / Cursor</button><button data-p="i4">网页端</button>
+      <button class="on" data-p="i0">npm</button><button data-p="i5">skills.sh</button><button data-p="i1">Claude Code</button><button data-p="i2">仅技能</button><button data-p="i3">Codex / Cursor</button><button data-p="i4">网页端</button>
     </div>
     <div id="i0" class="pane on"><pre><span class="c"># 一键安装技能（默认装到 ~/.claude/skills）</span>
 <span class="k">npx livepowers install</span>
@@ -526,6 +526,9 @@ ok
 <span class="c"># 查看 / 卸载</span>
 livepowers list
 livepowers uninstall --target codex --project</pre></div>
+    <div id="i5" class="pane"><pre><span class="c"># Vercel Agent Skills 市场（支持 20+ 款客户端）</span>
+<span class="k">npx skills add</span> zhanglunet/livepowers
+<span class="c"># 注意：只安装 18 个技能定义；lp 命令行工具仍需 npm i -g livepowers</span></pre></div>
     <div id="i1" class="pane"><pre>/plugin marketplace add zhanglunet/livepowers
 /plugin install livepowers@livepowers-marketplace
 <span class="c"># 自带 SessionStart 钩子，自动注入 using-livepowers</span>
@@ -596,7 +599,7 @@ ls livepowers/dist/skills/</pre></div>
     <tr><td>Palantir AIP / Ontology</td><td>商业企业平台</td><td>Agent + Ontology 公式；行动审批审计</td><td>开源、零依赖、可装进任意 Agent；缺本体运行时</td></tr>
     <tr><td>Devin Playbooks</td><td>可复用流程 prompt</td><td>Playbook ≈ 工具卡 + 剧本</td><td>固化物是代码而非 prompt；缺从会话自动生成</td></tr>
     <tr><td>Voyager 式自增长技能库</td><td>自动蒸馏技能</td><td>探索留证据 → 固化</td><td>独有 n*、生成者 ≠ 采纳人、去固化；缺 hook 自动采集</td></tr>
-    <tr><td>skills.sh · Cursor rules</td><td>分发渠道</td><td>npx 安装对应这些渠道</td><td>未上架 skills.sh；不生成 .mdc</td></tr>
+    <tr><td>skills.sh · Cursor rules</td><td>分发渠道</td><td>npx skills 与 livepowers 对应这些渠道</td><td>支持 skills.sh 安装 18 个技能；支持生成 .cursor/rules/*.mdc</td></tr>
   </tbody>
 </table>
 

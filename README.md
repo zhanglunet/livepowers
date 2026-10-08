@@ -109,7 +109,13 @@ npm i -g livepowers                               # 全局安装后可直接用 
 
 **Cursor**：仓库带 `.cursor-plugin/plugin.json` 与 `hooks/hooks-cursor.json`。
 
-**其他支持 Agent Skills 标准的客户端**：把 `skills/*` 放进客户端的技能目录。
+**skills.sh（Vercel 技能市场）**
+
+```bash
+npx skills add zhanglunet/livepowers
+```
+
+支持 20+ 款兼容 Agent Skills 标准的客户端。注意：skills.sh 仅安装 18 个技能定义，不带 `SessionStart` 钩子与 Python 脚本；如需使用 `lp` 命令行工具（任务看板、证据统计、结果台账等），仍需全局安装 `npm i -g livepowers`（需 Python 3.9+）。
 
 **网页端**：运行 `scripts/package-skills.sh`，在设置的技能页逐个上传 `dist/skills/*.zip`（也可以直接从 Releases 下载）。
 

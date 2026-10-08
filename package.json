@@ -20,6 +20,7 @@
     "templates/",
     "hooks/",
     "commands/",
+    "skills.json",
     "AGENTS.md",
     "CHANGELOG.md"
   ],
