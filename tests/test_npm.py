@@ -126,6 +126,12 @@ class TestInstaller(unittest.TestCase):
         self.assertEqual(os.listdir(self.proj), [])
         self.assertEqual(os.listdir(self.home), [])
 
+    def test_cursor_project_dry_run_does_not_write_mdc(self):
+        out = self.cli("install", "--target", "cursor", "--project", "--dry-run").stdout
+        self.assertIn("livepowers.mdc", out)
+        self.assertFalse(os.path.exists(os.path.join(self.proj, ".cursor", "rules", "livepowers.mdc")))
+        self.assertEqual(os.listdir(self.proj), [])
+
     def test_list_and_path(self):
         self.assertIn("未安装", self.cli("list").stdout)
         self.cli("install")
