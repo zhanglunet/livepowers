@@ -2,7 +2,8 @@
 const $ = (id) => document.getElementById(id);
 const thread = $("thread");
 const state = { db: null, ontology: new Set(["owners", "customers", "opportunities", "activities"]),
-  registry: [], records: {}, promoted: null, counter: 0, evidence: 0 };
+  registry: [], records: {}, promoted: null, counter: 0, evidence: 0, model: false };
+const MATCH = 0.6;   // 问题被预置展示面 / 固定页意图覆盖的比例达到这个值才算命中，否则不硬套
 const client = new A2UIClient({ onAction });
 
 function el(tag, text, cls) { const e = document.createElement(tag); if (text !== undefined) e.textContent = text; if (cls) e.className = cls; return e; }
@@ -30,14 +31,8 @@ function query(db, sql) {
   return { columns: res[0].columns, rows: res[0].values };
 }
 
-function refsOk(s) {  // lp surface validate 的核心：数据源与查询只引用本体内对象、只读
-  for (const d of Object.values(s.data)) {
-    if (!state.ontology.has(d.source.name)) return `数据源 ${d.source.name} 不在本体里`;
-    if (!/^\s*(select|with)\b/i.test(d.query)) return "查询必须只读";
-    for (const m of d.query.matchAll(/\b(?:from|join)\s+([A-Za-z_]\w*)/gi))
-      if (!state.ontology.has(m[1].toLowerCase())) return `查询引用了本体外的对象 ${m[1]}`;
-  }
-  return "";
+function refsOk(s) {  // 与 lp surface validate 同一套规则（surface-rules.js）
+  return SurfaceRules.validate(s, state.ontology).join("；");
 }
 
 function computeData(db, s) {
@@ -80,8 +75,7 @@ function toA2UI(s, data, sid, promotable, version) {  // 与 lp surface a2ui 相
   return msgs;
 }
 
-function tokens(t) { const s = new Set(t.toLowerCase().match(/[a-z0-9]+/g) || []); for (let i = 0; i < t.length - 1; i++) s.add(t.slice(i, i + 2)); return s; }
-function overlap(a, b) { const B = tokens(b); let n = 0; tokens(a).forEach((x) => { if (B.has(x)) n++; }); return n; }
+const coverage = SurfaceRules.coverage;
 
 function bubble(role, text) { const m = el("div", undefined, "msg " + role); if (text) m.append(el("p", text)); thread.append(m); m.scrollIntoView({ block: "end" }); return m; }
 
@@ -103,29 +97,45 @@ function openPage(page, route) {
     messages: toA2UI(s, computeData(state.db, s), `${page.id}-${++state.counter}`, false, page.version) });
 }
 
-function ask(q) {
-  bubble("user", q);
-  const hit = state.registry.map((p) => [Math.max(...p.intents.map((i) => overlap(q, i))), p]).sort((a, b) => b[0] - a[0])[0];
-  if (hit && hit[0] >= 4) return openPage(hit[1], "System 1 · 命中固定页");
-  const presets = Object.entries(SURFACES).filter(([, s]) => s.tier === "ephemeral");
-  const [key, s] = presets.map(([k, s]) => [overlap(q, s.intent + " " + s.title), k, s]).sort((a, b) => b[0] - a[0])
-    .filter((x) => x[0] > 0).map((x) => [x[1], x[2]])[0] || [];
-  if (!s) return assistant({ route: "System 2 · 未命中", kind: "none",
-    text: "没有固定页能回答这个问题。这个演示预置了两个次抛分析：各地区在途商机金额、每月跟进商机金额。" });
+function showEphemeral(s, key, route, text) {
   const err = refsOk(s);
-  if (err) return assistant({ route: "System 2", text: `展示面未通过校验：${err}` });
-  const data = computeData(state.db, s), sid = `${s.id}-${++state.counter}`;
+  if (err) return assistant({ route, kind: "none", text: `展示面未通过校验，没有执行：${err}` });
+  let data;
+  try { data = computeData(state.db, s); } catch (e) { return assistant({ route, kind: "none", text: `查询执行失败：${e.message}` }); }
+  const sid = `${s.id}-${++state.counter}`;
   state.records[sid] = { key, intent: s.intent, stats: data };   // 只记摘要：演示里直接保留计算结果用于对账
   state.evidence++;
-  assistant({ route: "System 2 · 次抛展示", kind: "ephemeral", messages: toA2UI(s, data, sid, true),
-    text: "没有现成的固定页，我当场做了一次分析（演示中为预置展示面；数字由 SQLite 按查询计算）。觉得以后常看，可以申请固化。" });
+  assistant({ route, kind: "ephemeral", messages: toA2UI(s, data, sid, true), text });
+}
+
+async function ask(q) {
+  bubble("user", q);
+  const hit = state.registry.map((p) => [Math.max(...p.intents.map((i) => coverage(q, i))), p]).sort((a, b) => b[0] - a[0])[0];
+  if (hit && hit[0] >= MATCH) return openPage(hit[1], "System 1 · 命中固定页");
+  const best = Object.entries(SURFACES).filter(([, s]) => s.tier === "ephemeral")
+    .map(([k, s]) => [coverage(q, s.intent + " " + s.title), k, s]).sort((a, b) => b[0] - a[0])[0];
+  if (best && best[0] >= MATCH) return showEphemeral(best[2], best[1], "System 2 · 次抛展示（预置）",
+    "没有现成的固定页，我当场做了一次分析（预置展示面；数字由 SQLite 按查询计算）。觉得以后常看，可以申请固化。");
+  if (!state.model) return assistant({ route: "System 2 · 未命中", kind: "none",
+    text: "演示里没有这个问题的预置分析，模型也还没接入，所以不硬套一个相近的结果。可以试试：各地区在途商机金额、每月跟进商机金额。" });
+  const wait = bubble("assistant", "正在让模型写查询和挑图表……");
+  let res;
+  try {
+    const r = await fetch("/api/agent", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ q }) });
+    res = await r.json();
+  } catch (e) { res = { error: "模型服务连不上" }; }
+  wait.remove();
+  if (res.unsupported) return assistant({ route: "System 2 · 模型", kind: "none", text: `模型认为这个问题不在演示数据范围内：${res.unsupported}` });
+  if (!res.surface) return assistant({ route: "System 2 · 模型", kind: "none", text: res.error || "模型没有给出展示面" });
+  showEphemeral(res.surface, null, "System 2 · 次抛展示（模型生成，已按规则校验）",
+    "模型写了查询、挑了组件；校验通过后由 SQLite 计算出这些数字。觉得以后常看，可以申请固化。");
 }
 
 function onAction({ surfaceId, name, button }) {
   if (name !== "promote_surface" || !state.records[surfaceId]) return;
   button.disabled = true;
   const rec = state.records[surfaceId];
-  if (!SURFACES[rec.key.replace(".ephemeral", ".fixed")]) {
+  if (!rec.key || !SURFACES[rec.key.replace(".ephemeral", ".fixed")]) {
     return assistant({ text: "已登记为固化候选。这个演示只为「各地区在途商机金额」预置了生长产物，其他分析停在候选状态。" });
   }
   state.promoted = { ...rec, task: "t_" + Math.random().toString(16).slice(2, 10) };
@@ -188,6 +198,10 @@ initSqlJs().then((SQL) => {
   }
   hello.append(chips);
   renderPages();
+  fetch("/api/agent").then((r) => (r.ok ? r.json() : { configured: false })).catch(() => ({ configured: false }))
+    .then((r) => { state.model = Boolean(r && r.configured); $("model-status").textContent = state.model
+      ? "模型：已接入。预置分析覆盖不到的问题会交给模型，输出先校验再执行。"
+      : "模型：未接入。只能回答预置的两个分析；接入方法见仓库 examples/living_app/README.md。"; });
 }).catch((e) => { $("loading").textContent = "SQLite 加载失败：" + e.message; });
 
 $("ask").addEventListener("submit", (e) => { e.preventDefault(); const q = $("q").value.trim(); if (!q || !state.db) return; $("q").value = ""; ask(q); });

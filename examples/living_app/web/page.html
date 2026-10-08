@@ -96,7 +96,8 @@ select { padding: 6px; border: 1px solid var(--line); border-radius: 6px; backgr
   </ol>
   <p class="muted">先在右侧申请固化，再点「模拟生长」。</p>
   <h2>说明</h2>
-  <p class="muted">智能体的生成在这里是模拟的（挑选预置展示面）；校验、对账、部署、注册的规则与 <code>lp surface</code> 相同。仓库里的参考宿主跑的是真实的 <code>lp</code> 命令：<a href="https://github.com/zhanglunet/livepowers/tree/main/examples/living_app">examples/living_app</a>。</p>
+  <p class="muted" id="model-status">模型：检测中……</p>
+  <p class="muted">没接模型时，智能体只会挑选预置展示面，覆盖度不够就如实说明，不硬套；接入模型后，模型只写查询、挑组件，输出先按与 <code>lp surface validate</code> 相同的规则校验再执行。对账、部署、注册的规则也与 <code>lp surface</code> 相同。仓库里的参考宿主跑的是真实的 <code>lp</code> 命令：<a href="https://github.com/zhanglunet/livepowers/tree/main/examples/living_app">examples/living_app</a>。</p>
 </aside>
 <main>
   <div id="thread" aria-live="polite"><p id="loading">正在加载浏览器内的 SQLite……</p></div>
@@ -107,6 +108,7 @@ select { padding: 6px; border: 1px solid var(--line); border-radius: 6px; backgr
 </main>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-asm.js" integrity="sha384-vIugRn1oq9Sl9UZMeszGC3jlKfutaSg1XHf8u4TKUWQiXELAVZXcKYualzDkPKrh" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script>/*A2UI*/</script>
+<script>/*RULES*/</script>
 <script>
 "use strict";
 const SURFACES = /*SURFACES*/;
