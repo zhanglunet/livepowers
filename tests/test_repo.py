@@ -99,6 +99,12 @@ class TestManifests(unittest.TestCase):
         self.assertEqual(body.strip(), inline.strip(), "docs/panorama.svg 与网站内联全景图不一致，请重新生成")
         self.assertIn("panorama.svg", read(os.path.join(REPO, "README.md")))
 
+    def test_tool_card_template(self):
+        content = read(os.path.join(REPO, "templates", "tool-card.md"))
+        self.assertIn("后置条件", content)
+        self.assertIn("禁止动作", content)
+
+
     def test_evidence_capture_hook(self):
         hooks = json.loads(read(os.path.join(REPO, "hooks", "hooks.json")))["hooks"]
         self.assertEqual(hooks["PostToolUse"][0]["matcher"], "Bash")
