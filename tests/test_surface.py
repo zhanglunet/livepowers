@@ -158,6 +158,50 @@ class TestSurface(Workdir):
         self.lp("registry", "retire", "cap_pipeline", "--reason", "口径变更")
         self.assertEqual(json.loads(self.lp("pages", "list").stdout), [])
 
+    def test_review_fixes_prod_env_validation_hash_and_capability_queries(self):
+        # 非 prod 环境（且非孪生）的回执不算生产部署
+        shutil.copy(os.path.join(self.dir, "demo.sqlite"), os.path.join(self.dir, "staging.sqlite"))
+        self.deploy("staging.sqlite", "staging")
+        fixed = self.write("fixed.json", self.load(FIXED))
+        reg = ["registry", "add", "--name", "P", "--id", "cap_p", "--kind", "view", "--intents", "pipeline",
+               "--entry", "v", "--ui", fixed]
+        self.lp(*reg, check=1)
+        self.lp("surface", "deploy", fixed, "--env", "prod", "--twin", "--by", "a", "--db", "demo.sqlite",
+                "--ddl", DDL, "--rollback", ROLLBACK, check=1)  # 孪生不能叫 prod
+        # 部署前先校验：含管理语句的展示面不执行任何 DDL 或查询
+        bad = self.load(FIXED)
+        bad["data"]["pipeline"]["query"] = "PRAGMA user_version=123"
+        out = self.lp("surface", "deploy", self.write("bad.json", bad), "--env", "prod", "--by", "ops",
+                      "--db", "demo.sqlite", "--ddl", DDL, "--rollback", ROLLBACK, check=1).stderr
+        self.assertIn("不执行任何 DDL", out)
+        import sqlite3
+        con = sqlite3.connect(os.path.join(self.dir, "demo.sqlite"))
+        try:
+            self.assertEqual(con.execute("pragma user_version").fetchone()[0], 0)
+            self.assertEqual(con.execute("select count(*) from sqlite_master where name='v_pipeline_by_region'")
+                             .fetchone()[0], 0)
+        finally:
+            con.close()
+        # 回执绑定展示面内容：部署后改了文件，旧回执不放行；注册后再改，页面下线
+        self.lp("surface", "deploy", fixed, "--env", "prod", "--by", "ops", "--db", "demo.sqlite",
+                "--ddl", DDL, "--rollback", ROLLBACK)
+        changed = self.load(fixed)
+        changed["title"] = "改过的标题"
+        self.write("fixed.json", changed)
+        self.assertIn("内容一致", self.lp(*reg, check=1).stderr)
+        self.write("fixed.json", self.load(FIXED))
+        self.lp(*reg)
+        self.assertEqual(len(json.loads(self.lp("pages", "list").stdout)), 1)
+        self.write("fixed.json", changed)
+        self.assertEqual(json.loads(self.lp("pages", "list").stdout), [])
+        # 能力类数据源同样必须带只读查询
+        self.lp("registry", "add", "--name", "R", "--id", "cap_r", "--kind", "sql", "--intents", "r", "--entry", "r")
+        s = self.load(EPH)
+        s["data"]["pipeline"] = {"source": {"type": "capability", "name": "cap_r"}}
+        self.invalid(s, "缺少 query")
+        s["data"]["pipeline"]["query"] = "PRAGMA user_version=1"
+        self.invalid(s, "SELECT 或 WITH")
+
     def test_template_validates(self):
         with open(os.path.join(self.dir, ".livepowers", "ontology.draft.yaml"), "a", encoding="utf-8") as f:
             f.write("  - name: v_weekly_revenue\n")

@@ -378,9 +378,9 @@ def cmd_registry_add(a):
         if errs:
             die("展示面未通过校验：\n  - " + "\n  - ".join(errs))
         surface_id = s["id"]
-        if not verified_deployments(surface_id):
-            die(f"展示面 {surface_id} 没有核验通过的生产部署回执：先 lp surface deploy（非孪生），"
-                "lp registry add 只登记信息，不会建表或建视图")
+        if not verified_deployments(surface_id, surface_sha(a.ui)):
+            die(f"展示面 {surface_id} 没有与当前文件内容一致、核验通过的生产部署回执（--env {PROD_ENV}）："
+                "先 lp surface deploy；lp registry add 只登记信息，不会建表或建视图")
     cap = {
         "id": cid, "name": a.name, "kind": a.kind,
         "intents": [s.strip() for s in a.intents.split(",") if s.strip()],
@@ -389,6 +389,7 @@ def cmd_registry_add(a):
         "writes_state": a.writes_state, "tests": a.tests, "version": a.version,
         "owner": a.owner, "ontology_version": a.ontology_version,
         "package": a.package, "validated_model": a.validated_model, "ui": a.ui, "surface_id": surface_id,
+        "surface_sha": surface_sha(a.ui) if a.ui else "",
         "generated_by": a.generated_by, "accepted_by": a.accepted_by,
         "status": "active", "created": now(), "last_verified": now(),
         "calls": 0, "fails": 0, "supersedes": a.supersedes or None,
@@ -1285,8 +1286,7 @@ def surface_problems(s, ontology_path=""):
                 errs.append(f"data.{name} 引用的能力 {sn} 不存在或已退役")
             elif cap.get("writes_state"):
                 errs.append(f"data.{name} 引用了写操作能力 {sn}：展示面不承载写操作（走 oltp-action-safety）")
-            continue
-        if sn.lower().split(".")[-1] not in allowed:
+        elif sn.lower().split(".")[-1] not in allowed:
             errs.append(f"data.{name} 的来源 {sn} 不在本体里（先走 ontology-evolution）")
         q = d.get("query")
         if not q:
@@ -1459,17 +1459,29 @@ def cmd_surface_reconcile(a):
     print("对账一致")
 
 
+PROD_ENV = "prod"   # 只有这个环境名的回执算生产部署
+
+
+def surface_sha(path):
+    """展示面内容指纹（规范化 JSON）：回执与注册都绑定它，部署后改过文件就要重新部署。"""
+    import hashlib
+    s = load_surface(path)
+    return hashlib.sha256(json.dumps(s, ensure_ascii=False, sort_keys=True).encode()).hexdigest()[:16]
+
+
 def deployment_path(surface_id, env):
     return os.path.join(DEPLOYMENTS, slug(surface_id), f"{slug(env)}.json")
 
 
-def verified_deployments(surface_id):
+def verified_deployments(surface_id, sha=None):
+    """核验通过的生产回执；给了 sha 时只认部署的正是这份展示面内容的回执。"""
     d = os.path.join(DEPLOYMENTS, slug(surface_id))
     out = []
     if os.path.isdir(d):
         for fn in sorted(os.listdir(d)):
             r = jload(os.path.join(d, fn), {})
-            if r.get("verified") and not r.get("twin"):
+            if (r.get("verified") and not r.get("twin") and r.get("env") == PROD_ENV
+                    and (sha is None or r.get("surface_sha") == sha)):
                 out.append(r)
     return out
 
@@ -1481,8 +1493,14 @@ def cmd_surface_deploy(a):
     s = load_surface(a.fixed)
     if s.get("tier") != "fixed":
         die("只有固化展示面（tier=fixed）需要部署")
+    if a.twin and a.env == PROD_ENV:
+        die(f"--twin 演练不能用环境名 {PROD_ENV}")
+    errs = surface_problems(s, a.ontology)
+    if errs:
+        die("展示面未通过校验，不执行任何 DDL 或查询：\n  - " + "\n  - ".join(errs))
     receipt = {"surface_id": s["id"], "env": a.env, "twin": a.twin, "by": a.by, "ts": now(),
-               "surface": a.fixed, "ddl": a.ddl, "rollback": a.rollback, "checks": [], "verified": False}
+               "surface": a.fixed, "surface_sha": surface_sha(a.fixed), "ddl": a.ddl, "rollback": a.rollback,
+               "checks": [], "verified": False}
     if a.external:
         if not a.verified_by or a.verified_by == a.by:
             die("--external 回执需要 --verified-by，且核验人不能是执行人")
@@ -1601,7 +1619,9 @@ def cmd_pages_list(a):
     for c in r["capabilities"]:
         if c["status"] != "active" or not c.get("ui"):
             continue
-        deps = verified_deployments(c.get("surface_id") or "")
+        if not os.path.isfile(c["ui"]) or surface_sha(c["ui"]) != c.get("surface_sha"):
+            continue   # 注册后展示面文件被改过：不上目录，需重新部署并发新版本
+        deps = verified_deployments(c.get("surface_id") or "", c.get("surface_sha"))
         if not deps:
             continue
         pages.append({"capability": c["id"], "name": c["name"], "version": c["version"], "ui": c["ui"],
@@ -2005,7 +2025,7 @@ def main(argv=None):
     sc.set_defaults(fn=cmd_surface_reconcile)
     sd = sf.add_parser("deploy", help="执行 DDL（失败回滚），核验结构存在且查询可执行，写部署回执")
     sd.add_argument("fixed", help="固化展示面")
-    sd.add_argument("--env", required=True, help="目标环境名（如 twin / prod）")
+    sd.add_argument("--env", required=True, help=f"目标环境名；只有 {PROD_ENV} 的回执算生产部署（孪生用 --twin 加其他名字）")
     sd.add_argument("--by", required=True, help="执行人")
     sd.add_argument("--db", default="", help="SQLite 数据库")
     sd.add_argument("--ddl", default="", help="迁移脚本")
@@ -2013,6 +2033,7 @@ def main(argv=None):
     sd.add_argument("--twin", action="store_true", help="孪生演练：回执不计入生产部署")
     sd.add_argument("--external", action="store_true", help="已用外部迁移工具执行，只记录回执")
     sd.add_argument("--verified-by", default="", help="--external 时的核验人（不能是执行人）")
+    sd.add_argument("--ontology", default="")
     sd.set_defaults(fn=cmd_surface_deploy)
     sa = sf.add_parser("a2ui", help="把展示面转成 A2UI v0.9.1 消息（JSONL：createSurface / updateComponents / updateDataModel）")
     sa.add_argument("file")

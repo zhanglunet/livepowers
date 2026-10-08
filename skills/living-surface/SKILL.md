@@ -46,7 +46,7 @@ lp surface promote <记录文件> --by <申请人>     # 建看板任务，进�
 | 5 对账 | `lp surface reconcile <记录文件> <fixed> --db <孪生库>`：按记录的查询重算，与新结构逐项比行数、哈希、合计；不一致必须解释并修正 | |
 | 6 验收 | 四道门，采纳人不能是生成者 | `acceptance-gates` |
 | 7 生产 | `lp surface deploy <fixed> --env prod --by <执行人> --db ... --ddl ... --rollback ...`；失败自动回滚。非 SQLite 用自己的迁移工具执行后 `--external --verified-by <核验人>` 记回执 | |
-| 8 注册 | `lp registry add --kind view --ui <fixed> ...`；没有生产回执会被拒绝 | |
+| 8 注册 | `lp registry add --kind view --ui <fixed> ...`；只认 `--env prod` 且展示面内容与部署时一致的回执，否则拒绝 | |
 
 注册后 `lp pages list` 就会列出这页，下次同类请求直接走 System 1。
 
