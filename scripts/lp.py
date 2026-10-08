@@ -46,6 +46,7 @@ lp —— Livepowers 命令行工具（只依赖 Python 3.9+ 标准库）
 """
 import argparse
 import contextlib
+import hashlib
 import io
 import json
 import os
@@ -1694,14 +1695,18 @@ def _auto_evidence(**kw):
 
 
 def hook_post_tool(d, st):
-    if d.get("tool_name") != "Bash":
+    tool_name = d.get("tool_name") or d.get("tool")
+    if tool_name and tool_name not in ("Bash", "bash", "sh", "terminal", "Command", "command"):
         return
-    cmd = (d.get("tool_input") or {}).get("command") or ""
-    resp = d.get("tool_response") or {}
+    cmd = (d.get("tool_input") or {}).get("command") or d.get("command") or d.get("cmd") or ""
+    if not cmd:
+        return
+    resp = d.get("tool_response") or d.get("response") or d.get("result") or {}
     if isinstance(resp, str):
         resp = {"stdout": resp}
-    stdout, stderr = str(resp.get("stdout", "")), str(resp.get("stderr", ""))
-    code = resp.get("exit_code")
+    stdout = str(resp.get("stdout") if "stdout" in resp else d.get("stdout", ""))
+    stderr = str(resp.get("stderr") if "stderr" in resp else d.get("stderr", ""))
+    code = resp.get("exit_code") if "exit_code" in resp else resp.get("exitCode", d.get("exit_code", d.get("exitCode")))
     m = FIND_RE.search(cmd)
     if m:
         q = m.group(1).strip().split("\n")[0].strip().strip("\"'")
@@ -1731,17 +1736,91 @@ def hook_post_tool(d, st):
 def hook_stop(d, st):
     pend = st.get("pending")
     if pend and not pend.get("hit") and not st.get("explicit"):
-        tokens = _turn_tokens(d.get("transcript_path") or "")
+        t_path = d.get("transcript_path") or d.get("transcriptPath") or ""
+        tokens = _turn_tokens(t_path)
+        sid = d.get("session_id") or d.get("sessionId") or ""
         _auto_evidence(intent=pend["intent"], system="S2", outcome="partial", tokens=tokens,
-                       note=f"auto: registry find MISS 后本轮未显式记证据，钩子补记；session={d.get('session_id', '')}")
+                       note=f"auto: registry find MISS 后本轮未显式记证据，钩子补记；session={sid}")
     st["pending"] = None
     st["explicit"] = False
+
+
+def cmd_hook_watch(a):
+    """轮询或单次解析 transcript 文件（用于 Codex / 无钩子客户端）。"""
+    tpath = getattr(a, "transcript", "")
+    if not tpath:
+        return
+    if not os.path.isabs(tpath):
+        tpath = os.path.abspath(tpath)
+    cwd = os.path.dirname(tpath)
+    if not os.path.isdir(ROOT) and os.path.isdir(os.path.join(cwd, ".livepowers")):
+        os.chdir(cwd)
+    if not os.path.isdir(ROOT):
+        return
+    os.makedirs(SESSIONS, exist_ok=True)
+    sid = "watch_" + hashlib.sha1(tpath.encode("utf-8")).hexdigest()[:8]
+    sp = _session_path(sid)
+    st = jload(sp, {"pending": None, "explicit": False, "offset": 0})
+
+    def process_file():
+        if not os.path.isfile(tpath):
+            return
+        offset = st.get("offset", 0)
+        with open(tpath, "r", encoding="utf-8", errors="replace") as f:
+            f.seek(offset)
+            while True:
+                line = f.readline()
+                if not line:
+                    break
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    obj = json.loads(line)
+                except Exception:
+                    continue
+                if obj.get("type") == "user" and not obj.get("toolUseResult") and not obj.get("tool_use_id"):
+                    hook_stop({"session_id": sid, "transcript_path": tpath}, st)
+                else:
+                    ev = None
+                    if "command" in obj or "cmd" in obj or obj.get("tool_name") or obj.get("tool"):
+                        ev = obj
+                    elif obj.get("type") == "assistant":
+                        msg = obj.get("message") or {}
+                        content = msg.get("content") or []
+                        if isinstance(content, list):
+                            for item in content:
+                                if isinstance(item, dict) and item.get("type") == "tool_use":
+                                    hook_post_tool({"tool_name": item.get("name"),
+                                                    "tool_input": item.get("input", {}),
+                                                    "session_id": sid}, st)
+                    if ev:
+                        hook_post_tool(ev, st)
+            st["offset"] = f.tell()
+            jsave(sp, st)
+
+    if getattr(a, "once", False):
+        process_file()
+        hook_stop({"session_id": sid, "transcript_path": tpath}, st)
+        jsave(sp, st)
+        return
+
+    import time
+    try:
+        while True:
+            process_file()
+            time.sleep(getattr(a, "interval", 1.0))
+    except KeyboardInterrupt:
+        pass
 
 
 def cmd_hook(a):
     """永不阻塞 Agent：任何异常都吞掉并 exit 0；未 init 的项目不创建文件。"""
     try:
         if os.environ.get("LP_HOOK_CAPTURE", "1") == "0":
+            return
+        if getattr(a, "event", "") == "watch" or getattr(a, "transcript", ""):
+            cmd_hook_watch(a)
             return
         d = json.loads(sys.stdin.read() or "{}")
         cwd = d.get("cwd")
@@ -1750,7 +1829,8 @@ def cmd_hook(a):
         if not os.path.isdir(ROOT):
             return
         os.makedirs(SESSIONS, exist_ok=True)
-        sp = _session_path(d.get("session_id"))
+        sid = d.get("session_id") or d.get("sessionId")
+        sp = _session_path(sid)
         st = jload(sp, {"pending": None, "explicit": False})
         if a.event == "post-tool":
             hook_post_tool(d, st)
@@ -1761,7 +1841,7 @@ def cmd_hook(a):
         try:
             os.makedirs(ROOT, exist_ok=True) if os.path.isdir(ROOT) else None
             with open(os.path.join(ROOT, "hook-errors.log"), "a", encoding="utf-8") as f:
-                f.write(f"{now()} {a.event}: {e!r}\n")
+                f.write(f"{now()} {getattr(a, 'event', 'hook')}: {e!r}\n")
         except Exception:  # noqa: BLE001
             pass
 
@@ -2047,8 +2127,12 @@ def main(argv=None):
     pgl = pg.add_parser("list", help="带展示面且有生产部署回执的 active 能力（JSON）")
     pgl.set_defaults(fn=cmd_pages_list)
 
-    hk = sp.add_parser("hook", help="钩子入口（Claude Code PostToolUse / Stop 调用；stdin 为钩子 JSON）")
-    hk.add_argument("event", choices=["post-tool", "stop"])
+    hk = sp.add_parser("hook", help="钩子与转录监听入口（Claude Code / Cursor / Codex 自动采集证据）")
+    hk.add_argument("event", nargs="?", default="post-tool", choices=["post-tool", "stop", "watch"],
+                    help="钩子事件或监听模式")
+    hk.add_argument("--transcript", default="", help="transcript 文件路径（Codex / 无钩子客户端）")
+    hk.add_argument("--once", action="store_true", help="watch 模式只扫描一次当前文件即退出（用于批处理或测试）")
+    hk.add_argument("--interval", type=float, default=1.0, help="watch 轮询间隔秒数（默认 1.0）")
     hk.set_defaults(fn=cmd_hook)
 
     rp = sp.add_parser("report", help="生成晨间报告 Markdown（固化候选、能力复核、看板、台账、待决事项）")

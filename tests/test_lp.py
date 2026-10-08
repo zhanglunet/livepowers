@@ -257,6 +257,74 @@ class TestCLI(Workdir):
         self.hook("stop", {"session_id": "s1", "cwd": self.dir}, env={"LP_HOOK_CAPTURE": "0"})
         self.assertEqual(self.evidence(), [])
 
+    def test_hook_cursor_format_captures_evidence(self):
+        # 兼容 Cursor hooks（平铺 command, stdout, stderr, exitCode, sessionId）
+        self.lp("init")
+        self.lp("registry", "add", "--name", "Weekly revenue", "--kind", "cli", "--intents", "weekly revenue",
+                "--entry", "python w.py --region {region}")
+        cursor_event1 = {
+            "sessionId": "cur-1",
+            "cwd": self.dir,
+            "command": 'lp registry find "weekly revenue"',
+            "stdout": "HIT —— 命中已固化能力\n  [5] cap_weekly_revenue v1.0.0 (cli) entry: python w.py",
+            "exitCode": 0,
+        }
+        self.hook("post-tool", cursor_event1)
+        cursor_event2 = {
+            "sessionId": "cur-1",
+            "cwd": self.dir,
+            "command": "python w.py --region east",
+            "stdout": "ok",
+            "exitCode": 0,
+        }
+        self.hook("post-tool", cursor_event2)
+        ev = self.evidence()
+        self.assertEqual(len(ev), 1)
+        self.assertEqual((ev[0]["system"], ev[0]["outcome"], ev[0]["capability"], ev[0]["auto"]),
+                         ("S1", "success", "cap_weekly_revenue", True))
+
+        # MISS 并在 sessionEnd 时自动补记 S2 partial
+        self.hook("post-tool", {
+            "sessionId": "cur-1",
+            "cwd": self.dir,
+            "command": 'lp registry find "transfer stale"',
+            "stdout": "MISS —— 未命中",
+            "exitCode": 2,
+        })
+        self.hook("stop", {"sessionId": "cur-1", "cwd": self.dir})
+        last = self.evidence()[-1]
+        self.assertEqual((last["intent"], last["system"], last["outcome"], last["auto"]),
+                         ("transfer stale", "S2", "partial", True))
+        self.assertIn("session=cur-1", last["note"])
+
+    def test_hook_watch_transcript(self):
+        # Codex / 无钩子客户端：从 transcript 文件轮询/一次性扫描自动产生证据
+        self.lp("init")
+        self.lp("registry", "add", "--name", "Weekly revenue", "--kind", "cli", "--intents", "weekly revenue",
+                "--entry", "python w.py --region {region}")
+        tpath = os.path.join(self.dir, "codex_transcript.jsonl")
+        records = [
+            {"command": 'lp registry find "weekly revenue"',
+             "stdout": "HIT —— 命中已固化能力\n  [5] cap_weekly_revenue v1.0.0 (cli) entry: python w.py",
+             "exit_code": 0},
+            {"command": "python w.py --region east", "stdout": "ok", "exit_code": 0},
+            {"type": "user", "message": {"content": "下一问"}},
+            {"command": 'lp registry find "unknown question"', "stdout": "MISS —— 未命中", "exit_code": 2},
+        ]
+        with open(tpath, "w", encoding="utf-8") as f:
+            for r in records:
+                f.write(json.dumps(r) + "\n")
+        p = subprocess.run([sys.executable, os.path.join(SCRIPTS, "lp.py"), "hook", "watch",
+                            "--transcript", tpath, "--once"],
+                           cwd=self.dir, capture_output=True, text=True)
+        self.assertEqual(p.returncode, 0, p.stderr)
+        ev = self.evidence()
+        self.assertEqual(len(ev), 2)
+        self.assertEqual((ev[0]["system"], ev[0]["outcome"], ev[0]["capability"], ev[0]["auto"]),
+                         ("S1", "success", "cap_weekly_revenue", True))
+        self.assertEqual((ev[1]["intent"], ev[1]["system"], ev[1]["outcome"], ev[1]["auto"]),
+                         ("unknown question", "S2", "partial", True))
+
     def test_confidence_shown_and_reviewed(self):
         self.lp("init")
         self.lp("registry", "add", "--name", "Flaky", "--id", "cap_f", "--kind", "cli", "--intents", "flaky thing", "--entry", "f")
