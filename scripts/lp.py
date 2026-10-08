@@ -619,13 +619,17 @@ def cmd_task_new(a):
     tid = a.id or "t_" + uuid.uuid4().hex[:8]
     if any(t["id"] == tid for t in db["tasks"]):
         die(f"任务 {tid} 已存在")
+    spec_val = getattr(a, "spec", "") or ""
+    spec_task_val = getattr(a, "spec_task", "") or ""
     t = {"id": tid, "title": a.title, "intent": canon(a.intent), "level": a.level, "owner": a.owner,
          "contract_version": a.contract_version, "max_loops": a.max_loops, "budget": a.budget,
+         "spec": spec_val, "spec_task": spec_task_val,
          "loops": 0, "spent": 0.0, "state": "clarify", "executor": None,
          "history": [{"ts": now(), "to": "clarify", "by": a.owner or "?", "reason": "created"}]}
     db["tasks"].append(t)
     jsave(TASKS, db)
     print(tid)
+
 
 
 def cmd_task_move(a):
@@ -902,6 +906,28 @@ def cmd_job_validate(a):
         ho = j.get("handoff") or {}
         if "handoff" in j and not (isinstance(ho, dict) and ho.get("actual_end_state") and ho.get("checker")):
             errs.append("handoff 须包含 actual_end_state（前段实际终态的位置）与 checker（独立完成度检查者）")
+        spec_file = j.get("spec")
+        spec_task_id = j.get("spec_task")
+        if spec_task_id and not spec_file:
+            errs.append("指定了 spec_task 但未指定 spec 规格文件路径")
+        elif spec_file:
+            # 相对路径以作业文件所在目录为基准，若不存在则尝试当前工作目录
+            base_dir = os.path.dirname(os.path.abspath(a.file))
+            target_path = spec_file if os.path.isabs(spec_file) else os.path.join(base_dir, spec_file)
+            if not os.path.isfile(target_path):
+                alt = os.path.abspath(spec_file)
+                if os.path.isfile(alt):
+                    target_path = alt
+            if not os.path.isfile(target_path):
+                errs.append(f"引用的规格文件不存在：{spec_file}")
+            elif spec_task_id:
+                try:
+                    with open(target_path, encoding="utf-8") as sf:
+                        spec_content = sf.read()
+                    if not re.search(rf"\b{re.escape(spec_task_id)}\b", spec_content):
+                        errs.append(f"规格文件 {spec_file} 中未找到任务 ID：{spec_task_id}")
+                except OSError as e:
+                    errs.append(f"读取规格文件失败：{e}")
         if errs:
             bad += 1
             print(f"✗ {j.get('job_id', '?')}: " + "；".join(errs))
@@ -1354,6 +1380,8 @@ def main(argv=None):
     tn.add_argument("--contract-version", default="", help="契约版本")
     tn.add_argument("--max-loops", type=int, default=5, help="最大探索轮次（止损）")
     tn.add_argument("--budget", type=float, default=0, help="探索预算（0 为不限）")
+    tn.add_argument("--spec", default="", help="关联的规格文件路径（specs/<feature>.md）")
+    tn.add_argument("--spec-task", default="", help="关联的规格任务 ID（如 T001）")
     tn.set_defaults(fn=cmd_task_new)
     tm = tk.add_parser("move", help="迁移状态：" + " → ".join(STATE_CN[x] for x in STATES[:6]) + "；任何状态可 → 异常接管")
     tm.add_argument("id")

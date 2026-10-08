@@ -2,7 +2,8 @@
   "model_horizon_minutes": {"small-local": 30, "medium": 60, "strong": 180},
   "jobs": [
     {
-      "job_id": "doc-parse-001", "tenant": "knowledge_batch", "stage_id": "parse",
+      "job_id": "doc-parse-001", "spec": "spec.md", "spec_task": "T001",
+      "tenant": "knowledge_batch", "stage_id": "parse",
       "dependency": [], "priority": 3, "earliest_start": "20:00", "deadline": "08:00",
       "model_capability": "small-local", "quality_floor": "ocr_accuracy>=0.98",
       "expected_minutes": 25,

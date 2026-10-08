@@ -91,6 +91,12 @@ class TestCLI(Workdir):
         self.lp("task", "move", t, "registered", "--by", "gen", "--reason", "self", "--evidence", "p", check=1)
         self.lp("task", "move", t, "registered", "--by", "rev", "--reason", "ok", check=1)  # 缺证据
         self.lp("task", "move", t, "registered", "--by", "rev", "--reason", "ok", "--evidence", "acc.md")
+        # 关联 spec 与 spec_task
+        t2 = self.lp("task", "new", "--title", "spec demo", "--spec", "specs/demo.md", "--spec-task", "T001").stdout.strip()
+        task2_json = json.loads(self.lp("task", "show", t2).stdout)
+        self.assertEqual(task2_json.get("spec"), "specs/demo.md")
+        self.assertEqual(task2_json.get("spec_task"), "T001")
+
 
     def test_task_stop_loss(self):
         self.lp("init")
@@ -365,6 +371,30 @@ class TestCLI(Workdir):
         self.assertIn("可稳定时长", out)
         self.assertIn("checker", out)
         self.assertIn("不是 DAG", out)
+        # 校验 spec 文件及任务 ID 存在性
+        spec_file = os.path.join(self.dir, "spec1.md")
+        with open(spec_file, "w", encoding="utf-8") as f:
+            f.write("# Spec\n\n- T001 [P] 数据库建表\n")
+        good_job = {"jobs": [{"job_id": "j1", "tenant": "t", "stage_id": "s", "dependency": [], "priority": 1,
+                              "deadline": "08:00", "model_capability": "m", "resources": {}, "max_cost": 10,
+                              "retry_limit": 1, "stop_condition": "stop", "checkpoint": "c", "preemptible": True,
+                              "resume_policy": "r", "data_classification": "d", "acceptance": "a",
+                              "handoff": {"actual_end_state": "x", "checker": "c"}, "expected_minutes": 10,
+                              "spec": spec_file, "spec_task": "T001"}]}
+        gp = os.path.join(self.dir, "good.json")
+        with open(gp, "w") as f:
+            json.dump(good_job, f)
+        self.lp("job", "validate", gp, check=0)
+
+        # 任务 ID 不存在
+        bad_task_job = dict(good_job)
+        bad_task_job["jobs"] = [dict(good_job["jobs"][0], spec_task="T999")]
+        bp = os.path.join(self.dir, "bad_task.json")
+        with open(bp, "w") as f:
+            json.dump(bad_task_job, f)
+        out_bad = self.lp("job", "validate", bp, check=1).stdout
+        self.assertIn("未找到任务 ID：T999", out_bad)
+
 
     def test_report(self):
         self.lp("init")

@@ -53,9 +53,12 @@ description: Use when a task must run for hours or overnight, should use idle of
 
 `job_id, tenant, stage_id, dependency, priority, deadline, model_capability, resources, max_cost, retry_limit, stop_condition, checkpoint, preemptible, resume_policy, data_classification, acceptance, handoff, expected_minutes`
 
+可选产物链对齐字段：`spec`（规格文件路径）与 `spec_task`（规格任务稳定 ID，如 `T001`）。
+
 ```bash
-lp job validate jobs.json   # 必填字段、悬空依赖、环、单段时长、交接契约
+lp job validate jobs.json   # 必填字段、悬空依赖、环、单段时长、交接契约、规格任务 ID
 ```
+
 
 ## 8. 检查点与抢占
 
