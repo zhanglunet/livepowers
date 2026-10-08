@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 五分钟体验：环境扫描 → 路由 MISS → 探索留证据 → 评分 → 任务看板 → 独立验收 → 注册 → 路由 HIT → 漂移 → 晨报
+# 五分钟体验：环境扫描 → 路由 MISS → 探索留证据 → 评分 → 任务看板 → 独立验收 → 注册 → 路由 HIT → 活软件生长 → 漂移 → 晨报
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"; LP="python3 $HERE/../scripts/lp.py"
 WORK="$(mktemp -d)"; cd "$WORK"; echo "工作目录：$WORK"
@@ -28,6 +28,13 @@ $LP registry find "把逾期的重点商机转给主管"
 $LP outcome accept --scenario stale-opps --task "$T" --by sales-ops --first
 $LP outcome measure --scenario stale-opps --metric "逾期重点商机数" --value 22
 $LP outcome report
+echo "--- 活软件：次抛展示 → 申请固化 → 生长出新视图 → 孪生对账 → 生产回执 → 固定页"
+EPH="$HERE/living_app/surfaces/pipeline-by-region.ephemeral.json"
+$LP surface validate "$EPH"
+REC=$($LP surface record "$EPH" --intent "pipeline by region" --db demo.sqlite)
+$LP surface promote "$REC" --by sales-ops >/dev/null
+bash "$HERE/living_app/grow.sh" "$WORK"
+$LP registry find "各地区在途商机"
 python3 "$HERE/make_demo_db.py" demo.sqlite --drift >/dev/null
 python3 "$HERE/../scripts/scan_sqlite.py" demo.sqlite --fingerprint .livepowers/env/fp-2.json > /dev/null
 python3 "$HERE/../scripts/scan_sqlite.py" --diff .livepowers/env/fp-1.json .livepowers/env/fp-2.json || true

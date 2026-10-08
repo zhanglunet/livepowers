@@ -27,6 +27,14 @@ lp —— Livepowers 命令行工具（只依赖 Python 3.9+ 标准库）
                                 单位验收任务成本、首次价值交付时间
   asset add / gate / list       现场创新入库四道门（可抽象、可版本化、可评测、可复用）与资产回流率
 
+活软件（展示面）
+  surface validate <file>       校验展示面：格式、组件、数据引用在本体内、只读查询、无可执行代码、次抛不引用写操作
+  surface record <file>         记录一次次抛展示（只记元数据：查询、行数、哈希、合计）并写 S2 证据
+  surface promote <record>      把一次次抛申请固化：建看板任务、登记为固化候选
+  surface reconcile <record> <fixed>  按记录的查询重算，与固化结构逐项对账
+  surface deploy <fixed>        执行 DDL（失败回滚），核验结构与查询，留部署回执
+  pages list                    固定页目录：带展示面且有生产部署回执的 active 能力（JSON）
+
 夜间
   pending add / list / done     夜间固化产物清单（意图、评分、n*、测试结果、位置、生成者），供早晨验收
   canary record / compare / list 金丝雀评测：记录每晚结果，与历史比较通过率与 token 用量
@@ -59,6 +67,8 @@ CANARY = os.path.join(ROOT, "canary.jsonl")
 PENDING = os.path.join(ROOT, "pending")
 SESSIONS = os.path.join(ROOT, "sessions")
 INTENTS = os.path.join(ROOT, "intents.json")
+SURFACES = os.path.join(ROOT, "surfaces")
+DEPLOYMENTS = os.path.join(ROOT, "deployments")
 
 
 # ---------------------------------------------------------------- utils
@@ -137,6 +147,10 @@ def slug(s):
 # ---------------------------------------------------------------- init
 def cmd_init(a):
     ensure()
+    gi = os.path.join(ROOT, ".gitignore")
+    if not os.path.exists(gi):
+        with open(gi, "w", encoding="utf-8") as f:
+            f.write("# 次抛结果明细等会话缓存：不进 git\ncache/\n")
     print(f"已初始化 {ROOT}/（evidence.jsonl, registry.json, tasks.json, outcomes.jsonl, assets.json, reports/）")
 
 
@@ -354,6 +368,18 @@ def cmd_registry_add(a):
         die("写操作能力必须提供 --tests（八项检查测试集），否则不予注册")
     if a.generated_by and a.accepted_by and a.generated_by == a.accepted_by:
         die("生成者不能验收自己：--accepted-by 必须不同于 --generated-by")
+    surface_id = ""
+    if a.ui:
+        s = load_surface(a.ui)
+        if s.get("tier") != "fixed":
+            die("--ui 必须指向固化展示面（tier=fixed）；次抛展示面不能注册为固定页")
+        errs = surface_problems(s, "")
+        if errs:
+            die("展示面未通过校验：\n  - " + "\n  - ".join(errs))
+        surface_id = s["id"]
+        if not verified_deployments(surface_id):
+            die(f"展示面 {surface_id} 没有核验通过的生产部署回执：先 lp surface deploy（非孪生），"
+                "lp registry add 只登记信息，不会建表或建视图")
     cap = {
         "id": cid, "name": a.name, "kind": a.kind,
         "intents": [s.strip() for s in a.intents.split(",") if s.strip()],
@@ -361,7 +387,7 @@ def cmd_registry_add(a):
         "preconditions": a.preconditions, "permissions": a.permissions,
         "writes_state": a.writes_state, "tests": a.tests, "version": a.version,
         "owner": a.owner, "ontology_version": a.ontology_version,
-        "package": a.package, "validated_model": a.validated_model,
+        "package": a.package, "validated_model": a.validated_model, "ui": a.ui, "surface_id": surface_id,
         "generated_by": a.generated_by, "accepted_by": a.accepted_by,
         "status": "active", "created": now(), "last_verified": now(),
         "calls": 0, "fails": 0, "supersedes": a.supersedes or None,
@@ -432,6 +458,8 @@ def cmd_registry_find(a):
         print(f"  [{s}] {c['id']} v{c['version']} ({c['kind']}) entry: {c['entry']}{flag}  置信度 {confidence(c):.2f}")
         if c.get("preconditions"):
             print(f"       前置条件: {c['preconditions']}")
+        if c.get("ui"):
+            print(f"       固定页: {c['ui']}（直接打开，不必重新分析）")
 
 
 def confidence(c):
@@ -553,12 +581,13 @@ def candidates(min_count):
     ev = read_evidence()
     r = jload(REG, {"capabilities": []})
     covered = {i.lower() for c in r["capabilities"] if c["status"] == "active" for i in c["intents"]}
+    promoted = promoted_intents()
     out = []
     for intent, es in group_by(ev, "intent").items():
         if intent.lower() in covered:
             continue
         s2 = [e for e in es if e.get("system") == "S2"]
-        if len(s2) < min_count:
+        if not s2 or (len(s2) < min_count and intent not in promoted):
             continue
         out.append({
             "intent": intent, "s2_calls": len(s2),
@@ -566,8 +595,9 @@ def candidates(min_count):
             "verifiable_ratio": sum(1 for e in s2 if e.get("verifiable")) / len(s2),
             "avg_cost": avg(s2, "cost"),
             "writes_state": any(e.get("writes_state") for e in s2),
+            "promoted": [p["task"] for p in promoted.get(intent, [])],
         })
-    out.sort(key=lambda c: -(c["s2_calls"] * (0.5 + c["verifiable_ratio"])))
+    out.sort(key=lambda c: (not c["promoted"], -(c["s2_calls"] * (0.5 + c["verifiable_ratio"]))))
     return out
 
 
@@ -582,6 +612,8 @@ def cmd_candidates(a):
     print("固化候选（按 调用次数 × 可验证度 排序）：")
     for c in cands:
         flag = "（写操作：需 oltp-action-safety）" if c["writes_state"] else ""
+        if c.get("promoted"):
+            flag += f"（用户申请固化：任务 {', '.join(c['promoted'])}）"
         print(f"- {c['intent']}: S2 {c['s2_calls']} 次, 成功率 {c['success']:.0%}, "
               f"可验证 {c['verifiable_ratio']:.0%}, 均成本 {c['avg_cost']:.4f} {flag}")
 
@@ -1120,6 +1152,401 @@ def cmd_canary_list(a):
         print(f"- {n}: {len(runs)} 次；" + " → ".join(f"{r['passed']}/{r['total']}" for r in runs[-6:]))
 
 
+# ---------------------------------------------------------------- surface（活软件展示面）
+SURFACE_TIERS = ("fixed", "ephemeral")
+SURFACE_SOURCES = ("table", "view", "capability")
+SURFACE_COMPONENTS = {"kpi": ("data", "value"), "table": ("data",), "bar": ("data", "x", "y"),
+                      "line": ("data", "x", "y"), "filter": ("param",)}
+CODE_KEYS = {"script", "code", "html", "js", "javascript", "eval", "function", "handler", "onclick"}
+CODE_VALUE_RE = re.compile(r"<\s*script|javascript:|\bon[a-z]+\s*=\s*[\"']|=>|\bfunction\s*\(|\beval\s*\(", re.I)
+SQL_WRITE_RE = re.compile(r"\b(insert|update|delete|drop|alter|create|replace|truncate|attach|detach|pragma|grant|"
+                          r"revoke|merge|call|exec|execute|vacuum|reindex|copy)\b", re.I)
+SQL_REF_RE = re.compile(r"\b(?:from|join)\s+([A-Za-z_][\w.]*)", re.I)
+SQL_CTE_RE = re.compile(r"(?:\bwith|,)\s*(?:recursive\s+)?([A-Za-z_]\w*)\s+as\s*\(", re.I)
+ONTOLOGY_CANDIDATES = ("ontology.yaml", "ontology.draft.yaml")
+
+
+def find_ontology(path=""):
+    if path:
+        return path if os.path.isfile(path) else None
+    for name in ONTOLOGY_CANDIDATES:
+        p = os.path.join(ROOT, name)
+        if os.path.isfile(p):
+            return p
+    return None
+
+
+def ontology_names(path):
+    """从本体 YAML 里取出可被展示面引用的名字：objects 的 name / table，views 的 name（零依赖、按行解析）。"""
+    names, section = set(), None
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            if not line.strip() or line.lstrip().startswith("#"):
+                continue
+            m = re.match(r"^([A-Za-z_]\w*):", line)
+            if m:
+                section = m.group(1)
+                continue
+            if section not in ("objects", "views"):
+                continue
+            m = re.match(r"^  - \{?\s*(?:name:\s*)?([A-Za-z_][\w.]*)", line)
+            if m and (section == "views" or "name:" in line):
+                names.add(m.group(1).lower())
+            m = re.match(r"^    table:\s*([A-Za-z_][\w.]*)", line)
+            if m:
+                names.add(m.group(1).lower())
+    return names
+
+
+def strip_sql_literals(sql):
+    return re.sub(r"'(?:[^']|'')*'", "''", sql)
+
+
+def sql_problems(sql, allowed):
+    errs = []
+    s = strip_sql_literals(sql).strip().rstrip(";").strip()
+    if not re.match(r"(?is)^(select|with)\b", s):
+        errs.append("查询必须以 SELECT 或 WITH 开头（只读）")
+    if ";" in s:
+        errs.append("查询只能有一条语句")
+    m = SQL_WRITE_RE.search(s)
+    if m:
+        errs.append(f"查询含写操作或管理关键字 {m.group(1).upper()}（展示面只允许只读查询）")
+    ctes = {x.lower() for x in SQL_CTE_RE.findall(s)}
+    for ref in SQL_REF_RE.findall(s):
+        name = ref.lower().split(".")[-1]
+        if name not in ctes and name not in allowed:
+            errs.append(f"查询引用了本体外的对象 {ref}（先走 ontology-evolution 把它加进本体）")
+    return errs
+
+
+def code_problems(obj, path="$"):
+    """展示面只允许数据与组件描述：任何疑似可执行代码的键或值都拒绝。query 字段按 SQL 另行检查。"""
+    errs = []
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            kl = str(k).lower()
+            if kl in CODE_KEYS or re.match(r"^on[A-Z_]", str(k)):
+                errs.append(f"{path}.{k}: 展示面不允许携带可执行代码或事件处理器")
+                continue
+            if k == "query":
+                continue
+            errs += code_problems(v, f"{path}.{k}")
+    elif isinstance(obj, list):
+        for i, v in enumerate(obj):
+            errs += code_problems(v, f"{path}[{i}]")
+    elif isinstance(obj, str) and CODE_VALUE_RE.search(obj):
+        errs.append(f"{path}: 值里出现疑似可执行代码")
+    return errs
+
+
+def load_surface(path):
+    try:
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError) as e:
+        die(f"无法读取展示面 {path}：{e}")
+
+
+def surface_problems(s, ontology_path=""):
+    errs = []
+    if not isinstance(s, dict):
+        return ["展示面必须是 JSON 对象"]
+    for k in ("surface", "id", "tier", "data", "components", "provenance"):
+        if k not in s:
+            errs.append(f"缺少字段 {k}")
+    if errs:
+        return errs
+    tier = s["tier"]
+    if tier not in SURFACE_TIERS:
+        errs.append(f"tier 只能是 {' / '.join(SURFACE_TIERS)}")
+    errs += code_problems(s)
+    onto = find_ontology(ontology_path)
+    allowed = ontology_names(onto) if onto else None
+    if allowed is None:
+        errs.append("找不到本体（.livepowers/ontology.yaml 或 ontology.draft.yaml，或用 --ontology 指定）：无法核对数据引用")
+        allowed = set()
+    reg = jload(REG, {"capabilities": []})
+    active = {c["id"]: c for c in reg["capabilities"] if c["status"] == "active"}
+    data = s["data"]
+    if not isinstance(data, dict) or not data:
+        errs.append("data 必须是非空对象：{名称: {source, query, params}}")
+        data = {}
+    for name, d in data.items():
+        src = (d or {}).get("source") or {}
+        st, sn = src.get("type"), str(src.get("name", ""))
+        if st not in SURFACE_SOURCES:
+            errs.append(f"data.{name}.source.type 只能是 {' / '.join(SURFACE_SOURCES)}")
+            continue
+        if st == "capability":
+            cap = active.get(sn)
+            if not cap:
+                errs.append(f"data.{name} 引用的能力 {sn} 不存在或已退役")
+            elif cap.get("writes_state"):
+                errs.append(f"data.{name} 引用了写操作能力 {sn}：展示面不承载写操作（走 oltp-action-safety）")
+            continue
+        if sn.lower().split(".")[-1] not in allowed:
+            errs.append(f"data.{name} 的来源 {sn} 不在本体里（先走 ontology-evolution）")
+        q = d.get("query")
+        if not q:
+            errs.append(f"data.{name} 缺少 query（展示面中的数字必须来自有查询文本的确定性计算）")
+        else:
+            errs += [f"data.{name}: {e}" for e in sql_problems(q, allowed)]
+        if "rows" in d or "values" in d:
+            errs.append(f"data.{name}: 展示面描述里不内嵌结果数据，数据由宿主按 query 计算后单独下发")
+    comps = s["components"]
+    if not isinstance(comps, list) or not comps:
+        errs.append("components 必须是非空列表")
+        comps = []
+    for i, c in enumerate(comps):
+        ct = (c or {}).get("type")
+        if ct not in SURFACE_COMPONENTS:
+            errs.append(f"components[{i}].type 不支持：{ct}（支持 {', '.join(SURFACE_COMPONENTS)}）")
+            continue
+        for field in SURFACE_COMPONENTS[ct]:
+            if not c.get(field):
+                errs.append(f"components[{i}]（{ct}）缺少 {field}")
+        if "data" in SURFACE_COMPONENTS[ct] and c.get("data") and c["data"] not in data:
+            errs.append(f"components[{i}] 引用了未定义的数据 {c['data']}")
+    prov = s["provenance"] if isinstance(s["provenance"], dict) else {}
+    if tier == "fixed" and not prov.get("ontology_version"):
+        errs.append("固化展示面的 provenance 必须写明 ontology_version")
+    return errs
+
+
+def cmd_surface_validate(a):
+    s = load_surface(a.file)
+    errs = surface_problems(s, a.ontology)
+    if errs:
+        print(f"✗ {a.file}")
+        for e in errs:
+            print(f"  - {e}")
+        sys.exit(1)
+    print(f"✓ {a.file}（{s['tier']}，{len(s['data'])} 个数据源，{len(s['components'])} 个组件）")
+
+
+def readonly_rows(db, sql, params=None):
+    import sqlite3
+    uri = "file:" + os.path.abspath(db) + "?mode=ro"
+    with contextlib.closing(sqlite3.connect(uri, uri=True)) as con:
+        cur = con.execute(sql, params or {})
+        cols = [d[0] for d in cur.description or []]
+        return cols, cur.fetchall()
+
+
+def norm_cell(v):
+    if isinstance(v, float):
+        return round(v, 6)
+    return v
+
+
+def result_stats(cols, rows):
+    """只留摘要，不留明细：行数、对排序后结果的哈希、数值列合计。"""
+    import hashlib
+    norm = sorted((json.dumps([norm_cell(v) for v in r], ensure_ascii=False, default=str) for r in rows))
+    sums = {}
+    for i, col in enumerate(cols):
+        vals = [r[i] for r in rows]
+        if vals and all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in vals if v is not None):
+            sums[col] = norm_cell(float(sum(v for v in vals if v is not None)))
+    return {"rows": len(rows), "columns": cols, "hash": hashlib.sha256("\n".join(norm).encode()).hexdigest()[:16],
+            "sums": sums}
+
+
+def surface_stats(s, db):
+    out = {}
+    for name, d in s["data"].items():
+        if d.get("query"):
+            cols, rows = readonly_rows(db, d["query"], d.get("params"))
+            out[name] = result_stats(cols, rows)
+    return out
+
+
+def cmd_surface_record(a):
+    ensure()
+    s = load_surface(a.file)
+    if s.get("tier") != "ephemeral":
+        die("只有次抛展示面（tier=ephemeral）需要 record；固化展示面走 deploy + registry add")
+    errs = surface_problems(s, a.ontology)
+    if errs:
+        die("展示面未通过校验，先运行 lp surface validate：\n  - " + "\n  - ".join(errs))
+    stats = surface_stats(s, a.db) if a.db else {}
+    structure = {k: v for k, v in s.items() if k != "data"}
+    structure["data"] = {n: {k: v for k, v in d.items() if k not in ("rows", "values")} for n, d in s["data"].items()}
+    intent = canon(a.intent)
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        cmd_evidence_add(argparse.Namespace(
+            intent=a.intent, system="S2", outcome=a.outcome, tokens=a.tokens, seconds=0.0, cost=a.cost,
+            capability="", task="", model=a.model, domain="OLAP", writes_state=False, verifiable=False,
+            note=f"surface={s['id']} 次抛展示"))
+    ev_id = buf.getvalue().strip()
+    rec = {"surface_id": s["id"], "intent": intent, "surface": structure, "stats": stats,
+           "ontology_version": (s.get("provenance") or {}).get("ontology_version", ""),
+           "evidence": ev_id, "recorded": now(), "promoted": None}
+    d = os.path.join(SURFACES, "ephemeral")
+    os.makedirs(d, exist_ok=True)
+    path = os.path.join(d, f"{slug(s['id'])}-{datetime.now().strftime('%Y%m%d%H%M%S%f')}.json")
+    jsave(path, rec)
+    print(path)
+
+
+def load_record(path):
+    rec = jload(path, None)
+    if not rec or "surface" not in rec:
+        die(f"{path} 不是 lp surface record 产生的记录")
+    return rec
+
+
+def cmd_surface_promote(a):
+    ensure()
+    rec = load_record(a.record)
+    if rec.get("promoted"):
+        die(f"该次抛已申请过固化：任务 {rec['promoted']['task']}")
+    title = a.title or f"固化：{rec['surface'].get('title') or rec['surface_id']}"
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        cmd_task_new(argparse.Namespace(id="", title=title, intent=rec["intent"], level="feature", owner=a.by,
+                                        contract_version="", max_loops=a.max_loops, budget=0))
+    tid = buf.getvalue().strip()
+    rec["promoted"] = {"task": tid, "by": a.by, "ts": now()}
+    jsave(a.record, rec)
+    print(tid)
+
+
+def promoted_intents():
+    d = os.path.join(SURFACES, "ephemeral")
+    out = {}
+    if os.path.isdir(d):
+        for fn in sorted(os.listdir(d)):
+            rec = jload(os.path.join(d, fn), {})
+            if rec.get("promoted"):
+                out.setdefault(rec["intent"], []).append(rec["promoted"])
+    return out
+
+
+def cmd_surface_reconcile(a):
+    rec = load_record(a.record)
+    fixed = load_surface(a.fixed)
+    errs = surface_problems(fixed, a.ontology)
+    if errs:
+        die("固化展示面未通过校验：\n  - " + "\n  - ".join(errs))
+    base_s = dict(rec["surface"])
+    base = surface_stats(base_s, a.db)
+    new = surface_stats(fixed, a.db)
+    bad = 0
+    for name, b in base.items():
+        old = rec.get("stats", {}).get(name)
+        if old and old["hash"] != b["hash"]:
+            print(f"! {name}: 数据自次抛记录后已变化（以重算结果为基准）")
+        n = new.get(name)
+        if not n:
+            print(f"✗ {name}: 固化展示面里没有同名数据源")
+            bad += 1
+            continue
+        if (b["rows"], b["hash"]) == (n["rows"], n["hash"]):
+            print(f"✓ {name}: {b['rows']} 行，结果一致（hash {b['hash']}）")
+            continue
+        bad += 1
+        print(f"✗ {name}: 行数 {b['rows']} → {n['rows']}，hash {b['hash']} → {n['hash']}")
+        for col in sorted(set(b["sums"]) | set(n["sums"])):
+            if b["sums"].get(col) != n["sums"].get(col):
+                print(f"    {col} 合计 {b['sums'].get(col)} → {n['sums'].get(col)}")
+    if bad:
+        print("对账不一致：差异必须解释并修正后才能进入验收")
+        sys.exit(1)
+    print("对账一致")
+
+
+def deployment_path(surface_id, env):
+    return os.path.join(DEPLOYMENTS, slug(surface_id), f"{slug(env)}.json")
+
+
+def verified_deployments(surface_id):
+    d = os.path.join(DEPLOYMENTS, slug(surface_id))
+    out = []
+    if os.path.isdir(d):
+        for fn in sorted(os.listdir(d)):
+            r = jload(os.path.join(d, fn), {})
+            if r.get("verified") and not r.get("twin"):
+                out.append(r)
+    return out
+
+
+def cmd_surface_deploy(a):
+    import hashlib
+    import sqlite3
+    ensure()
+    s = load_surface(a.fixed)
+    if s.get("tier") != "fixed":
+        die("只有固化展示面（tier=fixed）需要部署")
+    receipt = {"surface_id": s["id"], "env": a.env, "twin": a.twin, "by": a.by, "ts": now(),
+               "surface": a.fixed, "ddl": a.ddl, "rollback": a.rollback, "checks": [], "verified": False}
+    if a.external:
+        if not a.verified_by or a.verified_by == a.by:
+            die("--external 回执需要 --verified-by，且核验人不能是执行人")
+        receipt.update(mode="external", verified=True, verified_by=a.verified_by,
+                       checks=["外部迁移工具执行，核验人确认结构存在且查询可执行"])
+    else:
+        if not (a.db and a.ddl and a.rollback):
+            die("需要 --db、--ddl、--rollback（非 SQLite 环境用你的迁移工具执行后，以 --external --verified-by 记录回执）")
+        with open(a.ddl, encoding="utf-8") as f:
+            ddl = f.read()
+        with open(a.rollback, encoding="utf-8") as f:
+            rollback = f.read()
+        receipt.update(mode="sqlite", ddl_sha=hashlib.sha256(ddl.encode()).hexdigest()[:16],
+                       rollback_sha=hashlib.sha256(rollback.encode()).hexdigest()[:16])
+        con = sqlite3.connect(a.db)
+        try:
+            con.executescript(ddl)
+            con.commit()
+            for name, d in s["data"].items():
+                src = d["source"]["name"].split(".")[-1]
+                if d["source"]["type"] in ("table", "view"):
+                    hit = con.execute("select count(*) from sqlite_master where name = ? and type = ?",
+                                      (src, d["source"]["type"])).fetchone()[0]
+                    if not hit:
+                        raise RuntimeError(f"{d['source']['type']} {src} 不存在")
+                    receipt["checks"].append(f"{d['source']['type']} {src} 存在")
+                cur = con.execute(d["query"], d.get("params") or {})
+                cur.fetchall()
+                receipt["checks"].append(f"{name} 查询可执行")
+            receipt["verified"] = True
+        except Exception as e:  # noqa: BLE001 —— 任何失败都回滚
+            con.rollback()
+            try:
+                con.executescript(rollback)
+                con.commit()
+                receipt["rolled_back"] = True
+            except Exception as e2:  # noqa: BLE001
+                receipt["rollback_error"] = repr(e2)
+            receipt["error"] = repr(e)
+        finally:
+            con.close()
+    path = deployment_path(s["id"], a.env)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    jsave(path, receipt)
+    if not receipt["verified"]:
+        print(f"✗ 部署失败，已执行回滚：{receipt.get('error')}（回执 {path}）")
+        sys.exit(1)
+    print(f"✓ 已部署 {s['id']} → {a.env}{'（孪生演练）' if a.twin else ''}；回执 {path}")
+
+
+def cmd_pages_list(a):
+    r = jload(REG, {"capabilities": []})
+    pages = []
+    for c in r["capabilities"]:
+        if c["status"] != "active" or not c.get("ui"):
+            continue
+        deps = verified_deployments(c.get("surface_id") or "")
+        if not deps:
+            continue
+        pages.append({"capability": c["id"], "name": c["name"], "version": c["version"], "ui": c["ui"],
+                      "surface_id": c.get("surface_id"), "intents": c["intents"],
+                      "deployed": [{"env": d["env"], "ts": d["ts"]} for d in deps]})
+    print(json.dumps(pages, ensure_ascii=False, indent=2))
+
+
 # ---------------------------------------------------------------- hook（自动采集证据）
 FIND_RE = re.compile(r"(?:^|[\s;&|])(?:lp|lp\.py|python3?\s+\S*lp\.py)\s+registry\s+find\s+(.+)", re.S)
 EVIDENCE_RE = re.compile(r"(?:^|[\s;&|])(?:lp|lp\.py|python3?\s+\S*lp\.py)\s+evidence\s+add\b")
@@ -1301,6 +1728,7 @@ def main(argv=None):
     ra.add_argument("--generated-by", default="", help="生成者（Agent 或人）")
     ra.add_argument("--accepted-by", default="", help="采纳人（必须不同于生成者）")
     ra.add_argument("--supersedes", default="", help="发新版本：自动退役该旧能力 id 并记录取代关系")
+    ra.add_argument("--ui", default="", help="固化展示面路径（tier=fixed；须先有 lp surface deploy 的生产回执）")
     ra.set_defaults(fn=cmd_registry_add)
     rf = rg.add_parser("find", help="按意图查找能力（HIT exit 0 / MISS exit 2）；命中后仍要核对前置条件")
     rf.add_argument("query", help="用户原话或规范化意图，中文可不分词")
@@ -1483,6 +1911,49 @@ def main(argv=None):
     isg = it.add_parser("suggest", help="从证据与注册表里找出相似的意图对，供人工确认")
     isg.add_argument("--threshold", type=float, default=0.5, help="相似度阈值（英文词集 Jaccard / 中文二元组重叠）")
     isg.set_defaults(fn=cmd_intents_suggest)
+
+    sf = sp.add_parser("surface", help="活软件展示面：validate / record / promote / reconcile / deploy").add_subparsers(
+        dest="sub", required=True)
+    sv = sf.add_parser("validate", help="校验展示面（格式、组件、本体引用、只读查询、无代码；不通过 exit 1）")
+    sv.add_argument("file")
+    sv.add_argument("--ontology", default="", help="本体文件（默认 .livepowers/ontology.yaml 或 ontology.draft.yaml）")
+    sv.set_defaults(fn=cmd_surface_validate)
+    sr = sf.add_parser("record", help="记录一次次抛展示：只存元数据（查询、行数、哈希、合计），写 S2 证据")
+    sr.add_argument("file")
+    sr.add_argument("--intent", required=True, help="意图")
+    sr.add_argument("--db", default="", help="SQLite 数据库：只读执行查询以计算摘要（其他数据库可省略）")
+    sr.add_argument("--ontology", default="")
+    sr.add_argument("--outcome", choices=["success", "partial", "fail"], default="success")
+    sr.add_argument("--cost", type=float, default=0.0)
+    sr.add_argument("--tokens", type=int, default=0)
+    sr.add_argument("--model", default="")
+    sr.set_defaults(fn=cmd_surface_record)
+    sp_ = sf.add_parser("promote", help="把一次次抛申请固化：建看板任务并登记为固化候选")
+    sp_.add_argument("record", help="lp surface record 输出的记录文件")
+    sp_.add_argument("--by", required=True, help="申请人")
+    sp_.add_argument("--title", default="")
+    sp_.add_argument("--max-loops", type=int, default=5)
+    sp_.set_defaults(fn=cmd_surface_promote)
+    sc = sf.add_parser("reconcile", help="按记录的查询重算，与固化展示面逐项对账（不一致 exit 1）")
+    sc.add_argument("record")
+    sc.add_argument("fixed", help="固化展示面")
+    sc.add_argument("--db", required=True, help="SQLite 数据库（孪生或隔离环境）")
+    sc.add_argument("--ontology", default="")
+    sc.set_defaults(fn=cmd_surface_reconcile)
+    sd = sf.add_parser("deploy", help="执行 DDL（失败回滚），核验结构存在且查询可执行，写部署回执")
+    sd.add_argument("fixed", help="固化展示面")
+    sd.add_argument("--env", required=True, help="目标环境名（如 twin / prod）")
+    sd.add_argument("--by", required=True, help="执行人")
+    sd.add_argument("--db", default="", help="SQLite 数据库")
+    sd.add_argument("--ddl", default="", help="迁移脚本")
+    sd.add_argument("--rollback", default="", help="回滚脚本")
+    sd.add_argument("--twin", action="store_true", help="孪生演练：回执不计入生产部署")
+    sd.add_argument("--external", action="store_true", help="已用外部迁移工具执行，只记录回执")
+    sd.add_argument("--verified-by", default="", help="--external 时的核验人（不能是执行人）")
+    sd.set_defaults(fn=cmd_surface_deploy)
+    pg = sp.add_parser("pages", help="固定页目录").add_subparsers(dest="sub", required=True)
+    pgl = pg.add_parser("list", help="带展示面且有生产部署回执的 active 能力（JSON）")
+    pgl.set_defaults(fn=cmd_pages_list)
 
     hk = sp.add_parser("hook", help="钩子入口（Claude Code PostToolUse / Stop 调用；stdin 为钩子 JSON）")
     hk.add_argument("event", choices=["post-tool", "stop"])

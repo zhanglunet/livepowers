@@ -2,6 +2,21 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循[语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [Unreleased]
+
+### 新增
+
+- **活软件生长面**（#21，PRD 见 `docs/prd-living-surface.md`）：
+  - 展示面描述 `templates/surface.json`（结构与数据分离，对齐 A2UI 思路，不传可执行代码）；组件 kpi / table / bar / line / filter。
+  - `lp surface validate`：格式、组件、数据引用在本体内、只读单语句查询、无可执行代码、不内嵌结果数据、不引用写操作能力。
+  - `lp surface record`：次抛只记元数据（查询、行数、结果哈希、数值合计）并写 S2 证据；明细不进 git，`lp init` 生成 `.livepowers/.gitignore` 排除 `cache/`。
+  - `lp surface promote`：申请固化，建看板任务，`lp candidates` 把它排在最前。
+  - `lp surface reconcile`：按记录的查询重算，与固化结构逐项比行数、哈希、合计。
+  - `lp surface deploy`：执行 DDL、核验结构与查询、失败自动回滚，写部署回执；`--twin` 演练，`--external --verified-by` 记录外部迁移。
+  - `lp registry add --ui`：没有生产部署回执拒绝注册；`lp registry find` 命中时提示固定页；`lp pages list` 输出固定页目录。
+  - 新技能 `living-surface`；能力包增加 `ddl`、`rollback`、`materialization`、`deployment` 字段，`ui` 指向固化展示面。
+  - 参考宿主 `examples/living_app/`（零依赖：`http.server` + 原生 JS）与 `grow.sh`；walkthrough 增加活软件一段。
+
 ## [1.4.0] - 2026-10-07
 
 ### 新增
