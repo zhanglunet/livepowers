@@ -76,12 +76,27 @@ class TestInstaller(unittest.TestCase):
     def test_cursor_and_project_targets(self):
         self.cli("install", "--target", "cursor")
         self.assert_skills(os.path.join(self.home, ".cursor", "skills"))
+        self.assertFalse(os.path.exists(os.path.join(self.proj, ".cursor", "rules", "livepowers.mdc")))
         self.cli("install", "--target", "claude", "--project")
         self.assert_skills(os.path.join(self.proj, ".claude", "skills"))
         other = os.path.join(self._tmp.name, "other")
         os.makedirs(other)
         self.cli("install", "--target", "agents", "--project", other)
         self.assert_skills(os.path.join(other, ".agents", "skills"))
+        # Cursor 项目级安装生成 .cursor/rules/livepowers.mdc，uninstall 清理
+        self.cli("install", "--target", "cursor", "--project")
+        self.assert_skills(os.path.join(self.proj, ".cursor", "skills"))
+        mdc = os.path.join(self.proj, ".cursor", "rules", "livepowers.mdc")
+        self.assertTrue(os.path.isfile(mdc))
+        content = read(mdc)
+        self.assertIn("alwaysApply: true", content)
+        self.assertIn("七条铁律", content)
+        self.assertIn("路由表", content)
+        self.assertIn(START, content)
+        self.assertIn(END, content)
+        self.cli("uninstall", "--target", "cursor", "--project")
+        self.assertFalse(os.path.exists(mdc))
+
 
     def test_codex_project_merges_agents_md_and_uninstall_cleans_up(self):
         agents = os.path.join(self.proj, "AGENTS.md")
