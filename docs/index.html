@@ -610,7 +610,8 @@ ls livepowers/dist/skills/</pre></div>
 <details><summary>Agent 忘了记证据怎么办？</summary><p>Claude Code 插件自带 <code>PostToolUse</code> / <code>Stop</code> 钩子：<code>lp registry find</code> 命中后每次调用该能力都自动记一条 S1 证据（失败也记，能力置信度随之升降）；未命中而本轮结束前没有 <code>lp evidence add</code>，钩子补记一条 <code>partial</code> 的 S2 证据，晨报单列"自动采集待确认"。显式记录仍然优先——它有可验证标记、成本和说明；自动记录只是兜底，<code>LP_HOOK_CAPTURE=0</code> 可关闭。</p></details>
 <details><summary>固化会不会把错误也固化进去？</summary><p>可验证度 V=0 一票否决；候选要 3 次成功且被样例核对过；固化物必须带测试；写操作缺测试拒绝注册；早晨由人采纳；运行期连续失败、口径变化、环境漂移、换模型都会触发复核或去固化。自动固化并不可靠，所以夜间产出的永远是"草稿 + 测试证据"，最终决定权在人。</p></details>
 <details><summary>同一件事换个说法，会不会被当成新需求重复探索？</summary><p>用同义词表解决：<code>lp intents alias "weekly revenue by region" "各地区周收入"</code> 登记后，这个别名记的证据自动归到规范名，<code>lp registry find</code> 也按整组同义词匹配。夜间 <code>lp intents suggest</code> 会列出"长得像"的意图对让人确认——只建议，不自动合并，合错口径比多探索一次代价高。</p></details>
-<details><summary>只有 SQLite 扫描脚本，我的库是 PostgreSQL / MySQL 怎么办？</summary><p><code>scan_sqlite.py</code> 是示例：按同样的输出结构（对象、属性、外键、状态取值抽样、指纹）查你数据库的 information_schema 即可，其余流程不变。欢迎提 PR 补其他数据库的扫描器。</p></details>
+<details><summary>我的库是 PostgreSQL / MySQL 怎么办？</summary><p>运行 <code>python scripts/scan_sql.py --dsn "postgres://user:pass@host:5432/db"</code>（或 <code>mysql://...</code>）。脚本只读查询 <code>information_schema</code>，产生与 <code>scan_sqlite.py</code> 完全同构的本体草稿与指纹 JSON，且支持跨脚本 <code>--diff</code> 漂移比对。环境若无可用的 psql / mysql CLI，也可通过安装 <code>psycopg</code> / <code>pymysql</code> 驱动运行。</p></details>
+
 
 <h2 id="steps">落地三步</h2>
 <div class="grid g3">

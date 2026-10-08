@@ -57,7 +57,9 @@ Livepowers 让智能体按「活产品（Live Product）」范式工作：
 
 - `lp.py`：证据、能力注册表与 System 1 路由、F-V-S-R 评分与盈亏平衡、固化候选、任务看板状态机、结果台账、资产回流、夜间产物清单、金丝雀评测、作业契约校验、能力复核、晨报；活软件展示面（`lp surface validate / record / promote / reconcile / deploy`、`lp pages list`）。
 - `agent_switch.py`：智能体交换机（中转 / 旁路记录、哈希链、回放、审计）。
-- `scan_sqlite.py`：环境扫描示例（本体草稿、环境指纹、漂移比对）。
+- `scan_sqlite.py`：环境扫描示例（SQLite 本体草稿、环境指纹、漂移比对）。
+- `scan_sql.py`：环境扫描通用实现（PostgreSQL / MySQL information_schema 查询、指纹与漂移比对）。
+
 
 技能正文里的 `lp` 和 `templates/` 按安装方式对应到：
 

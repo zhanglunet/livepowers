@@ -23,6 +23,11 @@ description: Use when onboarding a new database, business system, API set or cus
    python <plugin>/scripts/scan_sqlite.py <db> --fingerprint .livepowers/env/fp-$(date +%F).json \
      > .livepowers/ontology.draft.yaml
    ```
+   PostgreSQL / MySQL 示例：
+   ```bash
+   python <plugin>/scripts/scan_sql.py --dsn "postgres://user:pass@host:5432/db" \
+     --fingerprint .livepowers/env/fp-$(date +%F).json > .livepowers/ontology.draft.yaml
+   ```
    其他数据库按同样结构查询 `information_schema`（表、列、类型、主键、外键、行数）。接口类系统读取 OpenAPI / MCP 工具清单；同时记录权限、制度文件与关键依赖。
 2. **识别候选语义。**
    - 身份：主键、业务唯一键。

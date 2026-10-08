@@ -32,6 +32,74 @@ class TestScan(Workdir):
         self.assertIn("新增列 industry", out)
         self.assertIn("on_hold", out)
 
+    def test_scan_sql_mock_and_diff(self):
+        # 验证 scan_sql.py 的数据解析、指纹生成同构性与跨脚本 --diff
+        sys.path.insert(0, SCRIPTS)
+        import scan_sql
+
+        def mock_executor(dsn_info, sql, params=None):
+            sql_clean = " ".join(sql.strip().split())
+            if "information_schema.tables" in sql_clean:
+                return ["table_name"], [["customers"], ["orders"]]
+            if "information_schema.columns" in sql_clean:
+                # 返回 (table_name, column_name, data_type, is_nullable, is_pk)
+                rows = [
+                    ["customers", "id", "integer", "NO", "1"],
+                    ["customers", "name", "varchar", "YES", "0"],
+                    ["customers", "phone", "varchar", "YES", "0"],
+                    ["orders", "id", "integer", "NO", "1"],
+                    ["orders", "customer_id", "integer", "NO", "0"],
+                    ["orders", "status", "varchar", "NO", "0"],
+                    ["orders", "created_at", "timestamp", "NO", "0"],
+                ]
+                return ["table_name", "column_name", "data_type", "is_nullable", "is_pk"], rows
+            if "information_schema.key_column_usage" in sql_clean or "constraint_column_usage" in sql_clean:
+                # 返回 (table_name, column_name, foreign_table_name, foreign_column_name)
+                rows = [
+                    ["orders", "customer_id", "customers", "id"]
+                ]
+                return ["table_name", "column_name", "foreign_table_name", "foreign_column_name"], rows
+            if "count(*)" in sql_clean.lower():
+                return ["count"], [["10"]]
+            if "select distinct" in sql_clean.lower():
+                return ["status"], [["pending"], ["completed"]]
+            return [], []
+
+        fp = scan_sql.scan("postgres://user:pass@localhost:5432/mydb", sample=20, query_executor=mock_executor)
+        self.assertEqual(fp["source"], "postgres:mydb")
+        self.assertIn("customers", fp["tables"])
+        self.assertIn("orders", fp["tables"])
+        self.assertTrue(fp["tables"]["customers"]["columns"]["phone"].get("sensitive"))
+        self.assertEqual(fp["tables"]["orders"]["columns"]["status"]["status_values"], ["completed", "pending"])
+        self.assertTrue(fp["tables"]["orders"]["columns"]["created_at"].get("time"))
+        self.assertEqual(fp["tables"]["orders"]["fks"], [["customer_id", "customers", "id"]])
+
+        # 检查 YAML 输出结构
+        yaml_out = scan_sql.to_yaml(fp)
+        self.assertIn("ontology_version: 0.1.0-draft", yaml_out)
+        self.assertIn("evidence: foreign_key", yaml_out)
+        self.assertIn("敏感字段", yaml_out)
+
+        # 校验跨指纹 diff 与 scan_sqlite.py 完全一致
+        fp_file1 = os.path.join(self.dir, "sql_fp1.json")
+        fp_file2 = os.path.join(self.dir, "sql_fp2.json")
+        with open(fp_file1, "w", encoding="utf-8") as f:
+            json.dump(fp, f)
+
+        # 模拟漂移
+        fp2 = json.loads(json.dumps(fp))
+        fp2["tables"]["orders"]["columns"]["status"]["status_values"].append("cancelled")
+        with open(fp_file2, "w", encoding="utf-8") as f:
+            json.dump(fp2, f)
+
+        # 用 scan_sql 比对
+        out_diff = self.run_script("scan_sql.py", "--diff", fp_file1, fp_file2, check=5).stdout
+        self.assertIn("cancelled", out_diff)
+        # 用 scan_sqlite 也能跨脚本解析比对
+        out_diff2 = self.run_script("scan_sqlite.py", "--diff", fp_file1, fp_file2, check=5).stdout
+        self.assertIn("cancelled", out_diff2)
+
+
 
 def free_port():
     s = socket.socket()
