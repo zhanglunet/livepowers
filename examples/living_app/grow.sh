@@ -9,7 +9,7 @@ FIXED="$APP/surfaces/pipeline-by-region.fixed.json"; DDL="$APP/ddl/v_pipeline_by
 RB="$APP/ddl/v_pipeline_by_region.rollback.sql"
 REC=$(grep -l '"promoted": {' .livepowers/surfaces/ephemeral/pipeline_by_region-*.json | tail -1)
 T=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['promoted']['task'])" "$REC")
-echo "== 申请固化的次抛：$REC（看板任务 $T）"
+echo "== 申请固化的次抛：${REC}（看板任务 ${T}）"
 
 echo "== 1-2 规格与本体变更：新视图 v_pipeline_by_region 进本体"
 grep -q "v_pipeline_by_region" .livepowers/ontology.draft.yaml || \
