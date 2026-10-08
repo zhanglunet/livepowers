@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="活软件演示：智能体用 A2UI 展示面给出次抛分析，申请固化后长成新的视图和固定页。数字全部由浏览器内的 SQLite 计算。">
+<title>活软件生长演示</title>
+<style>
+/* 布局：左侧固定页目录与生长控制，右侧对话；智能体回答是 A2UI 展示面 */
+:root { --bg: #fcfcfb; --panel: #f3f2ee; --bubble: #ebeae5; --fg: #0b0b0b; --fg2: #52514e; --line: #dcdbd5;
+  --series: #2a78d6; --eph: #b87800; --fix: #0b8a0b; --log: #f7f6f2;
+  --font: system-ui, -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #1a1a19; --panel: #212120; --bubble: #2c2c2a;
+  --fg: #ffffff; --fg2: #c3c2b7; --line: #383835; --series: #3987e5; --eph: #d99a1a; --fix: #2fb32f; --log: #232322; color-scheme: dark } }
+:root[data-theme="dark"] { --bg: #1a1a19; --panel: #212120; --bubble: #2c2c2a; --fg: #ffffff; --fg2: #c3c2b7; --line: #383835;
+  --series: #3987e5; --eph: #d99a1a; --fix: #2fb32f; --log: #232322; color-scheme: dark }
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--bg); color: var(--fg); font: 15px/1.55 var(--font); display: grid; grid-template-columns: 280px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); overflow: hidden; }
+aside { background: var(--panel); border-right: 1px solid var(--line); padding: 20px 16px; overflow: auto; display: flex; flex-direction: column; gap: 6px; }
+.brand { font-weight: 700; font-size: 18px; }
+.home { font-size: 13px; color: var(--fg2); text-decoration: none; }
+.home:hover { color: var(--fg); }
+aside a { color: var(--series); }
+code { font: 12px var(--mono); }
+.lede, .muted, .a2ui-caption { color: var(--fg2); font-size: 13px; margin: 0; }
+aside h2 { font-size: 12px; letter-spacing: .06em; color: var(--fg2); margin: 18px 0 2px; font-weight: 600; }
+aside ul { list-style: none; padding: 0; margin: 0; }
+aside li button { width: 100%; text-align: left; background: none; border: 0; padding: 8px; border-radius: 8px; color: var(--fg); font: inherit; cursor: pointer; }
+aside li button:hover, aside li button:focus-visible { background: var(--line); }
+.steps { margin: 4px 0 0; padding-left: 18px; color: var(--fg2); font-size: 13px; }
+.steps li.done { color: var(--fix); }
+main { display: flex; flex-direction: column; min-width: 0; min-height: 0; height: 100%; }
+#thread { flex: 1; overflow: auto; padding: 24px 16px; display: flex; flex-direction: column; gap: 18px; }
+.msg { max-width: 760px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.msg p { margin: 0; }
+.msg.user { align-items: flex-end; }
+.msg.user p { background: var(--bubble); padding: 8px 14px; border-radius: 18px; max-width: 80%; }
+.route { font-size: 12px; color: var(--fg2); }
+.route.ephemeral::before, .route.fixed::before { content: "●"; margin-right: 6px; }
+.route.ephemeral::before { color: var(--eph); }
+.route.fixed::before { color: var(--fix); }
+form { display: flex; gap: 8px; max-width: 760px; width: calc(100% - 32px); margin: 0 auto 16px; padding: 6px; border: 1px solid var(--line); border-radius: 24px; background: var(--bg); }
+input { flex: 1; min-width: 0; border: 0; outline: none; padding: 8px 12px; background: transparent; color: var(--fg); font: inherit; }
+button { padding: 8px 16px; border: 1px solid var(--line); border-radius: 18px; background: var(--panel); color: var(--fg); font: inherit; cursor: pointer; }
+button:focus-visible { outline: 2px solid var(--series); outline-offset: 2px; }
+input:focus-visible { outline: none; }
+form:focus-within { border-color: var(--series); box-shadow: 0 0 0 1px var(--series); }
+button:disabled { opacity: .5; cursor: default; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip { font-size: 13px; padding: 6px 12px; }
+details { font-size: 12px; color: var(--fg2); }
+pre { white-space: pre-wrap; word-break: break-all; background: var(--log); border: 1px solid var(--line); padding: 10px; border-radius: 8px; max-height: 260px; overflow: auto; font: 12px/1.5 var(--mono); color: var(--fg); }
+.a2ui-card { border: 1px solid var(--line); border-radius: 12px; padding: 16px; min-width: 0; }
+.a2ui-col { display: flex; flex-direction: column; gap: 4px; }
+.a2ui-card h2 { font-size: 17px; margin: 0; text-wrap: balance; }
+.a2ui-badge { align-self: flex-start; font-size: 12px; padding: 1px 8px; border-radius: 999px; border: 1px solid; }
+.a2ui-badge.ephemeral { border-color: var(--eph); color: var(--eph); }
+.a2ui-badge.fixed { border-color: var(--fix); color: var(--fix); }
+.a2ui-block { margin-top: 12px; overflow-x: auto; }
+.a2ui-block h3 { font-size: 13px; color: var(--fg2); margin: 0 0 4px; font-weight: 600; }
+.a2ui-kpi { font-size: 28px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.a2ui-button { align-self: flex-start; margin-top: 12px; }
+table { border-collapse: collapse; font-size: 13px; }
+th, td { border-bottom: 1px solid var(--line); padding: 4px 10px; text-align: left; }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+svg { max-width: 100%; }
+svg text { fill: var(--fg2); font-size: 11px; }
+svg .axis { stroke: var(--line); }
+svg .mark { fill: var(--series); }
+svg .series { stroke: var(--series); fill: none; stroke-width: 2; }
+select { padding: 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); }
+#loading { margin: auto; color: var(--fg2); }
+@media (max-width: 760px) {
+  body { grid-template-columns: 1fr; grid-template-rows: auto auto; overflow: visible; height: auto; }
+  aside { border-right: 0; border-bottom: 1px solid var(--line); }
+  main { height: auto; min-height: 75vh; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+</head>
+<body>
+<aside>
+  <a class="home" href="/">← Livepowers</a>
+  <div class="brand">活软件生长演示</div>
+  <p class="lede">固定页由数据库按公式计算；智能体能当场做次抛分析，也能把次抛长成新的固化结构。数据为虚构，全部在你的浏览器里用 SQLite 计算。</p>
+  <h2>固定页</h2>
+  <ul id="pages"></ul>
+  <p id="pages-empty" class="muted">还没有固定页。</p>
+  <h2>生长</h2>
+  <button id="grow" type="button" disabled>模拟生长</button>
+  <ol class="steps" id="steps">
+    <li>写规格，新视图进本体</li><li>生成视图 DDL 与回滚脚本</li><li>孪生库部署，与次抛结果对账</li>
+    <li>评审采纳（采纳人 ≠ 生成者）</li><li>生产部署并核验，留回执</li><li>注册为固定页</li>
+  </ol>
+  <p class="muted">先在右侧申请固化，再点「模拟生长」。</p>
+  <h2>说明</h2>
+  <p class="muted">智能体的生成在这里是模拟的（挑选预置展示面）；校验、对账、部署、注册的规则与 <code>lp surface</code> 相同。仓库里的参考宿主跑的是真实的 <code>lp</code> 命令：<a href="https://github.com/zhanglunet/livepowers/tree/main/examples/living_app">examples/living_app</a>。</p>
+</aside>
+<main>
+  <div id="thread" aria-live="polite"><p id="loading">正在加载浏览器内的 SQLite……</p></div>
+  <form id="ask">
+    <input id="q" name="q" placeholder="问业务问题，例如：各地区在途商机金额" autocomplete="off" aria-label="问业务问题">
+    <button type="submit">发送</button>
+  </form>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-asm.js" integrity="sha384-vIugRn1oq9Sl9UZMeszGC3jlKfutaSg1XHf8u4TKUWQiXELAVZXcKYualzDkPKrh" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>/*A2UI*/</script>
+<script>
+"use strict";
+const SURFACES = /*SURFACES*/;
+const DDL = /*DDL*/;
+/*APP*/
+</script>
+</body>
+</html>

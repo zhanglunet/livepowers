@@ -1,0 +1,60 @@
+:root { --surface: #fcfcfb; --panel: #f4f3f0; --bubble: #efeeea; --text: #0b0b0b; --text2: #52514e; --line: #dddcd7;
+  --series: #2a78d6; --eph: #c98500; --fix: #0ca30c; }
+@media (prefers-color-scheme: dark) {
+  :root { --surface: #1a1a19; --panel: #212120; --bubble: #2c2c2a; --text: #ffffff; --text2: #c3c2b7; --line: #383835;
+    --series: #3987e5; --eph: #c98500; --fix: #0ca30c; }
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; height: 100vh; display: grid; grid-template-columns: 260px 1fr; background: var(--surface); color: var(--text);
+  font: 15px/1.55 system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; }
+aside { background: var(--panel); padding: 16px; overflow: auto; border-right: 1px solid var(--line); }
+.brand { font-weight: 700; font-size: 18px; margin-bottom: 4px; }
+aside h2 { font-size: 13px; color: var(--text2); margin: 20px 0 6px; font-weight: 600; }
+aside ul { list-style: none; padding: 0; margin: 0; }
+aside li button { width: 100%; text-align: left; background: none; border: 0; padding: 8px; border-radius: 8px; color: var(--text); font: inherit; cursor: pointer; }
+aside li button:hover { background: var(--line); }
+.grow { margin-top: 24px; }
+.muted, .a2ui-caption { color: var(--text2); font-size: 13px; margin: 4px 0; }
+main { display: flex; flex-direction: column; min-width: 0; height: 100vh; }
+#thread { flex: 1; overflow: auto; padding: 24px 16px; display: flex; flex-direction: column; gap: 16px; }
+.msg { max-width: 760px; width: 100%; margin: 0 auto; }
+.msg p { margin: 0 0 8px; }
+.msg.user { display: flex; justify-content: flex-end; }
+.msg.user p { background: var(--bubble); padding: 8px 14px; border-radius: 18px; max-width: 80%; margin: 0; }
+.route { font-size: 12px; color: var(--text2); margin-bottom: 6px; }
+.route.ephemeral::before { content: "● "; color: var(--eph); }
+.route.fixed::before { content: "● "; color: var(--fix); }
+form { display: flex; gap: 8px; max-width: 760px; width: calc(100% - 32px); margin: 0 auto 16px; padding: 6px;
+  border: 1px solid var(--line); border-radius: 24px; background: var(--surface); }
+input { flex: 1; min-width: 0; border: 0; outline: none; padding: 8px 12px; background: transparent; color: var(--text); font: inherit; }
+button { padding: 8px 16px; border: 1px solid var(--line); border-radius: 18px; background: var(--panel); color: var(--text); font: inherit; cursor: pointer; }
+button:disabled { opacity: .5; cursor: default; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip { font-size: 13px; padding: 6px 12px; }
+details { margin-top: 8px; font-size: 12px; color: var(--text2); }
+pre { white-space: pre-wrap; word-break: break-all; background: var(--panel); padding: 8px; border-radius: 8px; max-height: 240px; overflow: auto; }
+.a2ui-card { border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+.a2ui-col { display: flex; flex-direction: column; gap: 4px; }
+.a2ui-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.a2ui-card h2 { font-size: 17px; margin: 0; }
+.a2ui-badge { align-self: flex-start; font-size: 12px; padding: 1px 8px; border-radius: 999px; border: 1px solid; }
+.a2ui-badge.ephemeral { border-color: var(--eph); }
+.a2ui-badge.fixed { border-color: var(--fix); }
+.a2ui-block { margin-top: 12px; }
+.a2ui-block h3 { font-size: 13px; color: var(--text2); margin: 0 0 4px; font-weight: 600; }
+.a2ui-kpi { font-size: 28px; font-weight: 600; }
+.a2ui-button { align-self: flex-start; margin-top: 12px; }
+table { border-collapse: collapse; font-size: 13px; }
+th, td { border-bottom: 1px solid var(--line); padding: 4px 10px; text-align: left; }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+svg text { fill: var(--text2); font-size: 11px; }
+svg .axis { stroke: var(--line); }
+svg .mark { fill: var(--series); }
+svg .series { stroke: var(--series); fill: none; stroke-width: 2; }
+select { padding: 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--text); }
+@media (max-width: 720px) {
+  body { grid-template-columns: 1fr; grid-template-rows: auto 1fr; height: auto; }
+  aside { border-right: 0; border-bottom: 1px solid var(--line); }
+  main { height: auto; min-height: 70vh; }
+}

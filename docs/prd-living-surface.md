@@ -1,6 +1,6 @@
 # PRD：活软件的"生长面"——次抛展示与语义生成固化结构
 
-> 状态：草案，待评审 · 起草日期：2026-10-08 · 相关：`docs/paradigm.md`、`crystallize-to-system1`、`ontology-evolution`、`ontology-grounded-spec`
+> 状态：M1–M3 已实现（#21） · 起草日期：2026-10-08 · 相关：`docs/paradigm.md`、`crystallize-to-system1`、`ontology-evolution`、`ontology-grounded-spec`
 
 ## 1. 背景与问题
 

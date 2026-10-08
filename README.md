@@ -54,6 +54,7 @@
 | 本体 | `ontology-evolution` | 候选 → 已校验 → 已确认 → 已发布；来源、适用范围、生效时间、历史重算 |
 | System 1 | `system1-first` | 先查注册表，命中即执行；去固化信号 |
 | System 2 | `explore-with-evidence` | 探索边界、预算与止损、样例核对、可接手的产物、证据 |
+| 活软件 · NEW | `living-surface` | 三类需求并存：固定页 / 次抛展示 / 从次抛长出新的固化结构；展示面只传数据与组件描述，只读查询，孪生对账，生产回执后才注册（`lp surface`、`lp pages`） |
 | 固化 | `crystallize-to-system1` | F-V-S-R 门禁与盈亏平衡 → TDD → 确定性实现 → 能力包 → 注册（Coding Harness） |
 | System 1 | `agent-harness-for-tools` | 工具卡、带决策点的剧本、硬约束；换模型重跑基准、去 Harness 化（Agent Harness） |
 | 验收 | `acceptance-gates` | 四道门：形式检查、契约测试、独立对抗审查、人工采纳；回执优先于声明；五种职责分离 |
@@ -71,8 +72,9 @@
 
 | 脚本 | 能做什么 |
 |---|---|
-| `scripts/lp.py` | 证据记录（含钩子自动采集）、意图同义词表（别名归并、按整组同义词路由、相似意图建议）、能力注册表与 System 1 路由（支持中文无空格匹配、置信度）、F-V-S-R 评分与盈亏平衡 n*、固化候选、**任务看板状态机**（非法迁移、止损、接管重开、生成者不能自验）、**结果台账**、**资产四道门与回流率**、夜间产物清单、金丝雀评测、作业契约校验、**能力复核**、晨报 |
+| `scripts/lp.py` | 证据记录（含钩子自动采集）、意图同义词表（别名归并、按整组同义词路由、相似意图建议）、能力注册表与 System 1 路由（支持中文无空格匹配、置信度）、F-V-S-R 评分与盈亏平衡 n*、固化候选、**任务看板状态机**（非法迁移、止损、接管重开、生成者不能自验）、**结果台账**、**资产四道门与回流率**、夜间产物清单、金丝雀评测、作业契约校验、**能力复核**、晨报、**活软件展示面**（`lp surface`：校验、次抛记录、申请固化、对账、带回滚的部署回执、转 A2UI 消息；`lp pages list` 固定页目录） |
 | `scripts/agent_switch.py` | 智能体交换机：HTTP 中转 / 旁路记录、策略拦截（未知类型、超长消息、拦截词）、哈希链防篡改、回放、审计 |
+| `examples/living_app/` | 活软件参考宿主（零依赖）：对话式页面，智能体回答以 A2UI v0.9.1 展示面嵌在对话里；固定页目录、申请固化、模拟生长；`python3 examples/living_app/server.py` |
 | `scripts/scan_sqlite.py` | 环境扫描示例：本体草稿、状态取值抽样、敏感字段跳过、环境指纹、漂移比对 |
 | `scripts/package-skills.sh` | 把每个技能打成单独 zip，便于在网页端上传 |
 | `bin/livepowers.js` · `bin/lp.js` | npm 包的命令：`livepowers install / uninstall / list / path` 安装器，`lp` 转发到 `scripts/lp.py` |
