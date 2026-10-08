@@ -128,6 +128,7 @@ bash examples/walkthrough.sh
 npm i -g livepowers   # 或在仓库里：lp() { python /path/to/livepowers/scripts/lp.py "$@"; }
 lp init
 lp registry find "各地区的周收入"                   # HIT → exit 0；MISS → exit 2
+lp registry find "每星期的营业额" --semantic          # MAYBE HIT → exit 3（语义探测候选，需核对前置条件）
 lp evidence add --intent "weekly revenue by region" --system S2 --outcome success --cost 0.9 --verifiable
 lp score --freq 20 --verifiable 2 --stability 2 --c2 0.9 --c1 0.001 --K 30 --M 10 --p 0.8 --h 5
 lp task new --title "逾期商机移交" --max-loops 5 --budget 20

@@ -200,15 +200,81 @@ def intent_group(name, intents=None):
 
 LATIN = re.compile(r"[a-z0-9]+")
 
+SYNONYM_GROUPS = [
+    # 周期
+    {"周", "每星期", "星期", "每周", "礼拜", "weekly", "week"},
+    {"月", "每月", "月度", "monthly", "month"},
+    {"季", "季度", "每季", "quarterly", "quarter"},
+    {"年", "年度", "每年", "yearly", "annual", "year"},
+    {"日", "每天", "日常", "daily", "day"},
+    # 财务 / 业务指标与概念
+    {"收入", "营收", "营业额", "流水", "销售额", "revenue", "income", "sales", "turnover"},
+    {"利润", "毛利", "净利", "profit", "margin", "earnings"},
+    {"成本", "花费", "支出", "开销", "cost", "expense", "spend"},
+    {"客户", "买家", "用户", "客群", "customer", "client", "user"},
+    {"商机", "线索", "机会", "赢单", "opportunity", "lead", "deal"},
+    {"区域", "地区", "省份", "地域", "城市", "region", "area", "territory", "district"},
+    # 行动与状态
+    {"转移", "转交", "转让", "移交", "转给", "transfer", "assign", "reassign", "handover"},
+    {"停滞", "呆滞", "超期", "逾期", "未动", "未跟进", "stale", "inactive", "overdue", "dormant"},
+    {"审批", "审核", "核准", "批复", "approval", "approve", "review"},
+    {"报告", "报表", "报送", "汇报", "report", "dashboard"},
+    {"更新", "修改", "同步", "变更", "update", "sync", "modify"},
+    {"创建", "新建", "录入", "登记", "create", "new", "add", "register"},
+    {"删除", "清理", "作废", "退役", "delete", "remove", "clean", "retire"},
+]
+
+SYNONYM_MAP = {}
+for _group in SYNONYM_GROUPS:
+    _rep = sorted(_group)[0]
+    for _w in _group:
+        SYNONYM_MAP[_w.lower()] = _rep
+
+
+def simple_stem(word):
+    w = word.lower()
+    if w.endswith("ies") and len(w) > 4:
+        return w[:-3] + "y"
+    if w.endswith("es") and len(w) > 4:
+        return w[:-2]
+    if w.endswith("s") and not w.endswith("ss") and len(w) > 3:
+        return w[:-1]
+    if w.endswith("ing") and len(w) > 5:
+        return w[:-3]
+    if w.endswith("ed") and len(w) > 4:
+        return w[:-2]
+    return w
+
+
+def extract_concepts(text):
+    """从文本提取归一化概念集：拉丁词做词干与同义词映射，中文子串扫描同义词表。"""
+    concepts = set()
+    tl = text.lower()
+    for w in LATIN.findall(tl):
+        st = simple_stem(w)
+        concepts.add(SYNONYM_MAP.get(st, SYNONYM_MAP.get(w, st)))
+    for syn, rep in SYNONYM_MAP.items():
+        if CJK.sub("", syn) and syn in tl:
+            concepts.add(rep)
+    return concepts
+
 
 def intent_sim(a, b):
-    """意图相似度 0–1：英文看词集 Jaccard，中文看二元组重叠率，取大者。"""
-    a, b = a.lower(), b.lower()
-    ta, tb = set(LATIN.findall(a)), set(LATIN.findall(b))
+    """意图相似度 0–1：英文词集 Jaccard、中文二元组重叠率、概念词元 Jaccard 取大者。"""
+    a_l, b_l = a.lower(), b.lower()
+    ta = {SYNONYM_MAP.get(simple_stem(x), simple_stem(x)) for x in LATIN.findall(a_l)}
+    tb = {SYNONYM_MAP.get(simple_stem(x), simple_stem(x)) for x in LATIN.findall(b_l)}
     s1 = len(ta & tb) / len(ta | tb) if ta and tb else 0
-    ba, bb = bigrams(a), bigrams(b)
+    ba, bb = bigrams(a_l), bigrams(b_l)
     s2 = len(ba & bb) / min(len(ba), len(bb)) if ba and bb else 0
-    return max(s1, s2)
+    ca, cb = extract_concepts(a_l), extract_concepts(b_l)
+    s3 = len(ca & cb) / len(ca | cb) if ca and cb else 0
+    return max(s1, s2, s3)
+
+
+def semantic_sim(a, b):
+    """语义综合相似度 0-1。"""
+    return intent_sim(a, b)
 
 
 def cmd_intents_alias(a):
@@ -450,18 +516,43 @@ def cmd_registry_find(a):
     q = expand_query(a.query)
     hits = sorted(((score_match(q, c), c) for c in r["capabilities"] if c["status"] == "active"),
                   key=lambda x: -x[0])
-    hits = [h for h in hits if h[0] >= a.min_score]
-    if not hits:
-        print("MISS —— 未命中已固化能力 → 转 System 2 探索（记得记录证据）")
-        sys.exit(2)
-    print("HIT —— 命中已固化能力 → 走 System 1 执行：")
-    for s, c in hits[: a.top]:
-        flag = "  [写操作]" if c.get("writes_state") else ""
-        print(f"  [{s}] {c['id']} v{c['version']} ({c['kind']}) entry: {c['entry']}{flag}  置信度 {confidence(c):.2f}")
-        if c.get("preconditions"):
-            print(f"       前置条件: {c['preconditions']}")
-        if c.get("ui"):
-            print(f"       固定页: {c['ui']}（直接打开，不必重新分析）")
+    strong_hits = [h for h in hits if h[0] >= a.min_score]
+    if strong_hits:
+        print("HIT —— 命中已固化能力 → 走 System 1 执行：")
+        for s, c in strong_hits[: a.top]:
+            flag = "  [写操作]" if c.get("writes_state") else ""
+            print(f"  [{s}] {c['id']} v{c['version']} ({c['kind']}) entry: {c['entry']}{flag}  置信度 {confidence(c):.2f}")
+            if c.get("preconditions"):
+                print(f"       前置条件: {c['preconditions']}")
+            if c.get("ui"):
+                print(f"       固定页: {c['ui']}（直接打开，不必重新分析）")
+        return
+
+    if getattr(a, "semantic", False):
+        sem_hits = []
+        for c in r["capabilities"]:
+            if c["status"] != "active":
+                continue
+            sims = [semantic_sim(a.query, it) for it in c.get("intents", [])]
+            sims.append(semantic_sim(a.query, c.get("name", "")))
+            max_sim = max(sims) if sims else 0
+            if max_sim >= getattr(a, "semantic_threshold", 0.5):
+                sem_hits.append((max_sim, c))
+        sem_hits.sort(key=lambda x: -x[0])
+        if sem_hits:
+            print("MAYBE HIT —— 语义推测可能命中（未严格匹配，需核对前置条件）:")
+            for s, c in sem_hits[: a.top]:
+                flag = "  [写操作，严禁盲目执行]" if c.get("writes_state") else ""
+                print(f"  [~{s:.2f}] {c['id']} v{c['version']} ({c['kind']}) entry: {c['entry']}{flag}  置信度 {confidence(c):.2f}")
+                if c.get("preconditions"):
+                    print(f"         前置条件: {c['preconditions']}")
+                if c.get("ui"):
+                    print(f"         固定页: {c['ui']}（直接打开，不必重新分析）")
+            print("\n提示：若适用请走 System 1 并用 lp intents alias 补录别名；不适用请转 System 2 探索。")
+            sys.exit(3)
+
+    print("MISS —— 未命中已固化能力 → 转 System 2 探索（记得记录证据）")
+    sys.exit(2)
 
 
 def confidence(c):
@@ -1813,10 +1904,12 @@ def main(argv=None):
     ra.add_argument("--supersedes", default="", help="发新版本：自动退役该旧能力 id 并记录取代关系")
     ra.add_argument("--ui", default="", help="固化展示面路径（tier=fixed；须先有 lp surface deploy 的生产回执）")
     ra.set_defaults(fn=cmd_registry_add)
-    rf = rg.add_parser("find", help="按意图查找能力（HIT exit 0 / MISS exit 2）；命中后仍要核对前置条件")
+    rf = rg.add_parser("find", help="按意图查找能力（HIT exit 0 / MISS exit 2 / MAYBE exit 3）；命中后仍要核对前置条件")
     rf.add_argument("query", help="用户原话或规范化意图，中文可不分词")
     rf.add_argument("--top", type=int, default=3, help="最多列出几条")
     rf.add_argument("--min-score", type=int, default=2, help="低于此分视为 MISS")
+    rf.add_argument("--semantic", action="store_true", help="启用语义匹配探测（未严格命中时输出 MAYBE HIT 候选，exit 3）")
+    rf.add_argument("--semantic-threshold", type=float, default=0.5, help="语义匹配阈值（默认 0.5）")
     rf.set_defaults(fn=cmd_registry_find)
     rl = rg.add_parser("list", help="列出能力（默认只列 active）")
     rl.add_argument("--all", action="store_true", help="含已退役")

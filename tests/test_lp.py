@@ -30,6 +30,12 @@ class TestMath(unittest.TestCase):
         self.assertGreaterEqual(lp.score_match("帮我看一下各地区的周收入", cap), 2)
         self.assertLess(lp.score_match("合同审批进度", cap), 2)
 
+    def test_intent_sim_with_synonyms(self):
+        # 常见同义表达即使没有字面交集，也能通过近义归一获得高相似度
+        self.assertGreaterEqual(lp.intent_sim("各地区周收入", "各省份周营收"), 0.5)
+        self.assertGreaterEqual(lp.intent_sim("transfer stale lead", "handover overdue opportunity"), 0.5)
+        self.assertLess(lp.intent_sim("各地区周收入", "合同审批流程"), 0.3)
+
 
 class TestCLI(Workdir):
     def test_registry_route_and_retire(self):
@@ -41,6 +47,29 @@ class TestCLI(Workdir):
         self.assertIn("HIT", out)
         self.lp("registry", "retire", "cap_weekly_revenue", "--reason", "口径变更")
         self.lp("registry", "find", "各地区的周收入", check=2)
+
+    def test_registry_semantic_find_maybe_hit_and_exit_codes(self):
+        self.lp("init")
+        self.lp("registry", "add", "--name", "Weekly revenue", "--kind", "sql",
+                "--intents", "weekly revenue by region,各地区周收入", "--entry", "python w.py")
+        self.lp("registry", "add", "--name", "Transfer stale", "--kind", "cli",
+                "--intents", "transfer stale lead,转移停滞线索", "--entry", "python t.py",
+                "--writes-state", "--tests", "test_t.py", "--generated-by", "dev", "--accepted-by", "qa")
+        # 未开启 --semantic 时，未登记的近义说法判为 MISS (exit 2)
+        self.lp("registry", "find", "每星期的营业额", check=2)
+        # 开启 --semantic 后，输出 MAYBE HIT (exit 3) 并提示确认前置条件
+        res1 = self.lp("registry", "find", "每星期的营业额", "--semantic", check=3)
+        self.assertIn("MAYBE HIT", res1.stdout)
+        self.assertIn("cap_weekly_revenue", res1.stdout)
+        # 写操作能力在 MAYBE HIT 时显式标明严禁盲目执行
+        res2 = self.lp("registry", "find", "移交超期商机", "--semantic", check=3)
+        self.assertIn("MAYBE HIT", res2.stdout)
+        self.assertIn("严禁盲目执行", res2.stdout)
+        # 完全无关的查询即使开启 --semantic 依然为 MISS (exit 2)
+        self.lp("registry", "find", "查询天气预报", "--semantic", check=2)
+        # 精确命中的查询在 --semantic 下依然为确定性 HIT (exit 0)
+        res3 = self.lp("registry", "find", "各地区周收入", "--semantic", check=0)
+        self.assertIn("HIT —— 命中已固化能力", res3.stdout)
 
     def test_write_capability_requires_tests_and_separation(self):
         self.lp("init")
