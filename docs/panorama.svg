@@ -100,7 +100,7 @@
   <text x="500" y="459" text-anchor="middle" class="sk">crystallize-to-system1 · agent-harness</text>
 
   <rect x="672" y="358" width="300" height="110" rx="12" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.4"/>
-  <text x="822" y="384" text-anchor="middle" class="h">操作手册（18 个技能）</text>
+  <text x="822" y="384" text-anchor="middle" class="h">操作手册（技能）</text>
   <text x="822" y="404" text-anchor="middle" class="b">什么时候该做什么、怎么做、做到什么程度算完。</text>
   <text x="822" y="421" text-anchor="middle" class="b">会话一开始就自动翻开，是规定不是建议。</text>
   <text x="822" y="441" text-anchor="middle" class="m">装进 Claude Code / Cursor / Codex 即可</text>
