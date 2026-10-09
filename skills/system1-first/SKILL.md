@@ -16,10 +16,12 @@ description: Use when handling any business request (query, report, dashboard, b
 2. **查注册表。**
    ```bash
    lp registry find "<规范化意图 + 关键词>"     # 退出码 0 = HIT，2 = MISS
+   # 或开启语义探测（模糊匹配未登记别名的可能能力）：
+   lp registry find "<意图>" --semantic      # 退出码 0 = HIT，3 = MAYBE HIT，2 = MISS
    ```
-3. **HIT → 执行 System 1。**
-   - 核对能力的前置条件、权限、适用范围是否覆盖当前请求；不覆盖视为 MISS。
-   - 命中的能力带"固定页"时，直接打开该页，不要重新分析（`living-surface`）。
+3. **HIT 或 MAYBE HIT 处理。**
+   - **严格 HIT（退出码 0）**：核对能力的前置条件、权限、适用范围是否覆盖当前请求；不覆盖视为 MISS。命中的能力带"固定页"时，直接打开该页，不要重新分析（`living-surface`）。
+   - **语义 MAYBE HIT（退出码 3）**：通过语义相似度发现了潜在能力候选。**严禁盲目调用写操作能力**；仔细核对前置条件与范围，确认适用后可调用并运行 `lp intents alias "<规范意图>" "<当前说法>"` 固化别名；若不适用则转 System 2。
    - 按 `entry` 调用。不要"顺手改进"已固化代码——改动走 `crystallize-to-system1` 发新版本。
    - 若是写操作能力（标 `[写操作]`），执行仍需过 `oltp-action-safety` 的执行阶段步骤（确认点、幂等键）。
    - 记录证据（Claude Code 插件的钩子会在你调用 entry 时自动记一条；其他客户端手动记）：

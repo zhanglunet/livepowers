@@ -31,6 +31,25 @@ class TestMath(unittest.TestCase):
         self.assertGreaterEqual(lp.score_match("帮我看一下各地区的周收入", cap), 2)
         self.assertLess(lp.score_match("合同审批进度", cap), 2)
 
+    def test_concept_similarity_is_opt_in_and_conservative_aliases(self):
+        # Broad semantic concepts are available only to semantic probe, not strict routing/suggestions.
+        self.assertLess(lp.intent_sim("delete customer", "删除系统用户"), 0.6)
+        self.assertLess(lp.semantic_sim("每月客户报表", "每周客户报表"), 0.65)
+        self.assertLess(lp.semantic_sim("生日提醒", "每日收入"), 0.65)
+        self.assertLess(lp.semantic_sim("code review", "审批"), 0.65)
+        self.assertGreaterEqual(lp.concept_sim("各地区周收入", "各省份周营收"), 0.5)
+        self.assertNotIn("日", lp.extract_concepts("生日提醒"))
+        positives = [("各地区周收入", "各省份周营收"), ("transfer stale lead", "handover overdue opportunity")]
+        negatives = [("每月客户报表", "每周客户报表"), ("生日提醒", "每日收入"), ("code review", "审批")]
+        self.assertTrue(all(lp.semantic_sim(a, b) >= 0.65 for a, b in positives))
+        self.assertTrue(all(lp.semantic_sim(a, b) < 0.65 for a, b in negatives))
+
+    def test_intent_sim_with_synonyms(self):
+        # 常见同义表达即使没有字面交集，也能通过近义归一获得高相似度
+        self.assertGreaterEqual(lp.concept_sim("各地区周收入", "各省份周营收"), 0.5)
+        self.assertGreaterEqual(lp.concept_sim("transfer stale lead", "handover overdue opportunity"), 0.5)
+        self.assertLess(lp.intent_sim("各地区周收入", "合同审批流程"), 0.3)
+
 
 class TestCLI(Workdir):
     def test_registry_route_and_retire(self):
@@ -42,6 +61,66 @@ class TestCLI(Workdir):
         self.assertIn("HIT", out)
         self.lp("registry", "retire", "cap_weekly_revenue", "--reason", "口径变更")
         self.lp("registry", "find", "各地区的周收入", check=2)
+
+    def test_semantic_similarity_cannot_expand_strict_write_match(self):
+        self.lp("init")
+        self.lp("intents", "alias", "delete customer", "删除客户")
+        self.lp("registry", "add", "--name", "Delete customer", "--kind", "cli",
+                "--intents", "delete customer,删除客户", "--entry", "crm customer delete {id}",
+                "--writes-state", "--tests", "t.py", "--generated-by", "dev", "--accepted-by", "qa")
+        self.lp("registry", "find", "删除系统用户", check=2)
+        self.lp("registry", "add", "--name", "Transfer stale lead", "--kind", "cli",
+                "--intents", "transfer stale lead", "--entry", "crm lead transfer {id}",
+                "--writes-state", "--tests", "t.py", "--generated-by", "dev", "--accepted-by", "qa")
+        self.lp("registry", "find", "移交超期商机", "--semantic", check=3)
+
+    def test_semantic_concepts_are_configurable_in_livepowers_home(self):
+        self.lp("init")
+        self.lp("registry", "add", "--name", "Alpha", "--kind", "cli", "--intents", "alpha", "--entry", "run")
+        with open(os.path.join(self.dir, ".livepowers", "concepts.json"), encoding="utf-8") as f:
+            config = json.load(f)
+        config["groups"] = [["alpha", "beta"]]
+        with open(os.path.join(self.dir, ".livepowers", "concepts.json"), "w", encoding="utf-8") as f:
+            json.dump(config, f)
+        self.lp("registry", "find", "beta", check=2)
+        self.lp("registry", "find", "beta", "--semantic", check=3)
+
+    def test_maybe_hit_fixed_page_requires_confirmation(self):
+        self.lp("init")
+        self.lp("registry", "add", "--name", "Weekly revenue", "--kind", "sql",
+                "--intents", "weekly revenue by region", "--entry", "python w.py")
+        # Force a semantic candidate with a fixed-page reference in registry fixture.
+        reg = self.read_json(".livepowers/registry.json")
+        reg["capabilities"][0]["ui"] = "fixed.json"
+        with open(os.path.join(self.dir, ".livepowers", "registry.json"), "w", encoding="utf-8") as f:
+            json.dump(reg, f)
+        res = self.lp("registry", "find", "每星期的营业额", "--semantic", check=3)
+        self.assertIn("候选固定页", res.stdout)
+        self.assertIn("确认适用后再打开", res.stdout)
+        self.assertNotIn("直接打开，不必重新分析", res.stdout)
+
+    def test_registry_semantic_find_maybe_hit_and_exit_codes(self):
+        self.lp("init")
+        self.lp("registry", "add", "--name", "Weekly revenue", "--kind", "sql",
+                "--intents", "weekly revenue by region,各地区周收入", "--entry", "python w.py")
+        self.lp("registry", "add", "--name", "Transfer stale", "--kind", "cli",
+                "--intents", "transfer stale lead,转移停滞线索", "--entry", "python t.py",
+                "--writes-state", "--tests", "test_t.py", "--generated-by", "dev", "--accepted-by", "qa")
+        # 未开启 --semantic 时，未登记的近义说法判为 MISS (exit 2)
+        self.lp("registry", "find", "每星期的营业额", check=2)
+        # 开启 --semantic 后，输出 MAYBE HIT (exit 3) 并提示确认前置条件
+        res1 = self.lp("registry", "find", "每星期的营业额", "--semantic", check=3)
+        self.assertIn("MAYBE HIT", res1.stdout)
+        self.assertIn("cap_weekly_revenue", res1.stdout)
+        # 写操作能力在 MAYBE HIT 时显式标明严禁盲目执行
+        res2 = self.lp("registry", "find", "移交超期商机", "--semantic", check=3)
+        self.assertIn("MAYBE HIT", res2.stdout)
+        self.assertIn("严禁盲目执行", res2.stdout)
+        # 完全无关的查询即使开启 --semantic 依然为 MISS (exit 2)
+        self.lp("registry", "find", "查询天气预报", "--semantic", check=2)
+        # 精确命中的查询在 --semantic 下依然为确定性 HIT (exit 0)
+        res3 = self.lp("registry", "find", "各地区周收入", "--semantic", check=0)
+        self.assertIn("HIT —— 命中已固化能力", res3.stdout)
 
     def test_write_capability_requires_tests_and_separation(self):
         self.lp("init")
@@ -403,6 +482,7 @@ class TestCLI(Workdir):
         self.assertIn("weekly revenue by region", out)
         self.assertIn("按区域的每周营收", out)
         self.assertIn("证据 2", out)
+        self.assertIn("HIT", self.lp("registry", "find", "帮我看一下各地区的周收入").stdout)
         # 路由：别名命中整组同义词
         self.assertIn("HIT", self.lp("registry", "find", "按区域的每周营收").stdout)
         self.assertIn("HIT", self.lp("registry", "find", "各地区周收入怎么样").stdout)
