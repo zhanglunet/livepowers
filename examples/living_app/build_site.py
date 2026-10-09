@@ -2,7 +2,7 @@
 """生成网站上的活软件演示页 docs/demo/index.html（单文件，零构建依赖）。
 
 页面复用参考宿主的 A2UI 渲染器（static/a2ui.js）、预置展示面（surfaces/）与生长用的 DDL（ddl/），
-外壳与浏览器内的演示逻辑在 web/。改了这些文件后运行：python3 examples/living_app/build_site.py
+外壳、浏览器内的演示逻辑与展示面校验规则在 web/；可选的模型通道是 functions/api/agent.js（Cloudflare Pages Function）。改了这些文件后运行：python3 examples/living_app/build_site.py
 （tests/test_surface.py 会检查 docs/demo/index.html 与源文件同步）。
 """
 import json
@@ -26,6 +26,7 @@ def build():
     ddl = {"up": read("ddl", "v_pipeline_by_region.sql"), "down": read("ddl", "v_pipeline_by_region.rollback.sql")}
     return (read("web", "page.html")
             .replace("/*A2UI*/", read("static", "a2ui.js"))
+            .replace("/*RULES*/", read("web", "surface-rules.js"))
             .replace("/*SURFACES*/", json.dumps(surfaces, ensure_ascii=False))
             .replace("/*DDL*/", json.dumps(ddl, ensure_ascii=False))
             .replace("/*APP*/", read("web", "demo.js")))
