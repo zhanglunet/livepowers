@@ -2,9 +2,8 @@
 """
 eval_triggers —— 技能触发率评测脚本：
 基于 tests/triggers/*.jsonl 用例集，对技能触发率与混淆情况进行评测。
-支持两种模式：
-1. 默认确定性打分模式（零依赖，复用 lp.py 中的 intent_sim 词重叠与二元组重叠）；
-2. 真实模型评测模式（--model <m>），可选调用模型并输出结果，支持把评测结果记录进 .livepowers/canary.jsonl（复用 lp canary record）。
+只支持确定性打分（零依赖，复用 intent_sim）；真实模型评测留待第二阶段。
+可记录金丝雀结果，并与上一条同名记录比较。
 """
 import argparse
 import json
@@ -74,9 +73,21 @@ def run_deterministic_eval(descs):
     return stats, overall_pos_total, overall_pos_hit
 
 
+def compare_previous(path, current):
+    """Compare the latest same-name run; never compare invented zero baselines."""
+    previous = next((r for r in reversed(lp.jsonl_read(path))
+                     if r.get("name") == current["name"]), None)
+    if previous is None:
+        return "历史比较: 首次记录，无历史基线"
+    if not previous.get("total"):
+        return "历史比较: 上一条记录分母无效，无法比较"
+    delta = current["passed"] / current["total"] - previous["passed"] / previous["total"]
+    warning = "（用例数量变化，仅供参考）" if previous["total"] != current["total"] else ""
+    return f"历史比较: {previous['passed']}/{previous['total']} → {current['passed']}/{current['total']}; 触发率差值 {delta:+.1%}{warning}"
+
+
 def main():
     parser = argparse.ArgumentParser(description="技能触发率自动评测")
-    parser.add_argument("--model", default="", help="评测所用模型（留空则为确定性词重叠打分）")
     parser.add_argument("--record-canary", action="store_true", help="把结果记录进 .livepowers/canary.jsonl")
     args = parser.parse_args()
 
@@ -85,7 +96,7 @@ def main():
 
     print("=" * 70)
     print("Livepowers 技能触发率评测结果（基于 tests/triggers/*.jsonl）")
-    print(f"模式: {'模型调用: ' + args.model if args.model else '确定性打分（零依赖，词集/二元组重叠）'}")
+    print("模式: 确定性打分（零依赖，词集/二元组重叠）")
     print("=" * 70)
     print(f"{'技能名称':<32} {'正例 Top-2 命中率':<18} {'反例排斥率':<12} {'主要混淆'}")
     print("-" * 70)
@@ -106,13 +117,14 @@ def main():
         rec = {
             "ts": lp.now(),
             "name": "triggers_eval",
-            "model": args.model or "deterministic-sim",
+            "model": "deterministic-sim",
             "passed": total_hit,
             "total": total_pos,
             "tokens": 0,
             "seconds": 0,
             "note": "tests/triggers eval"
         }
+        print(compare_previous(canary_file, rec))
         lp.jsonl_append(canary_file, rec)
         print(f"已记录至 {canary_file}: {total_hit}/{total_pos}")
 

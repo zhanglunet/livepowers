@@ -28,12 +28,11 @@ LP_DENYLIST="名称1,名称2" python -m unittest tests.test_repo -v
 python -m unittest tests.test_repo.TestSkills.test_triggers_coverage_and_ranking -v
 ```
 
-可运行 `scripts/eval_triggers.py` 输出 18 个技能的触发率表与混淆矩阵，支持 `--model <m>` 并可记录到 `.livepowers/canary.jsonl`：
+可运行 `scripts/eval_triggers.py` 输出全部技能的触发率表与主要混淆（失败正例的 top1 统计）。仅支持确定性打分；真实模型调用与完整混淆矩阵留待第二阶段。`--record-canary` 写入 `.livepowers/canary.jsonl` 前读取上一条同名记录，输出触发率差值；首次运行明确提示无历史基线：
 
 ```bash
 python scripts/eval_triggers.py
 ```
-
 
 ## 技能（行为测试）
 
@@ -43,3 +42,13 @@ python scripts/eval_triggers.py
 2. 在没有该技能的会话里运行，逐字记录 Agent 跳过的步骤和给出的借口。
 3. 装上技能后再跑同样的情境，确认 Agent 现在会遵守。
 4. 把新发现的借口补进技能的反模式表，再验证一遍。
+
+## 本轮触发用例回放
+
+为验收、安全写操作和先查注册表三个技能补了六条用户换说法用例。首次运行 63 条正例中命中 61 条：验收的“用户催着直接注册能力，但生成者自己验收可以吗？”被探索技能抢占；先查注册表的一条问题被固化技能抢占。依据这些反例补充两个技能 description 的触发条件，再运行原用例集与新增用例；没有删除原基准、放宽 Top-2 或修改反例标准。
+
+这是确定性触发测试的 RED/GREEN 记录；不能代替独立 Agent 压力行为测试或真实模型评测。第二阶段仍未实现。
+
+## 第二阶段后续范围（未实现）
+
+真实模型评测须单独交付：通过用户配置的端点或命令调用模型；凭证仅从环境注入，不落用例、仓库或回执；记录实际模型、调用失败、耗时、Token 与返回的技能选择。使用全部技能 description 和独立保留的用户说法用例，输出逐例预测及完整期望/预测混淆矩阵。历史比较须绑定模型、提示词版本与用例摘要，区分可比回归和套件变化。网络与解析失败不能降级为确定性结果或计作通过；真实端点的执行回执和独立审查通过后才宣称支持模型评测。
