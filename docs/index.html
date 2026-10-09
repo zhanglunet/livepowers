@@ -284,7 +284,7 @@ footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);font-si
 </figure>
 <div class="grid g3 read" style="margin-top:14px">
   <div class="card"><span class="tag t-s1">读图 ①</span><h3 style="font-family:inherit">先翻工具箱，再派人探索</h3><p>任何请求先看有没有现成的做法：有就直接用，几乎不花钱、结果确定；没有才让"探索者"（智能体 + 大模型）去想办法——先说清要什么，只在业务地图范围内摸索，做完要过质检。每一步都留下工作日志；走不通就到预算止损，换人接手，而不是无限重试。</p><div class="sk">system1-first · ontology-grounded-spec · explore-with-evidence · acceptance-gates · takeover-handling</div></div>
-  <div class="card"><span class="tag t-core">读图 ②</span><h3 style="font-family:inherit">三块地基各管一件事</h3><p><b>业务地图</b>回答"业务里有什么、怎么算、谁能做"，写在代码外面，可以确认和改版；<b>工具箱</b>装的是反复成功后做成"按钮"的能力，每个带测试和责任人；<b>操作手册</b>是 全部技能，规定什么时候做什么，会话一开始就自动翻开。</p><div class="sk">env-scan-ontology · ontology-evolution · crystallize-to-system1 · agent-harness-for-tools · using-livepowers</div></div>
+  <div class="card"><span class="tag t-core">读图 ②</span><h3 style="font-family:inherit">三块地基各管一件事</h3><p><b>业务地图</b>回答"业务里有什么、怎么算、谁能做"，写在代码外面，可以确认和改版；<b>工具箱</b>装的是反复成功后做成"按钮"的能力，每个带测试和责任人；<b>操作手册</b>由技能组成，规定什么时候做什么，会话一开始就自动翻开。</p><div class="sk">env-scan-ontology · ontology-evolution · crystallize-to-system1 · agent-harness-for-tools · using-livepowers</div></div>
   <div class="card"><span class="tag t-night">读图 ③</span><h3 style="font-family:inherit">白天用，夜里整理，早晨验收</h3><p>白天探索留日志；夜里翻日志，把反复成功的做法先算值不值、再写测试和草稿，顺便查旧工具还灵不灵；早晨人看晨报逐个决定，通过的放进工具箱。于是明天的请求更多走"找到了"——这就是"越用越熟练"。四道护栏贯穿全程：质检、写操作安全、账本、现场交付的资产回流。</p><div class="sk">nightly-crystallization-review · night-loop-planning · outcome-ledger · fde-delivery</div></div>
 </div>
 
@@ -528,7 +528,7 @@ livepowers list
 livepowers uninstall --target codex --project</pre></div>
     <div id="i5" class="pane"><pre><span class="c"># Vercel Agent Skills 市场（支持 20+ 款客户端）</span>
 <span class="k">npx skills add</span> zhanglunet/livepowers
-<span class="c"># 注意：只安装全部技能定义；lp 命令行工具仍需 npm i -g livepowers</span></pre></div>
+<span class="c"># 注意：只安装技能定义；lp 命令行工具仍需 npm i -g livepowers</span></pre></div>
     <div id="i1" class="pane"><pre>/plugin marketplace add zhanglunet/livepowers
 /plugin install livepowers@livepowers-marketplace
 <span class="c"># 自带 SessionStart 钩子，自动注入 using-livepowers</span>

@@ -33,7 +33,7 @@
 | 维度 | Livepowers 1.2.0 | Superpowers 6.3.0 |
 |---|---|---|
 | 目标用户 | 做企业业务软件、数据分析、交易系统、现场交付的业务 Agent 及其运营者；技能正文中文 | 用 Claude Code / Codex / Cursor 等写代码的开发者；英文 |
-| 技能数与分组 | 按入口、本体 ×3、System 1 ×2、System 2、固化、验收、安全、接管、夜间 ×2、协作、交付、价值 ×2、元 | 14 个：入口、元、协作 ×9、测试、调试 ×2 |
+| 技能数与分组 | 入口、本体、System 1、System 2、固化、展示面、验收、安全、接管、夜间、协作、交付、价值、元 | 14 个：入口、元、协作 ×9、测试、调试 ×2 |
 | 入口机制 | SessionStart 钩子注入 `using-livepowers` 全文；三个斜杠命令 `/lp-route` `/lp-nightly` `/lp-morning` | SessionStart 钩子注入 `using-superpowers` 全文；无斜杠命令 |
 | 运行时状态 | 有：`lp.py`（证据、注册表、看板、台账、资产、夜间产物、金丝雀、晨报）、`agent_switch.py`、`scan_sqlite.py`，数据落在项目 `.livepowers/` | 几乎没有；产物是 `docs/superpowers/plans/*.md` 和 specs |
 | 业务本体 | 核心：扫描生成本体草稿与环境指纹、漂移检测；规格按变化层级分类；本体按候选 → 已校验 → 已确认 → 已发布演进；"不在本体之外操作"是铁律 | 无本体概念，语义停留在 spec / plan 文档 |
