@@ -33,7 +33,7 @@
 | 维度 | Livepowers 1.2.0 | Superpowers 6.3.0 |
 |---|---|---|
 | 目标用户 | 做企业业务软件、数据分析、交易系统、现场交付的业务 Agent 及其运营者；技能正文中文 | 用 Claude Code / Codex / Cursor 等写代码的开发者；英文 |
-| 技能数与分组 | 18 个：入口、本体 ×3、System 1 ×2、System 2、固化、验收、安全、接管、夜间 ×2、协作、交付、价值 ×2、元 | 14 个：入口、元、协作 ×9、测试、调试 ×2 |
+| 技能数与分组 | 入口、本体、System 1、System 2、固化、展示面、验收、安全、接管、夜间、协作、交付、价值、元 | 14 个：入口、元、协作 ×9、测试、调试 ×2 |
 | 入口机制 | SessionStart 钩子注入 `using-livepowers` 全文；三个斜杠命令 `/lp-route` `/lp-nightly` `/lp-morning` | SessionStart 钩子注入 `using-superpowers` 全文；无斜杠命令 |
 | 运行时状态 | 有：`lp.py`（证据、注册表、看板、台账、资产、夜间产物、金丝雀、晨报）、`agent_switch.py`、`scan_sqlite.py`，数据落在项目 `.livepowers/` | 几乎没有；产物是 `docs/superpowers/plans/*.md` 和 specs |
 | 业务本体 | 核心：扫描生成本体草稿与环境指纹、漂移检测；规格按变化层级分类；本体按候选 → 已校验 → 已确认 → 已发布演进；"不在本体之外操作"是铁律 | 无本体概念，语义停留在 spec / plan 文档 |
@@ -72,7 +72,7 @@ Superpowers 的 `requesting-code-review` 评审子 Agent 充当 `acceptance-gate
 | **Palantir AIP / Ontology** | 商业企业平台，本体即语义层 + 动能层 | Action Types 走审批与审计；Agent 用本体工具 | Agent + Ontology 公式本身；原子行动 + 审计 ≈ `oltp-action-safety` | 独有：开源、零依赖、装进任意编码 Agent。缺失：真正的本体运行时（对象存储、权限传播、行动引擎） |
 | **Devin Playbooks / Knowledge** | 可复用的多步流程 prompt 与组织知识 | Playbook 含后置条件与禁止动作；Knowledge 按触发词匹配 | Playbook ≈ 工具卡 + 剧本；Knowledge 自动建议 ≈ 固化候选 | 独有：固化物是代码而非 prompt，有评分、独立验收、台账。缺失：从会话自动生成 playbook 的产品化流程 |
 | **Voyager 式自增长技能库**（continuous-learning、MUSE-Autoskill、Trace2Skill、SkillRL） | 自动从轨迹蒸馏技能并评估 | hook 观测 → 抽取模式 → 置信度评分 → 提升 | 最像"探索留证据 → 固化"；v1.3 起同样用 hook 自动采集证据并给能力算置信度 | 独有：显式经济学 n*、生成者 ≠ 采纳人、去固化信号、固化物是代码。缺失：从轨迹自动生成技能草稿（Livepowers 的夜间生成仍由 Agent 按技能执行） |
-| **skills.sh / Cursor rules 生态** | 技能与规则的分发渠道 | `npx skills` 市场；`.cursor/rules/*.mdc` | `npx livepowers install` 对应这些渠道 | 缺失：未上架 skills.sh；Cursor 侧不生成 `.mdc` 规则 |
+| **skills.sh / Cursor rules 生态** | 技能与规则的分发渠道 | `npx skills` 市场；`.cursor/rules/*.mdc` | `npx livepowers install` 与 `npx skills add` 对应这些渠道 | 支持 skills.sh 安装全部技能；Cursor 入口规则待对应功能合并 |
 
 ## Livepowers 的差异化
 
@@ -91,7 +91,7 @@ Superpowers 的 `requesting-code-review` 评审子 Agent 充当 `acceptance-gate
 - 意图同义词表 v1.4.0 已支持；语义探测（`--semantic`）作为 MAYBE HIT 候选提示，概念组可在 `.livepowers/concepts.json` 审阅调整，不会自动 HIT。严格路由与 `intents suggest` 使用保守匹配，避免概念近似直接扩展为别名或写操作。
 - 规格产物链与稳定任务 ID，让夜间 DAG 直接引用（借 spec-kit）。
 - 工具卡补后置条件与禁止动作字段（借 Devin Playbook）。
-- 上架 skills.sh；为 Cursor 生成 `.mdc` 入口规则。
+- 支持 skills.sh 安装；Cursor 入口规则待对应功能合并。
 
 ## 来源
 
