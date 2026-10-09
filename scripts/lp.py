@@ -614,6 +614,36 @@ def find_task(db, tid):
     die(f"未找到任务 {tid}")
 
 
+def spec_task_ids(path):
+    """Read declarations only inside the Markdown task-list section."""
+    with open(path, encoding="utf-8") as f:
+        content = f.read()
+    ids = set()
+    active = False
+    level = 0
+    fenced = False
+    for line in content.splitlines():
+        if re.match(r"^\s*(```|~~~)", line):
+            fenced = not fenced
+            continue
+        if fenced:
+            continue
+        heading = re.match(r"^(#{1,6})\s+(.+)", line)
+        if heading:
+            if active and len(heading[1]) <= level:
+                active = False
+            if heading[2].strip().startswith("任务清单"):
+                active = True
+                level = len(heading[1])
+            continue
+        match = re.match(r"^\s*-\s+(T\d+)\b", line) if active else None
+        if match:
+            if match[1] in ids:
+                raise ValueError(f"任务 ID 重复声明：{match[1]}")
+            ids.add(match[1])
+    return ids
+
+
 def cmd_task_new(a):
     db = load_tasks()
     tid = a.id or "t_" + uuid.uuid4().hex[:8]
@@ -621,6 +651,15 @@ def cmd_task_new(a):
         die(f"任务 {tid} 已存在")
     spec_val = getattr(a, "spec", "") or ""
     spec_task_val = getattr(a, "spec_task", "") or ""
+    if spec_task_val and not spec_val:
+        die("指定了 spec_task 但未指定 spec")
+    if spec_val:
+        try:
+            ids = spec_task_ids(spec_val)
+            if spec_task_val and spec_task_val not in ids:
+                die(f"规格文件中未找到任务 ID：{spec_task_val}")
+        except (OSError, ValueError) as e:
+            die(f"规格文件校验失败：{e}")
     t = {"id": tid, "title": a.title, "intent": canon(a.intent), "level": a.level, "owner": a.owner,
          "contract_version": a.contract_version, "max_loops": a.max_loops, "budget": a.budget,
          "spec": spec_val, "spec_task": spec_task_val,
@@ -922,11 +961,9 @@ def cmd_job_validate(a):
                 errs.append(f"引用的规格文件不存在：{spec_file}")
             elif spec_task_id:
                 try:
-                    with open(target_path, encoding="utf-8") as sf:
-                        spec_content = sf.read()
-                    if not re.search(rf"\b{re.escape(spec_task_id)}\b", spec_content):
+                    if spec_task_id not in spec_task_ids(target_path):
                         errs.append(f"规格文件 {spec_file} 中未找到任务 ID：{spec_task_id}")
-                except OSError as e:
+                except (OSError, ValueError) as e:
                     errs.append(f"读取规格文件失败：{e}")
         if errs:
             bad += 1

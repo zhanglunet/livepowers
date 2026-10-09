@@ -91,7 +91,10 @@ class TestCLI(Workdir):
         self.lp("task", "move", t, "registered", "--by", "gen", "--reason", "self", "--evidence", "p", check=1)
         self.lp("task", "move", t, "registered", "--by", "rev", "--reason", "ok", check=1)  # 缺证据
         self.lp("task", "move", t, "registered", "--by", "rev", "--reason", "ok", "--evidence", "acc.md")
-        # 关联 spec 与 spec_task
+        # 关联 spec 与 spec_task（必须引用实际存在的任务声明）
+        os.makedirs(os.path.join(self.dir, "specs"))
+        with open(os.path.join(self.dir, "specs", "demo.md"), "w") as f:
+            f.write("## 任务清单\n- T001 Demo\n")
         t2 = self.lp("task", "new", "--title", "spec demo", "--spec", "specs/demo.md", "--spec-task", "T001").stdout.strip()
         task2_json = json.loads(self.lp("task", "show", t2).stdout)
         self.assertEqual(task2_json.get("spec"), "specs/demo.md")
@@ -374,7 +377,7 @@ class TestCLI(Workdir):
         # 校验 spec 文件及任务 ID 存在性
         spec_file = os.path.join(self.dir, "spec1.md")
         with open(spec_file, "w", encoding="utf-8") as f:
-            f.write("# Spec\n\n- T001 [P] 数据库建表\n")
+            f.write("# Spec\n\n## 任务清单\n- T001 [P] 数据库建表\n")
         good_job = {"jobs": [{"job_id": "j1", "tenant": "t", "stage_id": "s", "dependency": [], "priority": 1,
                               "deadline": "08:00", "model_capability": "m", "resources": {}, "max_cost": 10,
                               "retry_limit": 1, "stop_condition": "stop", "checkpoint": "c", "preemptible": True,
@@ -395,6 +398,17 @@ class TestCLI(Workdir):
         out_bad = self.lp("job", "validate", bp, check=1).stdout
         self.assertIn("未找到任务 ID：T999", out_bad)
 
+
+    def test_spec_task_declarations_reject_prose_and_duplicates(self):
+        path = os.path.join(self.dir, "spec.md")
+        with open(path, "w") as f:
+            f.write("# Spec\nT009 已删除\n## 任务清单\n- T002 active\n## Notes\n- T009 prose\n")
+        self.assertEqual(lp.spec_task_ids(path), {"T002"})
+        self.lp("task", "new", "--title", "test", "--spec", path, "--spec-task", "T009", check=1)
+        with open(path, "w") as f:
+            f.write("## 任务清单\n- T002 first\n- T002 duplicate\n")
+        with self.assertRaises(ValueError):
+            lp.spec_task_ids(path)
 
     def test_report(self):
         self.lp("init")
