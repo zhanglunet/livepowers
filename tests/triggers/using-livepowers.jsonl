@@ -1,0 +1,5 @@
+{"prompt": "开始任何企业业务软件、数据分析或智能体交付任务前，先阅读入口技能", "expect": ["using-livepowers"], "reject": ["system1-first"]}
+{"prompt": "开启新会话，准备接触企业级交易系统，先核对七条铁律与路由表", "expect": ["using-livepowers"], "reject": ["fde-delivery"]}
+{"prompt": "Starting any conversation that touches business software or transactional systems", "expect": ["using-livepowers"], "reject": ["explore-with-evidence"]}
+{"prompt": "运行金丝雀对比测试命令", "expect": ["nightly-crystallization-review"], "reject": ["using-livepowers"]}
+{"prompt": "把任务看板中的卡片从待澄清移到规格确认", "expect": ["ontology-grounded-spec"], "reject": ["using-livepowers"]}

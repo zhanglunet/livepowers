@@ -1,0 +1,5 @@
+{"prompt": "新建或修改 Livepowers 技能本身，先看 Agent 在什么压力下失败", "expect": ["writing-livepowers-skills"], "reject": ["agent-harness-for-tools"]}
+{"prompt": "新建或修改 Livepowers 技能时使用，遵循编写规范与测试", "expect": ["writing-livepowers-skills"], "reject": ["crystallize-to-system1"]}
+{"prompt": "Creating a new Livepowers skill or editing an existing one", "expect": ["writing-livepowers-skills"], "reject": ["using-livepowers"]}
+{"prompt": "执行转账扣款操作", "expect": ["oltp-action-safety"], "reject": ["writing-livepowers-skills"]}
+{"prompt": "在生产环境中部署刚生成的代码", "expect": ["acceptance-gates"], "reject": ["writing-livepowers-skills"]}

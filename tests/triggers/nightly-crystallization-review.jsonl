@@ -1,0 +1,5 @@
+{"prompt": "收工或夜间：回顾证据、挑固化候选、复核能力、出晨报", "expect": ["nightly-crystallization-review"], "reject": ["night-loop-planning"]}
+{"prompt": "夜间回顾证据，挑出固化候选并生成晨报", "expect": ["nightly-crystallization-review"], "reject": ["crystallize-to-system1"]}
+{"prompt": "Review evidence at end of day, pick crystallization candidates, generate morning report", "expect": ["nightly-crystallization-review"], "reject": ["outcome-ledger"]}
+{"prompt": "用户刚发来一个紧急查询请求", "expect": ["system1-first"], "reject": ["nightly-crystallization-review"]}
+{"prompt": "把商机状态机新增一个取值", "expect": ["ontology-evolution"], "reject": ["nightly-crystallization-review"]}

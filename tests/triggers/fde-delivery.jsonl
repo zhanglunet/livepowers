@@ -1,0 +1,5 @@
+{"prompt": "把领域产品交付到客户现场，推进存量改造并沉淀回流资产", "expect": ["fde-delivery"], "reject": ["outcome-ledger"]}
+{"prompt": "作为前线部署工程师 FDE 进入客户现场做交付与资产沉淀", "expect": ["fde-delivery"], "reject": ["digital-role-spec"]}
+{"prompt": "Delivering a domain Live Product at a customer site as a forward-deployed engineer", "expect": ["fde-delivery"], "reject": ["env-scan-ontology"]}
+{"prompt": "检查当前本地代码是否通过单元测试", "expect": ["writing-livepowers-skills"], "reject": ["fde-delivery"]}
+{"prompt": "为单个写操作设计补偿事务", "expect": ["oltp-action-safety"], "reject": ["fde-delivery"]}

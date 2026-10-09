@@ -1,6 +1,6 @@
 ---
 name: acceptance-gates
-description: Use when any candidate capability, ontology change, spec implementation or agent-produced result is about to enter production, or whenever an agent or person says "done" and that claim needs to be confirmed. 候选能力进入生产、或任何"已完成"需要被确认时使用。
+description: Use when any candidate capability, ontology change, spec implementation or agent-produced result is about to enter production, or whenever an agent or person says "done" and that claim needs to be confirmed. 报表上线、注册前需要独立审查验收，候选能力进入生产、或任何"已完成"需要被确认时使用。
 ---
 
 # 验收门禁

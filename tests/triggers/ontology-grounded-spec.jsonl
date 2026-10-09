@@ -1,0 +1,5 @@
+{"prompt": "实现任何业务功能、报表、命令或流程前，先编写规格", "expect": ["ontology-grounded-spec"], "reject": ["system1-first"]}
+{"prompt": "实现业务功能或报表前，当需求范围或验收不明确时", "expect": ["ontology-grounded-spec"], "reject": ["explore-with-evidence"]}
+{"prompt": "Before implementing any business feature or report, ambiguous request", "expect": ["ontology-grounded-spec"], "reject": ["crystallize-to-system1"]}
+{"prompt": "夜间运行作业契约校验", "expect": ["night-loop-planning"], "reject": ["ontology-grounded-spec"]}
+{"prompt": "向客户核对现场项目的经济账与投入产出", "expect": ["outcome-ledger"], "reject": ["ontology-grounded-spec"]}

@@ -1,0 +1,5 @@
+{"prompt": "把探索成功的路径固化为 System 1 能力包", "expect": ["crystallize-to-system1"], "reject": ["explore-with-evidence"]}
+{"prompt": "某条路径被反复探索成功，请把它固化为代码或 CLI", "expect": ["crystallize-to-system1"], "reject": ["ontology-evolution"]}
+{"prompt": "An intent has been explored successfully several times, crystallize into System 1 package", "expect": ["crystallize-to-system1"], "reject": ["system1-first"]}
+{"prompt": "任务超出了最大探索轮次被止损", "expect": ["takeover-handling"], "reject": ["crystallize-to-system1"]}
+{"prompt": "给客户的数据库建立环境指纹", "expect": ["env-scan-ontology"], "reject": ["crystallize-to-system1"]}

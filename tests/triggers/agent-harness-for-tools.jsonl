@@ -1,0 +1,5 @@
+{"prompt": "接口已有但 Agent 用不稳，弱模型执行业务不稳定", "expect": ["agent-harness-for-tools"], "reject": ["explore-with-evidence"]}
+{"prompt": "换了更便宜的模型，需要调整工具卡与硬约束 Harness", "expect": ["agent-harness-for-tools"], "reject": ["system1-first"]}
+{"prompt": "CLIs exist but business agents use them unreliably, need agent harness", "expect": ["agent-harness-for-tools"], "reject": ["outcome-ledger"]}
+{"prompt": "连接数据库扫描表结构", "expect": ["env-scan-ontology"], "reject": ["agent-harness-for-tools"]}
+{"prompt": "两个 Agent 之间发消息同步状态", "expect": ["auditable-agent-comms"], "reject": ["agent-harness-for-tools"]}

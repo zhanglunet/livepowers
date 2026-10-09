@@ -1,0 +1,7 @@
+{"prompt": "任何写生产状态的动作之前，必须先过安全门禁", "expect": ["oltp-action-safety"], "reject": ["system1-first"]}
+{"prompt": "写生产状态动作之前，检查前提、权限、事务、幂等与审批", "expect": ["oltp-action-safety"], "reject": ["explore-with-evidence"]}
+{"prompt": "Before executing any action that writes production state like create or transfer", "expect": ["oltp-action-safety"], "reject": ["acceptance-gates"]}
+{"prompt": "只读扫描数据库并生成字段类型列表", "expect": ["env-scan-ontology"], "reject": ["oltp-action-safety"]}
+{"prompt": "为任务设置最大轮次并迁移看板状态", "expect": ["takeover-handling"], "reject": ["oltp-action-safety"]}
+{"prompt": "准备写生产订单，权限和幂等事务审批还要检查哪些项？", "expect": ["oltp-action-safety"], "reject": []}
+{"prompt": "两个请求同时修改生产状态，如何确保并发事务安全？", "expect": ["oltp-action-safety"], "reject": []}

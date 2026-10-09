@@ -1,0 +1,7 @@
+{"prompt": "收到任何业务请求、准备动手前先查注册表", "expect": ["system1-first"], "reject": ["explore-with-evidence"]}
+{"prompt": "业务请求先查 registry，命中已固化能力则优先执行 System 1", "expect": ["system1-first"], "reject": ["ontology-grounded-spec"]}
+{"prompt": "Handling any business request before reasoning it out from scratch", "expect": ["system1-first"], "reject": ["crystallize-to-system1"]}
+{"prompt": "任务探索超时转入人工接管", "expect": ["takeover-handling"], "reject": ["system1-first"]}
+{"prompt": "为团队编写一份新的技能规范文件", "expect": ["writing-livepowers-skills"], "reject": ["system1-first"]}
+{"prompt": "我收到业务请求了，先查注册表里有没有现成能力？", "expect": ["system1-first"], "reject": []}
+{"prompt": "这个需求以前做过，先找已固化能力还是重新探索？", "expect": ["system1-first"], "reject": []}
