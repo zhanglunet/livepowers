@@ -1,0 +1,7 @@
+{"type":"response_item","payload":{"type":"function_call","name":"exec_command","arguments":"{\"cmd\":\"lp registry find \\\"weekly revenue\\\"\",\"workdir\":\".\"}","call_id":"call_fixture_find_hit"}}
+{"type":"response_item","payload":{"type":"function_call_output","call_id":"call_fixture_find_hit","output":"Command: lp registry find \"weekly revenue\"\nChunk ID: fixture-hit\nOutput:\nHIT —— 命中已固化能力\n  [5] cap_weekly_revenue v1.0.0 (cli) entry: python w.py"}}
+{"type":"response_item","payload":{"type":"function_call","name":"exec_command","arguments":"{\"cmd\":\"python w.py --region east\",\"workdir\":\".\"}","call_id":"call_fixture_entry"}}
+{"type":"response_item","payload":{"type":"function_call_output","call_id":"call_fixture_entry","output":"Command: python w.py --region east\nChunk ID: fixture-entry\nOutput:\nok"}}
+{"type":"response_item","payload":{"type":"function_call","name":"exec_command","arguments":"{\"cmd\":\"lp registry find \\\"unknown question\\\"\",\"workdir\":\".\"}","call_id":"call_fixture_find_miss"}}
+{"type":"response_item","payload":{"type":"function_call_output","call_id":"call_fixture_find_miss","output":"Command: lp registry find \"unknown question\"\nChunk ID: fixture-miss\nOutput:\nMISS —— 未命中\nProcess exited with code 2"}}
+{"type":"event_msg","payload":{"type":"task_complete","turn_id":"turn_fixture"}}

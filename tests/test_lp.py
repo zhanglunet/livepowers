@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 import subprocess
 import sys
 import unittest
@@ -265,6 +266,119 @@ class TestCLI(Workdir):
         self.hook("post-tool", self.bash_event('lp registry find "x"', stdout="MISS", exit_code=2), env={"LP_HOOK_CAPTURE": "0"})
         self.hook("stop", {"session_id": "s1", "cwd": self.dir}, env={"LP_HOOK_CAPTURE": "0"})
         self.assertEqual(self.evidence(), [])
+
+    def test_hook_maybe_hit_does_not_record_system_one(self):
+        self.lp("init")
+        for output in ("MAYBE HIT —— candidate", "Output:\nMAYBE HIT —— candidate"):
+            event = {"conversation_id": "maybe", "workspace_roots": [self.dir],
+                     "command": 'lp registry find "new question" --semantic', "output": output}
+            self.hook("post-tool", event)
+            self.hook("post-tool", dict(event, command="python w.py", output="ok"))
+            self.assertFalse(any(e["system"] == "S1" for e in self.evidence()))
+
+    def test_hook_cursor_format_captures_evidence(self):
+        # Cursor afterShellExecution 的真实 schema：command/output/duration/sandbox，
+        # 并通过 conversation_id 与 sessionEnd 的 session_id 共享会话状态。
+        self.lp("init")
+        self.lp("registry", "add", "--name", "Weekly revenue", "--kind", "cli", "--intents", "weekly revenue",
+                "--entry", "python w.py --region {region}")
+        cursor_event1 = {
+            "conversation_id": "cur-1",
+            "workspace_roots": [self.dir],
+            "command": 'lp registry find "weekly revenue"',
+            "output": "HIT —— 命中已固化能力\n  [5] cap_weekly_revenue v1.0.0 (cli) entry: python w.py",
+            "duration": 1234,
+            "sandbox": False,
+        }
+        self.hook("post-tool", cursor_event1)
+        cursor_event2 = {
+            "conversation_id": "cur-1",
+            "workspace_roots": [self.dir],
+            "command": "python w.py --region east",
+            "output": "ok",
+            "duration": 345,
+            "sandbox": True,
+        }
+        self.hook("post-tool", cursor_event2)
+        ev = self.evidence()
+        self.assertEqual(len(ev), 1)
+        self.assertEqual((ev[0]["system"], ev[0]["outcome"], ev[0]["capability"], ev[0]["auto"]),
+                         ("S1", "success", "cap_weekly_revenue", True))
+        self.assertAlmostEqual(ev[0]["seconds"], 0.345)
+        self.assertIn("sandbox=True", ev[0]["note"])
+
+        # MISS 并在 sessionEnd 时自动补记 S2 partial
+        self.hook("post-tool", {
+            "conversation_id": "cur-1",
+            "workspace_roots": [self.dir],
+            "command": 'lp registry find "transfer stale"',
+            "output": "MISS —— 未命中",
+            "duration": 20,
+            "sandbox": False,
+        })
+        self.hook("stop", {"conversation_id": "cur-1", "workspace_roots": [self.dir]})
+        last = self.evidence()[-1]
+        self.assertEqual((last["intent"], last["system"], last["outcome"], last["auto"]),
+                         ("transfer stale", "S2", "partial", True))
+        self.assertIn("session=cur-1", last["note"])
+
+        # Cursor sessionEnd 使用 session_id（与 conversation_id 指向同一会话）。
+        self.hook("post-tool", {
+            "conversation_id": "cur-end",
+            "workspace_roots": [self.dir],
+            "command": 'lp registry find "final turn"',
+            "output": "MISS —— 未命中",
+            "duration": 5,
+            "sandbox": False,
+        })
+        self.hook("stop", {"session_id": "cur-end", "workspace_roots": [self.dir]})
+        self.assertIn("session=cur-end", self.evidence()[-1]["note"])
+
+    def test_hook_watch_transcript(self):
+        # 使用本机 rollout 中观察到的 response_item/payload envelope；命令与输出已匿名化，
+        # 只保留 function_call / function_call_output 字段、call_id 配对结构与 task_complete 边界。
+        self.lp("init")
+        self.lp("registry", "add", "--name", "Weekly revenue", "--kind", "cli", "--intents", "weekly revenue",
+                "--entry", "python w.py --region {region}")
+        tpath = os.path.join(self.dir, "codex_transcript.jsonl")
+        fixture = os.path.join(os.path.dirname(__file__), "fixtures", "codex-rollout.jsonl")
+        shutil.copyfile(fixture, tpath)
+        p = subprocess.run([sys.executable, os.path.join(SCRIPTS, "lp.py"), "hook", "watch",
+                            "--transcript", tpath, "--once"],
+                           cwd=self.dir, capture_output=True, text=True)
+        self.assertEqual(p.returncode, 0, p.stderr)
+        ev = self.evidence()
+        self.assertEqual(len(ev), 2)
+        self.assertEqual((ev[0]["system"], ev[0]["outcome"], ev[0]["capability"], ev[0]["auto"]),
+                         ("S1", "success", "cap_weekly_revenue", True))
+        self.assertEqual((ev[1]["intent"], ev[1]["system"], ev[1]["outcome"], ev[1]["auto"]),
+                         ("unknown question", "S2", "partial", True))
+
+    def test_codex_legacy_shell_argument_formats(self):
+        self.lp("init")
+        for name, command in (("shell", ["lp", "registry", "find", "unknown question"]),
+                              ("shell_command", 'lp registry find "unknown question"')):
+            path = os.path.join(self.dir, name + ".jsonl")
+            rows = [
+                {"type": "response_item", "payload": {"type": "function_call", "name": name,
+                 "call_id": name, "arguments": json.dumps({"command": command})}},
+                {"type": "response_item", "payload": {"type": "function_call_output", "call_id": name,
+                 "output": "Process exited with code 2\nOutput:\nMISS"}},
+                {"type": "event_msg", "payload": {"type": "task_complete"}},
+            ]
+            with open(path, "w") as f:
+                f.write("\n".join(json.dumps(row) for row in rows))
+            self.lp("hook", "watch", "--transcript", path, "--once")
+        self.assertEqual(len(self.evidence()), 2)
+        self.assertTrue(all(e["system"] == "S2" for e in self.evidence()))
+
+    def test_cursor_hook_manifest_uses_supported_events(self):
+        with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), "hooks", "hooks-cursor.json"), encoding="utf-8") as f:
+            manifest = json.load(f)
+        self.assertIn("afterShellExecution", manifest["hooks"])
+        self.assertIn("stop", manifest["hooks"])
+        self.assertIn("sessionEnd", manifest["hooks"])
+        self.assertNotIn("afterCommand", manifest["hooks"])
 
     def test_confidence_shown_and_reviewed(self):
         self.lp("init")
