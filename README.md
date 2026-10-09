@@ -80,6 +80,8 @@
 | `scripts/package-skills.sh` | 把每个技能打成单独 zip，便于在网页端上传 |
 | `bin/livepowers.js` · `bin/lp.js` | npm 包的命令：`livepowers install / uninstall / list / path` 安装器，`lp` 转发到 `scripts/lp.py` |
 
+PostgreSQL 扫描通过只读会话执行。`information_schema.referential_constraints` 的可见性受角色权限约束：仅有 SELECT 权限的角色可能看不到外键；完整外键扫描需要可见元数据的角色，并继续使用只读会话。真实数据库集成测试可设置 `LP_SCAN_PG_TEST_DSN` 后运行 `python -m unittest discover -s tests -p test_scan_and_switch.py -v`。该 DSN 必须指向隔离、可丢弃的数据库，角色需要能创建并拥有测试表；测试创建随机名称的合成表并在结束时清理，切勿指向生产数据库。
+
 数据全部落在项目的 `.livepowers/` 下，建议纳入 git。
 
 ## 安装

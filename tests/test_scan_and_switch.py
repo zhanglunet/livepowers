@@ -5,6 +5,7 @@ import subprocess
 import sys
 import time
 import unittest
+import uuid
 from urllib import request
 
 sys.path.insert(0, os.path.dirname(__file__))
@@ -75,6 +76,36 @@ class TestScan(Workdir):
         for column in ('catalog', 'schema', 'name'):
             self.assertIn(f'kcu.constraint_{column} = rc.constraint_{column}', observed_fk_sql[0])
             self.assertIn(f'kcu2.constraint_{column} = rc.unique_constraint_{column}', observed_fk_sql[0])
+
+    @unittest.skipUnless(os.environ.get("LP_SCAN_PG_TEST_DSN"), "set LP_SCAN_PG_TEST_DSN to an isolated PostgreSQL database")
+    def test_scan_sql_postgres_real_database(self):
+        # Opt-in database must be disposable and its role must own the fixture tables.
+        # SELECT-only roles may not see information_schema.referential_constraints.
+        sys.path.insert(0, SCRIPTS)
+        import scan_sql
+        dsn = os.environ["LP_SCAN_PG_TEST_DSN"]
+        info = scan_sql.parse_dsn(dsn)
+        self.assertEqual(info["db_type"], "postgres")
+        suffix = uuid.uuid4().hex[:12]
+        parent, child, rejected = ("lp_scan_" + suffix + x for x in ("_parent", "_child", "_rejected"))
+        env = dict(os.environ, PGPASSWORD=info["password"])
+        env.pop("PGOPTIONS", None)
+        cmd = ["psql", "-X", "-v", "ON_ERROR_STOP=1", "-h", info["host"],
+               "-p", str(info["port"]), "-U", info["user"], "-d", info["database"], "-c"]
+        def fixture(sql):
+            result = subprocess.run(cmd + [sql], env=env, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+        try:
+            fixture(f"CREATE TABLE {parent} (a integer, b integer, PRIMARY KEY (a,b)); "
+                    f"CREATE TABLE {child} (a integer, b integer, FOREIGN KEY (a,b) REFERENCES {parent}(a,b)); "
+                    f"INSERT INTO {parent} VALUES (1,2); INSERT INTO {child} VALUES (1,2);")
+            fp = scan_sql.scan(dsn)
+            self.assertEqual(fp["tables"][child]["fks"], [["a", parent, "a"], ["b", parent, "b"]])
+            self.assertEqual(fp["tables"][child]["rows"], 1)
+            with self.assertRaisesRegex(Exception, "read.only"):
+                scan_sql.run_query(info, f"CREATE TABLE {rejected} (id integer)")
+        finally:
+            fixture(f"DROP TABLE IF EXISTS {child}; DROP TABLE IF EXISTS {parent}; DROP TABLE IF EXISTS {rejected};")
 
     def test_draft_fingerprint_and_drift(self):
         db = os.path.join(self.dir, "d.sqlite")
