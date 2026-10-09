@@ -72,7 +72,7 @@ Superpowers 的 `requesting-code-review` 评审子 Agent 充当 `acceptance-gate
 | **Palantir AIP / Ontology** | 商业企业平台，本体即语义层 + 动能层 | Action Types 走审批与审计；Agent 用本体工具 | Agent + Ontology 公式本身；原子行动 + 审计 ≈ `oltp-action-safety` | 独有：开源、零依赖、装进任意编码 Agent。缺失：真正的本体运行时（对象存储、权限传播、行动引擎） |
 | **Devin Playbooks / Knowledge** | 可复用的多步流程 prompt 与组织知识 | Playbook 含后置条件与禁止动作；Knowledge 按触发词匹配 | Playbook ≈ 工具卡 + 剧本；Knowledge 自动建议 ≈ 固化候选 | 独有：固化物是代码而非 prompt，有评分、独立验收、台账。缺失：从会话自动生成 playbook 的产品化流程 |
 | **Voyager 式自增长技能库**（continuous-learning、MUSE-Autoskill、Trace2Skill、SkillRL） | 自动从轨迹蒸馏技能并评估 | hook 观测 → 抽取模式 → 置信度评分 → 提升 | 最像"探索留证据 → 固化"；v1.3 起同样用 hook 自动采集证据并给能力算置信度 | 独有：显式经济学 n*、生成者 ≠ 采纳人、去固化信号、固化物是代码。缺失：从轨迹自动生成技能草稿（Livepowers 的夜间生成仍由 Agent 按技能执行） |
-| **skills.sh / Cursor rules 生态** | 技能与规则的分发渠道 | `npx skills` 市场；`.cursor/rules/*.mdc` | `npx livepowers install` 与 `npx skills add` 对应这些渠道 | 支持 skills.sh 安装全部技能；Cursor 入口规则待对应功能合并 |
+| **skills.sh / Cursor rules 生态** | 技能与规则的分发渠道 | `npx skills` 市场；`.cursor/rules/*.mdc` | `npx livepowers install` 与 `npx skills add` 对应这些渠道 | 支持 skills.sh 安装全部技能；Cursor 加 `--project` 支持生成 `.mdc` 入口规则 |
 
 ## Livepowers 的差异化
 
@@ -91,7 +91,7 @@ Superpowers 的 `requesting-code-review` 评审子 Agent 充当 `acceptance-gate
 - ~~意图同义词表~~ v1.4.0 已做（确定性、可审计的别名表；不引入向量检索，保持零依赖）。语义检索仍在路线图。
 - 规格产物链与稳定任务 ID，让夜间 DAG 直接引用（借 spec-kit）。
 - 工具卡补后置条件与禁止动作字段（借 Devin Playbook）。
-- 支持 skills.sh 安装；Cursor 入口规则待对应功能合并。
+- 支持 skills.sh 安装；Cursor 加 `--project` 支持生成 `.mdc` 入口规则。
 
 ## 来源
 
