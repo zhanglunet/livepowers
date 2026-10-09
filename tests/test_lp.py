@@ -258,6 +258,15 @@ class TestCLI(Workdir):
         self.hook("stop", {"session_id": "s1", "cwd": self.dir}, env={"LP_HOOK_CAPTURE": "0"})
         self.assertEqual(self.evidence(), [])
 
+    def test_hook_maybe_hit_does_not_record_system_one(self):
+        self.lp("init")
+        for output in ("MAYBE HIT —— candidate", "Output:\nMAYBE HIT —— candidate"):
+            event = {"conversation_id": "maybe", "workspace_roots": [self.dir],
+                     "command": 'lp registry find "new question" --semantic', "output": output}
+            self.hook("post-tool", event)
+            self.hook("post-tool", dict(event, command="python w.py", output="ok"))
+            self.assertFalse(any(e["system"] == "S1" for e in self.evidence()))
+
     def test_hook_cursor_format_captures_evidence(self):
         # Cursor afterShellExecution 的真实 schema：command/output/duration/sandbox，
         # 并通过 conversation_id 与 sessionEnd 的 session_id 共享会话状态。
@@ -335,6 +344,24 @@ class TestCLI(Workdir):
                          ("S1", "success", "cap_weekly_revenue", True))
         self.assertEqual((ev[1]["intent"], ev[1]["system"], ev[1]["outcome"], ev[1]["auto"]),
                          ("unknown question", "S2", "partial", True))
+
+    def test_codex_legacy_shell_argument_formats(self):
+        self.lp("init")
+        for name, command in (("shell", ["lp", "registry", "find", "unknown question"]),
+                              ("shell_command", 'lp registry find "unknown question"')):
+            path = os.path.join(self.dir, name + ".jsonl")
+            rows = [
+                {"type": "response_item", "payload": {"type": "function_call", "name": name,
+                 "call_id": name, "arguments": json.dumps({"command": command})}},
+                {"type": "response_item", "payload": {"type": "function_call_output", "call_id": name,
+                 "output": "Process exited with code 2\nOutput:\nMISS"}},
+                {"type": "event_msg", "payload": {"type": "task_complete"}},
+            ]
+            with open(path, "w") as f:
+                f.write("\n".join(json.dumps(row) for row in rows))
+            self.lp("hook", "watch", "--transcript", path, "--once")
+        self.assertEqual(len(self.evidence()), 2)
+        self.assertTrue(all(e["system"] == "S2" for e in self.evidence()))
 
     def test_cursor_hook_manifest_uses_supported_events(self):
         with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), "hooks", "hooks-cursor.json"), encoding="utf-8") as f:

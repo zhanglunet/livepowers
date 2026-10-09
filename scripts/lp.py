@@ -51,6 +51,7 @@ import io
 import json
 import os
 import re
+import shlex
 import sys
 import uuid
 from collections import defaultdict
@@ -1734,7 +1735,7 @@ def hook_post_tool(d, st):
     if m:
         q = m.group(1).strip().split("\n")[0].strip().strip("\"'")
         q = re.sub(r"\s+--\S+.*$", "", q).strip().strip("\"'")
-        hit = (stdout.lstrip().startswith("HIT") or "HIT" in stdout) and "MISS" not in stdout and code in (None, 0)
+        hit = bool(re.search(r"(?m)^\s*HIT\b", stdout)) and code in (None, 0)
         cm = CAP_RE.search(stdout) if hit else None
         st["pending"] = {"intent": q, "hit": bool(hit), "capability": cm.group(1) if cm else None,
                          "ts": now(), "s1_calls": 0, "duration_ms": duration_ms,
@@ -1814,17 +1815,20 @@ def cmd_hook_watch(a):
                     hook_stop({"session_id": sid, "transcript_path": tpath}, st)
                 elif obj.get("type") == "response_item" and isinstance(obj.get("payload"), dict):
                     payload = obj["payload"]
-                    if payload.get("type") == "function_call" and payload.get("name") in ("exec_command", "shell_command"):
+                    if payload.get("type") == "function_call" and payload.get("name") in ("exec_command", "shell_command", "shell"):
                         arguments = payload.get("arguments") or {}
                         if isinstance(arguments, str):
                             try:
                                 arguments = json.loads(arguments)
                             except (TypeError, ValueError):
                                 arguments = {}
-                        if isinstance(arguments, dict) and arguments.get("cmd"):
+                        command = arguments.get("cmd", arguments.get("command")) if isinstance(arguments, dict) else None
+                        if isinstance(command, list):
+                            command = shlex.join(command)
+                        if command:
                             calls = st.setdefault("codex_calls", {})
                             calls[payload.get("call_id", "")] = {
-                                "command": arguments["cmd"], "cwd": arguments.get("workdir", "")}
+                                "command": command, "cwd": arguments.get("workdir", arguments.get("cwd", ""))}
                     elif payload.get("type") == "function_call_output":
                         call = st.setdefault("codex_calls", {}).pop(payload.get("call_id", ""), None)
                         if call:
