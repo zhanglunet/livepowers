@@ -90,7 +90,7 @@ footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);font-si
     <p class="lead">业务智能体每次都从零推理，同一件事做一千次就付一千次的钱，结果还是概率性的；用 AI 更快写出的软件，业务含义仍然写死在代码里，交付即冻结。Livepowers 是一套装进 Claude Code、Codex、Cursor 的工作方法，让智能体<b>先复用已固化的能力，没有才去探索并留下证据，把成功路径固化成经测试的代码，一切成果过独立验收</b>——越用越熟练。</p>
     <div class="formula">Agentic AI = Agent + Ontology + Harness</div>
     <div class="install"><pre><span class="k">npx livepowers install</span>   <span class="c"># Claude Code · Cursor · Codex</span></pre><a class="btn" href="#demo">五分钟 demo</a><a class="btn ghost" href="/demo/">在线演示：活软件生长</a><a class="btn ghost" href="#install">其他安装方式</a></div>
-    <div class="badges"><span class="badge">18 个技能</span><span class="badge">4 个零依赖脚本</span><span class="badge">8 个模板</span><span class="badge">3 个命令</span><span class="badge">SessionStart 自动注入</span><span class="badge">钩子自动采集证据</span><span class="badge">npx 一键安装</span><span class="badge">12 个场景</span><span class="badge">47 项自动化测试</span><span class="badge">结构借鉴 obra/superpowers</span></div>
+    <div class="badges"><span class="badge">全部技能</span><span class="badge">4 个零依赖脚本</span><span class="badge">8 个模板</span><span class="badge">3 个命令</span><span class="badge">SessionStart 自动注入</span><span class="badge">钩子自动采集证据</span><span class="badge">npx 一键安装</span><span class="badge">12 个场景</span><span class="badge">47 项自动化测试</span><span class="badge">结构借鉴 obra/superpowers</span></div>
     <div class="badges"><a class="badge" href="https://github.com/zhanglunet/livepowers">github.com/zhanglunet/livepowers</a><a class="badge" href="https://www.npmjs.com/package/livepowers">npm: livepowers</a><a class="badge" href="#feedback">提反馈</a></div>
   </div>
   <figure>
@@ -124,7 +124,7 @@ footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);font-si
   </figure>
 </section>
 
-<nav class="toc"><a href="#why">为什么</a><a href="#pano">全景</a><a href="#rules">七条铁律</a><a href="#skills">18 个技能</a><a href="#scenarios">场景</a><a href="#demo">demo</a><a href="/demo/">活软件演示</a><a href="#rhythm">节律</a><a href="#board">看板</a><a href="#gate">固化门禁</a><a href="#accept">验收</a><a href="#scripts">脚本</a><a href="#install">安装</a><a href="#compare">对比</a><a href="#faq">FAQ</a><a href="#steps">落地</a><a href="#devlog">开发日志</a><a href="#feedback">反馈</a></nav>
+<nav class="toc"><a href="#why">为什么</a><a href="#pano">全景</a><a href="#rules">七条铁律</a><a href="#skills">全部技能</a><a href="#scenarios">场景</a><a href="#demo">demo</a><a href="/demo/">活软件演示</a><a href="#rhythm">节律</a><a href="#board">看板</a><a href="#gate">固化门禁</a><a href="#accept">验收</a><a href="#scripts">脚本</a><a href="#install">安装</a><a href="#compare">对比</a><a href="#faq">FAQ</a><a href="#steps">落地</a><a href="#devlog">开发日志</a><a href="#feedback">反馈</a></nav>
 
 <h2 id="why">为什么需要它：两种"死"</h2>
 <div class="grid g3">
@@ -227,7 +227,7 @@ footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);font-si
   <text x="500" y="459" text-anchor="middle" class="sk">crystallize-to-system1 · agent-harness</text>
 
   <rect x="672" y="358" width="300" height="110" rx="12" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.4"/>
-  <text x="822" y="384" text-anchor="middle" class="h">操作手册（18 个技能）</text>
+  <text x="822" y="384" text-anchor="middle" class="h">操作手册（技能）</text>
   <text x="822" y="404" text-anchor="middle" class="b">什么时候该做什么、怎么做、做到什么程度算完。</text>
   <text x="822" y="421" text-anchor="middle" class="b">会话一开始就自动翻开，是规定不是建议。</text>
   <text x="822" y="441" text-anchor="middle" class="m">装进 Claude Code / Cursor / Codex 即可</text>
@@ -284,7 +284,7 @@ footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);font-si
 </figure>
 <div class="grid g3 read" style="margin-top:14px">
   <div class="card"><span class="tag t-s1">读图 ①</span><h3 style="font-family:inherit">先翻工具箱，再派人探索</h3><p>任何请求先看有没有现成的做法：有就直接用，几乎不花钱、结果确定；没有才让"探索者"（智能体 + 大模型）去想办法——先说清要什么，只在业务地图范围内摸索，做完要过质检。每一步都留下工作日志；走不通就到预算止损，换人接手，而不是无限重试。</p><div class="sk">system1-first · ontology-grounded-spec · explore-with-evidence · acceptance-gates · takeover-handling</div></div>
-  <div class="card"><span class="tag t-core">读图 ②</span><h3 style="font-family:inherit">三块地基各管一件事</h3><p><b>业务地图</b>回答"业务里有什么、怎么算、谁能做"，写在代码外面，可以确认和改版；<b>工具箱</b>装的是反复成功后做成"按钮"的能力，每个带测试和责任人；<b>操作手册</b>是 18 个技能，规定什么时候做什么，会话一开始就自动翻开。</p><div class="sk">env-scan-ontology · ontology-evolution · crystallize-to-system1 · agent-harness-for-tools · using-livepowers</div></div>
+  <div class="card"><span class="tag t-core">读图 ②</span><h3 style="font-family:inherit">三块地基各管一件事</h3><p><b>业务地图</b>回答"业务里有什么、怎么算、谁能做"，写在代码外面，可以确认和改版；<b>工具箱</b>装的是反复成功后做成"按钮"的能力，每个带测试和责任人；<b>操作手册</b>由技能组成，规定什么时候做什么，会话一开始就自动翻开。</p><div class="sk">env-scan-ontology · ontology-evolution · crystallize-to-system1 · agent-harness-for-tools · using-livepowers</div></div>
   <div class="card"><span class="tag t-night">读图 ③</span><h3 style="font-family:inherit">白天用，夜里整理，早晨验收</h3><p>白天探索留日志；夜里翻日志，把反复成功的做法先算值不值、再写测试和草稿，顺便查旧工具还灵不灵；早晨人看晨报逐个决定，通过的放进工具箱。于是明天的请求更多走"找到了"——这就是"越用越熟练"。四道护栏贯穿全程：质检、写操作安全、账本、现场交付的资产回流。</p><div class="sk">nightly-crystallization-review · night-loop-planning · outcome-ledger · fde-delivery</div></div>
 </div>
 
@@ -300,7 +300,7 @@ footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);font-si
   <div class="rule"><div class="n">7</div><p><b>没有基线的价值不算价值。</b>承诺业务结果之前，先登记基线。</p></div>
 </div>
 
-<h2 id="skills">18 个技能</h2>
+<h2 id="skills">全部技能</h2>
 <p class="sub">按工作循环分组。每个技能是一个含 <code>SKILL.md</code> 的文件夹，符合 Agent Skills 开放标准。标 <b>NEW</b> 的是 v1.0 新增的。</p>
 <div class="grid g3">
   <div class="card"><span class="tag t-core">入口</span><h3>using-livepowers <small>总入口</small></h3><p>七条铁律、路由表、三层架构落点（本体 / 工具 / 技能）、标准工作循环和反模式。</p><div class="when"><b>何时：</b>每个会话开始时（自动注入）。</div></div>
@@ -513,7 +513,7 @@ ok
 <div class="grid g2">
   <div>
     <div class="tabs" role="tablist">
-      <button class="on" data-p="i0">npm</button><button data-p="i1">Claude Code</button><button data-p="i2">仅技能</button><button data-p="i3">Codex / Cursor</button><button data-p="i4">网页端</button>
+      <button class="on" data-p="i0">npm</button><button data-p="i5">skills.sh</button><button data-p="i1">Claude Code</button><button data-p="i2">仅技能</button><button data-p="i3">Codex / Cursor</button><button data-p="i4">网页端</button>
     </div>
     <div id="i0" class="pane on"><pre><span class="c"># 一键安装技能（默认装到 ~/.claude/skills）</span>
 <span class="k">npx livepowers install</span>
@@ -528,6 +528,9 @@ ok
 <span class="c"># 查看 / 卸载</span>
 livepowers list
 livepowers uninstall --target codex --project</pre></div>
+    <div id="i5" class="pane"><pre><span class="c"># Vercel Agent Skills 市场（支持 20+ 款客户端）</span>
+<span class="k">npx skills add</span> zhanglunet/livepowers
+<span class="c"># 注意：只安装技能定义；lp 命令行工具仍需 npm i -g livepowers</span></pre></div>
     <div id="i1" class="pane"><pre>/plugin marketplace add zhanglunet/livepowers
 /plugin install livepowers@livepowers-marketplace
 <span class="c"># 自带 SessionStart 钩子，自动注入 using-livepowers</span>
@@ -555,7 +558,7 @@ ls livepowers/dist/skills/</pre></div>
 ├── bin/                      npm：livepowers 安装器 · lp 命令
 ├── hooks/                    SessionStart 注入 · 证据自动采集
 ├── commands/                 /lp-route · /lp-nightly · /lp-morning
-├── skills/                   18 个技能（SKILL.md）
+├── skills/                   全部技能（SKILL.md）
 ├── scripts/
 │   ├── lp.py                 证据 · 路由 · 评分 · 看板 · 台账 · 资产 · 晨报
 │   ├── agent_switch.py       交换机 · 回放 · 校验 · 审计
@@ -600,7 +603,7 @@ ls livepowers/dist/skills/</pre></div>
     <tr><td>Palantir AIP / Ontology</td><td>商业企业平台</td><td>Agent + Ontology 公式；行动审批审计</td><td>开源、零依赖、可装进任意 Agent；缺本体运行时</td></tr>
     <tr><td>Devin Playbooks</td><td>可复用流程 prompt</td><td>Playbook ≈ 工具卡 + 剧本</td><td>固化物是代码而非 prompt；缺从会话自动生成</td></tr>
     <tr><td>Voyager 式自增长技能库</td><td>自动蒸馏技能</td><td>探索留证据 → 固化</td><td>独有 n*、生成者 ≠ 采纳人、去固化；缺 hook 自动采集</td></tr>
-    <tr><td>skills.sh · Cursor rules</td><td>分发渠道</td><td>npx 安装对应这些渠道</td><td>未上架 skills.sh；Cursor 加 --project 支持生成 .mdc</td></tr>
+    <tr><td>skills.sh · Cursor rules</td><td>分发渠道</td><td>npx skills 与 livepowers 对应这些渠道</td><td>支持 skills.sh 安装全部技能；Cursor 加 --project 支持生成 .mdc</td></tr>
   </tbody>
 </table>
 
