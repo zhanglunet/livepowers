@@ -38,6 +38,7 @@ Livepowers 让智能体按「活产品（Live Product）」范式工作：
 | 收到业务请求，准备动手（**先走这一行**） | `system1-first` |
 | 没有现成能力，需要 Agent 探索 | `explore-with-evidence` |
 | 某条路径被反复探索成功，考虑变成代码 / CLI / 能力包 | `crystallize-to-system1` |
+| 业务应用里要出一次性分析展示，或把次抛长成新的固化表结构与固定页 | `living-surface` |
 | 接口已有，但业务 Agent 用不稳；或要换模型 | `agent-harness-for-tools` |
 | 任何候选能力要进入生产；任何"我做完了"需要被确认 | `acceptance-gates` |
 | 任何写生产状态的动作 | `oltp-action-safety` |
@@ -54,7 +55,7 @@ Livepowers 让智能体按「活产品（Live Product）」范式工作：
 
 技能包自带脚本（纯 Python 3.9+ 标准库，位于插件的 `scripts/`）：
 
-- `lp.py`：证据、能力注册表与 System 1 路由、F-V-S-R 评分与盈亏平衡、固化候选、任务看板状态机、结果台账、资产回流、夜间产物清单、金丝雀评测、作业契约校验、能力复核、晨报。
+- `lp.py`：证据、能力注册表与 System 1 路由、F-V-S-R 评分与盈亏平衡、固化候选、任务看板状态机、结果台账、资产回流、夜间产物清单、金丝雀评测、作业契约校验、能力复核、晨报；活软件展示面（`lp surface validate / record / promote / reconcile / deploy`、`lp pages list`）。
 - `agent_switch.py`：智能体交换机（中转 / 旁路记录、哈希链、回放、审计）。
 - `scan_sqlite.py`：环境扫描示例（本体草稿、环境指纹、漂移比对）。
 
