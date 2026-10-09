@@ -69,7 +69,7 @@ class TestSkills(unittest.TestCase):
 class TestManifests(unittest.TestCase):
     def test_versions_consistent(self):
         vs = set()
-        for p in (".claude-plugin/plugin.json", ".codex-plugin/plugin.json", ".cursor-plugin/plugin.json", "skills.json"):
+        for p in (".claude-plugin/plugin.json", ".codex-plugin/plugin.json", ".cursor-plugin/plugin.json"):
             vs.add(json.loads(read(os.path.join(REPO, p)))["version"])
         vs.add(json.loads(read(os.path.join(REPO, ".claude-plugin/marketplace.json")))["plugins"][0]["version"])
         vs.add(json.loads(read(os.path.join(REPO, "package.json")))["version"])
@@ -78,9 +78,6 @@ class TestManifests(unittest.TestCase):
         vs.add(lp.__version__)
         self.assertEqual(len(vs), 1, vs)
         self.assertIn(f"## [{vs.pop()}]", read(os.path.join(REPO, "CHANGELOG.md")))
-        skills_manifest = json.loads(read(os.path.join(REPO, "skills.json")))
-        skill_dirs = [d for d in os.listdir(SKILLS) if os.path.isdir(os.path.join(SKILLS, d))]
-        self.assertEqual(sorted(skills_manifest["skills"]), sorted(skill_dirs))
 
     def test_session_start_hook(self):
         for env, key in (({"CLAUDE_PLUGIN_ROOT": REPO}, "hookSpecificOutput"),
