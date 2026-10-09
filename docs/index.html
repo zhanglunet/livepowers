@@ -519,6 +519,8 @@ ok
 <span class="k">npx livepowers install</span>
 <span class="c"># 其他客户端：--target codex | cursor | agents</span>
 <span class="k">npx livepowers install</span> --target cursor
+<span class="c"># 项目级安装：生成 Cursor 入口规则</span>
+<span class="k">npx livepowers install</span> --target cursor --project
 <span class="c"># 装到当前项目；codex 会同时合并 AGENTS.md 入口说明</span>
 <span class="k">npx livepowers install</span> --target codex --project
 <span class="c"># 全局安装后可直接用 lp 命令（需要 Python 3.9+）</span>
@@ -540,6 +542,8 @@ cp -r livepowers/skills/* your-repo/.claude/skills/</pre></div>
 <span class="c"># 或作为插件：.codex-plugin/plugin.json</span>
 <span class="c"># Cursor：个人技能目录 ~/.cursor/skills</span>
 <span class="k">npx livepowers install</span> --target cursor
+<span class="c"># 项目级安装：生成 Cursor 入口规则</span>
+<span class="k">npx livepowers install</span> --target cursor --project
 <span class="c"># 或作为插件：.cursor-plugin/plugin.json + hooks/hooks-cursor.json</span></pre></div>
     <div id="i4" class="pane"><pre><span class="c"># 每个技能单独打包为 zip，在设置的技能页逐个上传</span>
 bash livepowers/scripts/package-skills.sh

@@ -99,12 +99,17 @@ function withCursorRule(opts) {
   return opts.project && opts.target === "cursor";
 }
 
+function isManagedCursorRule(file) {
+  if (!fs.existsSync(file)) return true;
+  const text = fs.readFileSync(file, "utf8");
+  return text.includes(START) && text.includes(END);
+}
+
 function cursorMdcContent() {
   const text = fs.readFileSync(path.join(ROOT, "skills", "using-livepowers", "SKILL.md"), "utf8");
   const body = text.replace(/^---[\s\S]*?---\n/, "").trim();
   return `---
 description: Livepowers 活产品范式入口规则与技能路由表
-globs: *
 alwaysApply: true
 ---
 
@@ -157,10 +162,14 @@ function install(opts) {
   if (withCursorRule(opts)) {
     const rulesDir = path.join(opts.project, ".cursor", "rules");
     const file = path.join(rulesDir, "livepowers.mdc");
+    if (!isManagedCursorRule(file)) {
+      console.log(`${tag}跳过 ${file}（保留未标记的用户规则）`);
+    } else {
     console.log(`${tag}生成 ${file}（Cursor 入口规则）`);
     if (!opts.dryRun) {
       fs.mkdirSync(rulesDir, { recursive: true });
       fs.writeFileSync(file, cursorMdcContent());
+    }
     }
   } else if (opts.target === "cursor") {
     console.log("提示：在项目里运行 `livepowers install --target cursor --project`，可在项目的 .cursor/rules/ 生成 livepowers.mdc 入口规则。");
@@ -199,7 +208,9 @@ function uninstall(opts) {
   }
   if (withCursorRule(opts)) {
     const file = path.join(opts.project, ".cursor", "rules", "livepowers.mdc");
-    if (fs.existsSync(file)) {
+    if (fs.existsSync(file) && !isManagedCursorRule(file)) {
+      console.log(`${tag}跳过 ${file}（保留未标记的用户规则）`);
+    } else if (fs.existsSync(file)) {
       console.log(`${tag}删除 ${file}（Cursor 入口规则）`);
       if (!opts.dryRun) fs.rmSync(file, { force: true });
     }

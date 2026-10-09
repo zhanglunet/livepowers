@@ -132,6 +132,30 @@ class TestInstaller(unittest.TestCase):
         self.assertFalse(os.path.exists(os.path.join(self.proj, ".cursor", "rules", "livepowers.mdc")))
         self.assertEqual(os.listdir(self.proj), [])
 
+    def test_cursor_preserves_unmarked_user_rule(self):
+        mdc = os.path.join(self.proj, ".cursor", "rules", "livepowers.mdc")
+        original = "---\nalwaysApply: true\n---\nUser rules\n"
+        write(mdc, original)
+        for args in (("install",), ("install", "--force"),
+                     ("install", "--dry-run"), ("uninstall",),
+                     ("uninstall", "--dry-run")):
+            self.cli(*args, "--target", "cursor", "--project")
+            self.assertEqual(read(mdc), original)
+
+    def test_cursor_updates_managed_rule_and_preserves_dry_run(self):
+        mdc = os.path.join(self.proj, ".cursor", "rules", "livepowers.mdc")
+        original = START + "\nold managed content\n" + END
+        write(mdc, original)
+        self.cli("install", "--target", "cursor", "--project", "--dry-run")
+        self.assertEqual(read(mdc), original)
+        self.cli("install", "--target", "cursor", "--project")
+        self.assertIn("alwaysApply: true", read(mdc))
+        self.assertNotIn("globs: *", read(mdc))
+        self.cli("uninstall", "--target", "cursor", "--project", "--dry-run")
+        self.assertTrue(os.path.exists(mdc))
+        self.cli("uninstall", "--target", "cursor", "--project")
+        self.assertFalse(os.path.exists(mdc))
+
     def test_list_and_path(self):
         self.assertIn("未安装", self.cli("list").stdout)
         self.cli("install")
