@@ -43,7 +43,7 @@
 - 自动补记 vs 只提醒：选了补记并标 `partial`。理由是频率不能漏；代价是"只问了一句没探索"也会记一条，但 note 写明 auto、晨报单列"自动采集待确认"、`stats` 单独计数，不计入成功率。
 - 显式记录永远优先：自动记录没有 verifiable / cost / note，技能里明确写"这只是兜底"。
 - 钩子永不阻塞：异常全吞、总是 exit 0、未 `lp init` 的项目不创建任何文件、`LP_HOOK_CAPTURE=0` 可关。`PostToolUse` 同步（要保证顺序，耗时毫秒级），`Stop` 异步。
-- 只做 Claude Code：Cursor 的钩子接口不同，npm / 仅技能安装没有钩子，这些客户端仍靠 Agent 手动记。
+- 客户端适配：Claude Code 用 `PostToolUse` / `Stop`；Cursor 使用官方 [`afterShellExecution` / `stop` / `sessionEnd` 事件](https://cursor.com/docs/hooks)，并映射 `command`、`output`、`duration`、`sandbox` 与 `conversation_id`；Codex `lp hook watch --transcript <path>` 解析 rollout JSONL 的 `response_item.payload.function_call` / `function_call_output` 并按 `call_id` 配对，在 `event_msg.payload.task_complete` 时结算本轮（格式参考 [Codex rollout fixtures](https://github.com/openai/codex/blob/main/codex-rs/app-server/tests/common/rollout.rs)），亦可回合结束显式记。
 - entry 匹配用"参数占位符之前最多三个 token"的前缀：简单、可解释；误判的代价只是多一条 S1 记录。
 
 ## 2026-10-07 · v1.2.0：独立评审后的修正与补强

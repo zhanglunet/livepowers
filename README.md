@@ -75,9 +75,12 @@
 | `scripts/lp.py` | 证据记录（含钩子自动采集）、意图同义词表（别名归并、按整组同义词路由、相似意图建议）、能力注册表与 System 1 路由（支持中文无空格匹配、置信度）、F-V-S-R 评分与盈亏平衡 n*、固化候选、**任务看板状态机**（非法迁移、止损、接管重开、生成者不能自验）、**结果台账**、**资产四道门与回流率**、夜间产物清单、金丝雀评测、作业契约校验、**能力复核**、晨报、**活软件展示面**（`lp surface`：校验、次抛记录、申请固化、对账、带回滚的部署回执、转 A2UI 消息；`lp pages list` 固定页目录） |
 | `scripts/agent_switch.py` | 智能体交换机：HTTP 中转 / 旁路记录、策略拦截（未知类型、超长消息、拦截词）、哈希链防篡改、回放、审计 |
 | `examples/living_app/` | 活软件参考宿主（零依赖）：对话式页面，智能体回答以 A2UI v0.9.1 展示面嵌在对话里；固定页目录、申请固化、模拟生长；`python3 examples/living_app/server.py` |
-| `scripts/scan_sqlite.py` | 环境扫描示例：本体草稿、状态取值抽样、敏感字段跳过、环境指纹、漂移比对 |
+| `scripts/scan_sqlite.py` | 环境扫描示例：SQLite 本体草稿、状态取值抽样、敏感字段跳过、环境指纹、漂移比对 |
+| `scripts/scan_sql.py` | 环境扫描：PostgreSQL / MySQL information_schema 查询、同构指纹与跨脚本漂移比对 |
 | `scripts/package-skills.sh` | 把每个技能打成单独 zip，便于在网页端上传 |
 | `bin/livepowers.js` · `bin/lp.js` | npm 包的命令：`livepowers install / uninstall / list / path` 安装器，`lp` 转发到 `scripts/lp.py` |
+
+PostgreSQL 扫描通过只读会话执行。`information_schema.referential_constraints` 的可见性受角色权限约束：仅有 SELECT 权限的角色可能看不到外键；完整外键扫描需要可见元数据的角色，并继续使用只读会话。真实数据库集成测试可设置 `LP_SCAN_PG_TEST_DSN` 后运行 `python -m unittest discover -s tests -p test_scan_and_switch.py -v`。该 DSN 必须指向隔离、可丢弃的数据库，角色需要能创建并拥有测试表；测试创建随机名称的合成表并在结束时清理，切勿指向生产数据库。
 
 数据全部落在项目的 `.livepowers/` 下，建议纳入 git。
 
@@ -105,9 +108,9 @@ npm i -g livepowers                               # 全局安装后可直接用 
 
 **Claude Code（仅技能）**：把 `skills/*` 复制到 `~/.claude/skills/`（个人）或项目的 `.claude/skills/`（团队）。
 
-**Codex**：仓库带 `.codex-plugin/plugin.json`，可作为插件安装；或把 `skills/*` 复制到 `~/.agents/skills/`。Codex 插件不带会话启动钩子，请把本仓库 `AGENTS.md` 的内容合并进项目根目录的 `AGENTS.md`，让 Agent 在开始时读取 `using-livepowers`。
+**Codex**：仓库带 `.codex-plugin/plugin.json`，可作为插件安装；或把 `skills/*` 复制到 `~/.agents/skills/`。Codex 插件不带会话启动钩子，请把本仓库 `AGENTS.md` 的内容合并进项目根目录的 `AGENTS.md`，让 Agent 在开始时读取 `using-livepowers`。无钩子环境下可通过 `lp hook watch --transcript <path>` 轮询自动采集证据，或在回合结束时显式运行 `lp evidence add`。
 
-**Cursor**：仓库带 `.cursor-plugin/plugin.json` 与 `hooks/hooks-cursor.json`。
+**Cursor**：仓库带 `.cursor-plugin/plugin.json` 与 `hooks/hooks-cursor.json`（使用 `afterShellExecution` 采集命令结果、`stop` 与 `sessionEnd` 补记；按 Cursor 的 `command` / `output` / `duration` / `sandbox` / `conversation_id` 字段映射）。
 
 其他支持 Agent Skills 标准的客户端：把 `skills/*` 放进客户端的技能目录。
 
@@ -136,6 +139,7 @@ bash examples/walkthrough.sh
 npm i -g livepowers   # 或在仓库里：lp() { python /path/to/livepowers/scripts/lp.py "$@"; }
 lp init
 lp registry find "各地区的周收入"                   # HIT → exit 0；MISS → exit 2
+lp registry find "每星期的营业额" --semantic          # MAYBE HIT → exit 3（语义探测候选，需核对前置条件）
 lp evidence add --intent "weekly revenue by region" --system S2 --outcome success --cost 0.9 --verifiable
 lp score --freq 20 --verifiable 2 --stability 2 --c2 0.9 --c1 0.001 --K 30 --M 10 --p 0.8 --h 5
 lp task new --title "逾期商机移交" --max-loops 5 --budget 20

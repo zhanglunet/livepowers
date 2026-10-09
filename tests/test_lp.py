@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 import subprocess
 import sys
 import unittest
@@ -30,6 +31,25 @@ class TestMath(unittest.TestCase):
         self.assertGreaterEqual(lp.score_match("帮我看一下各地区的周收入", cap), 2)
         self.assertLess(lp.score_match("合同审批进度", cap), 2)
 
+    def test_concept_similarity_is_opt_in_and_conservative_aliases(self):
+        # Broad semantic concepts are available only to semantic probe, not strict routing/suggestions.
+        self.assertLess(lp.intent_sim("delete customer", "删除系统用户"), 0.6)
+        self.assertLess(lp.semantic_sim("每月客户报表", "每周客户报表"), 0.65)
+        self.assertLess(lp.semantic_sim("生日提醒", "每日收入"), 0.65)
+        self.assertLess(lp.semantic_sim("code review", "审批"), 0.65)
+        self.assertGreaterEqual(lp.concept_sim("各地区周收入", "各省份周营收"), 0.5)
+        self.assertNotIn("日", lp.extract_concepts("生日提醒"))
+        positives = [("各地区周收入", "各省份周营收"), ("transfer stale lead", "handover overdue opportunity")]
+        negatives = [("每月客户报表", "每周客户报表"), ("生日提醒", "每日收入"), ("code review", "审批")]
+        self.assertTrue(all(lp.semantic_sim(a, b) >= 0.65 for a, b in positives))
+        self.assertTrue(all(lp.semantic_sim(a, b) < 0.65 for a, b in negatives))
+
+    def test_intent_sim_with_synonyms(self):
+        # 常见同义表达即使没有字面交集，也能通过近义归一获得高相似度
+        self.assertGreaterEqual(lp.concept_sim("各地区周收入", "各省份周营收"), 0.5)
+        self.assertGreaterEqual(lp.concept_sim("transfer stale lead", "handover overdue opportunity"), 0.5)
+        self.assertLess(lp.intent_sim("各地区周收入", "合同审批流程"), 0.3)
+
 
 class TestCLI(Workdir):
     def test_registry_route_and_retire(self):
@@ -41,6 +61,66 @@ class TestCLI(Workdir):
         self.assertIn("HIT", out)
         self.lp("registry", "retire", "cap_weekly_revenue", "--reason", "口径变更")
         self.lp("registry", "find", "各地区的周收入", check=2)
+
+    def test_semantic_similarity_cannot_expand_strict_write_match(self):
+        self.lp("init")
+        self.lp("intents", "alias", "delete customer", "删除客户")
+        self.lp("registry", "add", "--name", "Delete customer", "--kind", "cli",
+                "--intents", "delete customer,删除客户", "--entry", "crm customer delete {id}",
+                "--writes-state", "--tests", "t.py", "--generated-by", "dev", "--accepted-by", "qa")
+        self.lp("registry", "find", "删除系统用户", check=2)
+        self.lp("registry", "add", "--name", "Transfer stale lead", "--kind", "cli",
+                "--intents", "transfer stale lead", "--entry", "crm lead transfer {id}",
+                "--writes-state", "--tests", "t.py", "--generated-by", "dev", "--accepted-by", "qa")
+        self.lp("registry", "find", "移交超期商机", "--semantic", check=3)
+
+    def test_semantic_concepts_are_configurable_in_livepowers_home(self):
+        self.lp("init")
+        self.lp("registry", "add", "--name", "Alpha", "--kind", "cli", "--intents", "alpha", "--entry", "run")
+        with open(os.path.join(self.dir, ".livepowers", "concepts.json"), encoding="utf-8") as f:
+            config = json.load(f)
+        config["groups"] = [["alpha", "beta"]]
+        with open(os.path.join(self.dir, ".livepowers", "concepts.json"), "w", encoding="utf-8") as f:
+            json.dump(config, f)
+        self.lp("registry", "find", "beta", check=2)
+        self.lp("registry", "find", "beta", "--semantic", check=3)
+
+    def test_maybe_hit_fixed_page_requires_confirmation(self):
+        self.lp("init")
+        self.lp("registry", "add", "--name", "Weekly revenue", "--kind", "sql",
+                "--intents", "weekly revenue by region", "--entry", "python w.py")
+        # Force a semantic candidate with a fixed-page reference in registry fixture.
+        reg = self.read_json(".livepowers/registry.json")
+        reg["capabilities"][0]["ui"] = "fixed.json"
+        with open(os.path.join(self.dir, ".livepowers", "registry.json"), "w", encoding="utf-8") as f:
+            json.dump(reg, f)
+        res = self.lp("registry", "find", "每星期的营业额", "--semantic", check=3)
+        self.assertIn("候选固定页", res.stdout)
+        self.assertIn("确认适用后再打开", res.stdout)
+        self.assertNotIn("直接打开，不必重新分析", res.stdout)
+
+    def test_registry_semantic_find_maybe_hit_and_exit_codes(self):
+        self.lp("init")
+        self.lp("registry", "add", "--name", "Weekly revenue", "--kind", "sql",
+                "--intents", "weekly revenue by region,各地区周收入", "--entry", "python w.py")
+        self.lp("registry", "add", "--name", "Transfer stale", "--kind", "cli",
+                "--intents", "transfer stale lead,转移停滞线索", "--entry", "python t.py",
+                "--writes-state", "--tests", "test_t.py", "--generated-by", "dev", "--accepted-by", "qa")
+        # 未开启 --semantic 时，未登记的近义说法判为 MISS (exit 2)
+        self.lp("registry", "find", "每星期的营业额", check=2)
+        # 开启 --semantic 后，输出 MAYBE HIT (exit 3) 并提示确认前置条件
+        res1 = self.lp("registry", "find", "每星期的营业额", "--semantic", check=3)
+        self.assertIn("MAYBE HIT", res1.stdout)
+        self.assertIn("cap_weekly_revenue", res1.stdout)
+        # 写操作能力在 MAYBE HIT 时显式标明严禁盲目执行
+        res2 = self.lp("registry", "find", "移交超期商机", "--semantic", check=3)
+        self.assertIn("MAYBE HIT", res2.stdout)
+        self.assertIn("严禁盲目执行", res2.stdout)
+        # 完全无关的查询即使开启 --semantic 依然为 MISS (exit 2)
+        self.lp("registry", "find", "查询天气预报", "--semantic", check=2)
+        # 精确命中的查询在 --semantic 下依然为确定性 HIT (exit 0)
+        res3 = self.lp("registry", "find", "各地区周收入", "--semantic", check=0)
+        self.assertIn("HIT —— 命中已固化能力", res3.stdout)
 
     def test_write_capability_requires_tests_and_separation(self):
         self.lp("init")
@@ -91,6 +171,15 @@ class TestCLI(Workdir):
         self.lp("task", "move", t, "registered", "--by", "gen", "--reason", "self", "--evidence", "p", check=1)
         self.lp("task", "move", t, "registered", "--by", "rev", "--reason", "ok", check=1)  # 缺证据
         self.lp("task", "move", t, "registered", "--by", "rev", "--reason", "ok", "--evidence", "acc.md")
+        # 关联 spec 与 spec_task（必须引用实际存在的任务声明）
+        os.makedirs(os.path.join(self.dir, "specs"))
+        with open(os.path.join(self.dir, "specs", "demo.md"), "w") as f:
+            f.write("## 任务清单\n- T001 Demo\n")
+        t2 = self.lp("task", "new", "--title", "spec demo", "--spec", "specs/demo.md", "--spec-task", "T001").stdout.strip()
+        task2_json = json.loads(self.lp("task", "show", t2).stdout)
+        self.assertEqual(task2_json.get("spec"), "specs/demo.md")
+        self.assertEqual(task2_json.get("spec_task"), "T001")
+
 
     def test_task_stop_loss(self):
         self.lp("init")
@@ -257,6 +346,119 @@ class TestCLI(Workdir):
         self.hook("stop", {"session_id": "s1", "cwd": self.dir}, env={"LP_HOOK_CAPTURE": "0"})
         self.assertEqual(self.evidence(), [])
 
+    def test_hook_maybe_hit_does_not_record_system_one(self):
+        self.lp("init")
+        for output in ("MAYBE HIT —— candidate", "Output:\nMAYBE HIT —— candidate"):
+            event = {"conversation_id": "maybe", "workspace_roots": [self.dir],
+                     "command": 'lp registry find "new question" --semantic', "output": output}
+            self.hook("post-tool", event)
+            self.hook("post-tool", dict(event, command="python w.py", output="ok"))
+            self.assertFalse(any(e["system"] == "S1" for e in self.evidence()))
+
+    def test_hook_cursor_format_captures_evidence(self):
+        # Cursor afterShellExecution 的真实 schema：command/output/duration/sandbox，
+        # 并通过 conversation_id 与 sessionEnd 的 session_id 共享会话状态。
+        self.lp("init")
+        self.lp("registry", "add", "--name", "Weekly revenue", "--kind", "cli", "--intents", "weekly revenue",
+                "--entry", "python w.py --region {region}")
+        cursor_event1 = {
+            "conversation_id": "cur-1",
+            "workspace_roots": [self.dir],
+            "command": 'lp registry find "weekly revenue"',
+            "output": "HIT —— 命中已固化能力\n  [5] cap_weekly_revenue v1.0.0 (cli) entry: python w.py",
+            "duration": 1234,
+            "sandbox": False,
+        }
+        self.hook("post-tool", cursor_event1)
+        cursor_event2 = {
+            "conversation_id": "cur-1",
+            "workspace_roots": [self.dir],
+            "command": "python w.py --region east",
+            "output": "ok",
+            "duration": 345,
+            "sandbox": True,
+        }
+        self.hook("post-tool", cursor_event2)
+        ev = self.evidence()
+        self.assertEqual(len(ev), 1)
+        self.assertEqual((ev[0]["system"], ev[0]["outcome"], ev[0]["capability"], ev[0]["auto"]),
+                         ("S1", "success", "cap_weekly_revenue", True))
+        self.assertAlmostEqual(ev[0]["seconds"], 0.345)
+        self.assertIn("sandbox=True", ev[0]["note"])
+
+        # MISS 并在 sessionEnd 时自动补记 S2 partial
+        self.hook("post-tool", {
+            "conversation_id": "cur-1",
+            "workspace_roots": [self.dir],
+            "command": 'lp registry find "transfer stale"',
+            "output": "MISS —— 未命中",
+            "duration": 20,
+            "sandbox": False,
+        })
+        self.hook("stop", {"conversation_id": "cur-1", "workspace_roots": [self.dir]})
+        last = self.evidence()[-1]
+        self.assertEqual((last["intent"], last["system"], last["outcome"], last["auto"]),
+                         ("transfer stale", "S2", "partial", True))
+        self.assertIn("session=cur-1", last["note"])
+
+        # Cursor sessionEnd 使用 session_id（与 conversation_id 指向同一会话）。
+        self.hook("post-tool", {
+            "conversation_id": "cur-end",
+            "workspace_roots": [self.dir],
+            "command": 'lp registry find "final turn"',
+            "output": "MISS —— 未命中",
+            "duration": 5,
+            "sandbox": False,
+        })
+        self.hook("stop", {"session_id": "cur-end", "workspace_roots": [self.dir]})
+        self.assertIn("session=cur-end", self.evidence()[-1]["note"])
+
+    def test_hook_watch_transcript(self):
+        # 使用本机 rollout 中观察到的 response_item/payload envelope；命令与输出已匿名化，
+        # 只保留 function_call / function_call_output 字段、call_id 配对结构与 task_complete 边界。
+        self.lp("init")
+        self.lp("registry", "add", "--name", "Weekly revenue", "--kind", "cli", "--intents", "weekly revenue",
+                "--entry", "python w.py --region {region}")
+        tpath = os.path.join(self.dir, "codex_transcript.jsonl")
+        fixture = os.path.join(os.path.dirname(__file__), "fixtures", "codex-rollout.jsonl")
+        shutil.copyfile(fixture, tpath)
+        p = subprocess.run([sys.executable, os.path.join(SCRIPTS, "lp.py"), "hook", "watch",
+                            "--transcript", tpath, "--once"],
+                           cwd=self.dir, capture_output=True, text=True)
+        self.assertEqual(p.returncode, 0, p.stderr)
+        ev = self.evidence()
+        self.assertEqual(len(ev), 2)
+        self.assertEqual((ev[0]["system"], ev[0]["outcome"], ev[0]["capability"], ev[0]["auto"]),
+                         ("S1", "success", "cap_weekly_revenue", True))
+        self.assertEqual((ev[1]["intent"], ev[1]["system"], ev[1]["outcome"], ev[1]["auto"]),
+                         ("unknown question", "S2", "partial", True))
+
+    def test_codex_legacy_shell_argument_formats(self):
+        self.lp("init")
+        for name, command in (("shell", ["lp", "registry", "find", "unknown question"]),
+                              ("shell_command", 'lp registry find "unknown question"')):
+            path = os.path.join(self.dir, name + ".jsonl")
+            rows = [
+                {"type": "response_item", "payload": {"type": "function_call", "name": name,
+                 "call_id": name, "arguments": json.dumps({"command": command})}},
+                {"type": "response_item", "payload": {"type": "function_call_output", "call_id": name,
+                 "output": "Process exited with code 2\nOutput:\nMISS"}},
+                {"type": "event_msg", "payload": {"type": "task_complete"}},
+            ]
+            with open(path, "w") as f:
+                f.write("\n".join(json.dumps(row) for row in rows))
+            self.lp("hook", "watch", "--transcript", path, "--once")
+        self.assertEqual(len(self.evidence()), 2)
+        self.assertTrue(all(e["system"] == "S2" for e in self.evidence()))
+
+    def test_cursor_hook_manifest_uses_supported_events(self):
+        with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), "hooks", "hooks-cursor.json"), encoding="utf-8") as f:
+            manifest = json.load(f)
+        self.assertIn("afterShellExecution", manifest["hooks"])
+        self.assertIn("stop", manifest["hooks"])
+        self.assertIn("sessionEnd", manifest["hooks"])
+        self.assertNotIn("afterCommand", manifest["hooks"])
+
     def test_confidence_shown_and_reviewed(self):
         self.lp("init")
         self.lp("registry", "add", "--name", "Flaky", "--id", "cap_f", "--kind", "cli", "--intents", "flaky thing", "--entry", "f")
@@ -280,6 +482,7 @@ class TestCLI(Workdir):
         self.assertIn("weekly revenue by region", out)
         self.assertIn("按区域的每周营收", out)
         self.assertIn("证据 2", out)
+        self.assertIn("HIT", self.lp("registry", "find", "帮我看一下各地区的周收入").stdout)
         # 路由：别名命中整组同义词
         self.assertIn("HIT", self.lp("registry", "find", "按区域的每周营收").stdout)
         self.assertIn("HIT", self.lp("registry", "find", "各地区周收入怎么样").stdout)
@@ -365,6 +568,41 @@ class TestCLI(Workdir):
         self.assertIn("可稳定时长", out)
         self.assertIn("checker", out)
         self.assertIn("不是 DAG", out)
+        # 校验 spec 文件及任务 ID 存在性
+        spec_file = os.path.join(self.dir, "spec1.md")
+        with open(spec_file, "w", encoding="utf-8") as f:
+            f.write("# Spec\n\n## 任务清单\n- T001 [P] 数据库建表\n")
+        good_job = {"jobs": [{"job_id": "j1", "tenant": "t", "stage_id": "s", "dependency": [], "priority": 1,
+                              "deadline": "08:00", "model_capability": "m", "resources": {}, "max_cost": 10,
+                              "retry_limit": 1, "stop_condition": "stop", "checkpoint": "c", "preemptible": True,
+                              "resume_policy": "r", "data_classification": "d", "acceptance": "a",
+                              "handoff": {"actual_end_state": "x", "checker": "c"}, "expected_minutes": 10,
+                              "spec": spec_file, "spec_task": "T001"}]}
+        gp = os.path.join(self.dir, "good.json")
+        with open(gp, "w") as f:
+            json.dump(good_job, f)
+        self.lp("job", "validate", gp, check=0)
+
+        # 任务 ID 不存在
+        bad_task_job = dict(good_job)
+        bad_task_job["jobs"] = [dict(good_job["jobs"][0], spec_task="T999")]
+        bp = os.path.join(self.dir, "bad_task.json")
+        with open(bp, "w") as f:
+            json.dump(bad_task_job, f)
+        out_bad = self.lp("job", "validate", bp, check=1).stdout
+        self.assertIn("未找到任务 ID：T999", out_bad)
+
+
+    def test_spec_task_declarations_reject_prose_and_duplicates(self):
+        path = os.path.join(self.dir, "spec.md")
+        with open(path, "w") as f:
+            f.write("# Spec\nT009 已删除\n## 任务清单\n- T002 active\n## Notes\n- T009 prose\n")
+        self.assertEqual(lp.spec_task_ids(path), {"T002"})
+        self.lp("task", "new", "--title", "test", "--spec", path, "--spec-task", "T009", check=1)
+        with open(path, "w") as f:
+            f.write("## 任务清单\n- T002 first\n- T002 duplicate\n")
+        with self.assertRaises(ValueError):
+            lp.spec_task_ids(path)
 
     def test_report(self):
         self.lp("init")

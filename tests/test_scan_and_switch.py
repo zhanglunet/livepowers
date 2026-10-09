@@ -5,6 +5,7 @@ import subprocess
 import sys
 import time
 import unittest
+import uuid
 from urllib import request
 
 sys.path.insert(0, os.path.dirname(__file__))
@@ -14,6 +15,98 @@ EXAMPLES = os.path.join(REPO, "examples")
 
 
 class TestScan(Workdir):
+    def test_scan_sql_identifier_quoting_and_mysql_auth(self):
+        sys.path.insert(0, SCRIPTS)
+        import scan_sql
+        self.assertEqual(scan_sql.quote_identifier('order`items', 'mysql'), '`order``items`')
+        self.assertEqual(scan_sql.quote_identifier('order"items', 'postgres'), '"order""items"')
+
+        calls = []
+        def fake_run(cmd, **kwargs):
+            calls.append((cmd, kwargs))
+            return subprocess.CompletedProcess(cmd, 0, stdout='value\n1\n', stderr='')
+        old_which, old_run = scan_sql.shutil.which, scan_sql.subprocess.run
+        try:
+            scan_sql.shutil.which = lambda name: '/usr/bin/mysql' if name == 'mysql' else None
+            scan_sql.subprocess.run = fake_run
+            info = scan_sql.parse_dsn('mysql://user:secret@localhost/db')
+            self.assertEqual(scan_sql.run_query(info, 'SELECT 1'), (['value'], [['1']]))
+            cmd, kwargs = calls[-1]
+            self.assertFalse(any(arg == '-p' or arg.startswith('-p') for arg in cmd))
+            self.assertNotIn('secret', cmd)
+            self.assertEqual(kwargs['env']['MYSQL_PWD'], 'secret')
+            self.assertIn('START TRANSACTION READ ONLY', cmd[-1])
+            self.assertTrue(cmd[-1].endswith('ROLLBACK;'))
+
+            calls.clear()
+            info = scan_sql.parse_dsn('mysql://user@localhost/db')
+            scan_sql.run_query(info, 'SELECT 1')
+            cmd, kwargs = calls[-1]
+            self.assertFalse(any(arg == '-p' or arg.startswith('-p') for arg in cmd))
+            self.assertEqual(kwargs['env']['MYSQL_PWD'], '')
+            self.assertIn('--connect-timeout=10', cmd)
+        finally:
+            scan_sql.shutil.which, scan_sql.subprocess.run = old_which, old_run
+
+    def test_scan_sql_postgres_composite_foreign_key_pairing(self):
+        sys.path.insert(0, SCRIPTS)
+        import scan_sql
+        observed_fk_sql = []
+        def executor(info, sql, params=None):
+            clean = ' '.join(sql.split())
+            if 'information_schema.tables' in clean:
+                return ['table_name'], [['parents'], ['children']]
+            if 'information_schema.columns' in clean:
+                return [], [
+                    ['parents', 'a', 'integer', 'NO', 1], ['parents', 'b', 'integer', 'NO', 1],
+                    ['children', 'a', 'integer', 'NO', 0], ['children', 'b', 'integer', 'NO', 0],
+                ]
+            if 'information_schema.referential_constraints' in clean:
+                observed_fk_sql.append(clean)
+                # Simulate the rows after ordinal pairing; the old unconstrained join produces 4.
+                return [], [['children', 'a', 'parents', 'a'], ['children', 'b', 'parents', 'b']]
+            if 'count(*)' in clean:
+                return [], [['0']]
+            return [], []
+        fp = scan_sql.scan('postgres://user@localhost/db', query_executor=executor)
+        self.assertEqual(fp['tables']['children']['fks'], [['a', 'parents', 'a'], ['b', 'parents', 'b']])
+        self.assertIn('position_in_unique_constraint', observed_fk_sql[0])
+        self.assertIn('kcu2.ordinal_position = kcu.position_in_unique_constraint', observed_fk_sql[0])
+        self.assertNotIn('constraint_column_usage', observed_fk_sql[0])
+        for column in ('catalog', 'schema', 'name'):
+            self.assertIn(f'kcu.constraint_{column} = rc.constraint_{column}', observed_fk_sql[0])
+            self.assertIn(f'kcu2.constraint_{column} = rc.unique_constraint_{column}', observed_fk_sql[0])
+
+    @unittest.skipUnless(os.environ.get("LP_SCAN_PG_TEST_DSN"), "set LP_SCAN_PG_TEST_DSN to an isolated PostgreSQL database")
+    def test_scan_sql_postgres_real_database(self):
+        # Opt-in database must be disposable and its role must own the fixture tables.
+        # SELECT-only roles may not see information_schema.referential_constraints.
+        sys.path.insert(0, SCRIPTS)
+        import scan_sql
+        dsn = os.environ["LP_SCAN_PG_TEST_DSN"]
+        info = scan_sql.parse_dsn(dsn)
+        self.assertEqual(info["db_type"], "postgres")
+        suffix = uuid.uuid4().hex[:12]
+        parent, child, rejected = ("lp_scan_" + suffix + x for x in ("_parent", "_child", "_rejected"))
+        env = dict(os.environ, PGPASSWORD=info["password"])
+        env.pop("PGOPTIONS", None)
+        cmd = ["psql", "-X", "-v", "ON_ERROR_STOP=1", "-h", info["host"],
+               "-p", str(info["port"]), "-U", info["user"], "-d", info["database"], "-c"]
+        def fixture(sql):
+            result = subprocess.run(cmd + [sql], env=env, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+        try:
+            fixture(f"CREATE TABLE {parent} (a integer, b integer, PRIMARY KEY (a,b)); "
+                    f"CREATE TABLE {child} (a integer, b integer, FOREIGN KEY (a,b) REFERENCES {parent}(a,b)); "
+                    f"INSERT INTO {parent} VALUES (1,2); INSERT INTO {child} VALUES (1,2);")
+            fp = scan_sql.scan(dsn)
+            self.assertEqual(fp["tables"][child]["fks"], [["a", parent, "a"], ["b", parent, "b"]])
+            self.assertEqual(fp["tables"][child]["rows"], 1)
+            with self.assertRaisesRegex(Exception, "read.only"):
+                scan_sql.run_query(info, f"CREATE TABLE {rejected} (id integer)")
+        finally:
+            fixture(f"DROP TABLE IF EXISTS {child}; DROP TABLE IF EXISTS {parent}; DROP TABLE IF EXISTS {rejected};")
+
     def test_draft_fingerprint_and_drift(self):
         db = os.path.join(self.dir, "d.sqlite")
         subprocess.run([sys.executable, os.path.join(EXAMPLES, "make_demo_db.py"), db], check=True, capture_output=True)
@@ -31,6 +124,74 @@ class TestScan(Workdir):
         out = self.run_script("scan_sqlite.py", "--diff", "fp1.json", "fp2.json", check=5).stdout
         self.assertIn("新增列 industry", out)
         self.assertIn("on_hold", out)
+
+    def test_scan_sql_mock_and_diff(self):
+        # 验证 scan_sql.py 的数据解析、指纹生成同构性与跨脚本 --diff
+        sys.path.insert(0, SCRIPTS)
+        import scan_sql
+
+        def mock_executor(dsn_info, sql, params=None):
+            sql_clean = " ".join(sql.strip().split())
+            if "information_schema.tables" in sql_clean:
+                return ["table_name"], [["customers"], ["orders"]]
+            if "information_schema.columns" in sql_clean:
+                # 返回 (table_name, column_name, data_type, is_nullable, is_pk)
+                rows = [
+                    ["customers", "id", "integer", "NO", "1"],
+                    ["customers", "name", "varchar", "YES", "0"],
+                    ["customers", "phone", "varchar", "YES", "0"],
+                    ["orders", "id", "integer", "NO", "1"],
+                    ["orders", "customer_id", "integer", "NO", "0"],
+                    ["orders", "status", "varchar", "NO", "0"],
+                    ["orders", "created_at", "timestamp", "NO", "0"],
+                ]
+                return ["table_name", "column_name", "data_type", "is_nullable", "is_pk"], rows
+            if "information_schema.key_column_usage" in sql_clean or "constraint_column_usage" in sql_clean:
+                # 返回 (table_name, column_name, foreign_table_name, foreign_column_name)
+                rows = [
+                    ["orders", "customer_id", "customers", "id"]
+                ]
+                return ["table_name", "column_name", "foreign_table_name", "foreign_column_name"], rows
+            if "count(*)" in sql_clean.lower():
+                return ["count"], [["10"]]
+            if "select distinct" in sql_clean.lower():
+                return ["status"], [["pending"], ["completed"]]
+            return [], []
+
+        fp = scan_sql.scan("postgres://user:pass@localhost:5432/mydb", sample=20, query_executor=mock_executor)
+        self.assertEqual(fp["source"], "postgres:mydb")
+        self.assertIn("customers", fp["tables"])
+        self.assertIn("orders", fp["tables"])
+        self.assertTrue(fp["tables"]["customers"]["columns"]["phone"].get("sensitive"))
+        self.assertEqual(fp["tables"]["orders"]["columns"]["status"]["status_values"], ["completed", "pending"])
+        self.assertTrue(fp["tables"]["orders"]["columns"]["created_at"].get("time"))
+        self.assertEqual(fp["tables"]["orders"]["fks"], [["customer_id", "customers", "id"]])
+
+        # 检查 YAML 输出结构
+        yaml_out = scan_sql.to_yaml(fp)
+        self.assertIn("ontology_version: 0.1.0-draft", yaml_out)
+        self.assertIn("evidence: foreign_key", yaml_out)
+        self.assertIn("敏感字段", yaml_out)
+
+        # 校验跨指纹 diff 与 scan_sqlite.py 完全一致
+        fp_file1 = os.path.join(self.dir, "sql_fp1.json")
+        fp_file2 = os.path.join(self.dir, "sql_fp2.json")
+        with open(fp_file1, "w", encoding="utf-8") as f:
+            json.dump(fp, f)
+
+        # 模拟漂移
+        fp2 = json.loads(json.dumps(fp))
+        fp2["tables"]["orders"]["columns"]["status"]["status_values"].append("cancelled")
+        with open(fp_file2, "w", encoding="utf-8") as f:
+            json.dump(fp2, f)
+
+        # 用 scan_sql 比对
+        out_diff = self.run_script("scan_sql.py", "--diff", fp_file1, fp_file2, check=5).stdout
+        self.assertIn("cancelled", out_diff)
+        # 用 scan_sqlite 也能跨脚本解析比对
+        out_diff2 = self.run_script("scan_sqlite.py", "--diff", fp_file1, fp_file2, check=5).stdout
+        self.assertIn("cancelled", out_diff2)
+
 
 
 def free_port():

@@ -3,6 +3,15 @@
   "hooks": {
     "sessionStart": [
       {"command": "./hooks/session-start.sh"}
+    ],
+    "afterShellExecution": [
+      {"command": "./hooks/evidence-capture.sh post-tool"}
+    ],
+    "stop": [
+      {"command": "./hooks/evidence-capture.sh stop"}
+    ],
+    "sessionEnd": [
+      {"command": "./hooks/evidence-capture.sh stop"}
     ]
   }
 }
