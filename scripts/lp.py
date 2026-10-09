@@ -279,7 +279,7 @@ def intent_sim(a, b):
     tb = {simple_stem(x) for x in LATIN.findall(b_l)}
     s1 = len(ta & tb) / len(ta | tb) if ta and tb else 0
     ba, bb = bigrams(a_l), bigrams(b_l)
-    s2 = len(ba & bb) / len(ba | bb) if ba and bb else 0
+    s2 = len(ba & bb) / min(len(ba), len(bb)) if ba and bb else 0
     return max(s1, s2)
 
 
