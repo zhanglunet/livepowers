@@ -312,3 +312,13 @@ class TestA2UI(Workdir):
         # 结构里不含查询文本与任何结果数据（数据只在 updateDataModel 里）
         self.assertNotIn("SELECT", json.dumps(msgs[:2]))
         self.assertNotIn("3000000", json.dumps(msgs[:2]))
+
+
+class TestDemoJs(Workdir):
+    def test_node_suite(self):
+        import shutil as _sh
+        if not _sh.which("node"):
+            self.skipTest("需要 node")
+        p = subprocess.run(["node", "--test", os.path.join(REPO, "tests", "js", "demo.test.mjs")],
+                           capture_output=True, text=True)
+        self.assertEqual(p.returncode, 0, p.stdout[-3000:] + p.stderr[-2000:])
