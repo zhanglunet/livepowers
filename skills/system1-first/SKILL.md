@@ -19,6 +19,7 @@ description: Use when handling any business request (query, report, dashboard, b
    ```
 3. **HIT → 执行 System 1。**
    - 核对能力的前置条件、权限、适用范围是否覆盖当前请求；不覆盖视为 MISS。
+   - 命中的能力带"固定页"时，直接打开该页，不要重新分析（`living-surface`）。
    - 按 `entry` 调用。不要"顺手改进"已固化代码——改动走 `crystallize-to-system1` 发新版本。
    - 若是写操作能力（标 `[写操作]`），执行仍需过 `oltp-action-safety` 的执行阶段步骤（确认点、幂等键）。
    - 记录证据（Claude Code 插件的钩子会在你调用 entry 时自动记一条；其他客户端手动记）：

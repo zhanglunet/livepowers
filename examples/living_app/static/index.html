@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>活软件演示</title>
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+<aside>
+  <div class="brand">活软件</div>
+  <p class="muted">固定页由数据库按公式计算，CPU 直接算出，准确、快、便宜。</p>
+  <h2>固定页</h2>
+  <ul id="pages"></ul>
+  <p id="pages-empty" class="muted">还没有固定页。</p>
+  <div class="grow">
+    <button id="grow" type="button" disabled>模拟生长</button>
+    <p class="muted">申请固化后可用：模拟智能体生成视图 → 孪生对账 → 评审采纳 → 生产部署 → 注册为固定页。</p>
+  </div>
+</aside>
+<main>
+  <div id="thread" aria-live="polite"></div>
+  <form id="ask">
+    <input id="q" name="q" placeholder="问业务问题，例如：各地区在途商机金额" autocomplete="off">
+    <button type="submit">发送</button>
+  </form>
+</main>
+<script src="/a2ui.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>

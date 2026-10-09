@@ -39,6 +39,8 @@ class TestSkills(unittest.TestCase):
             self.assertTrue(d.startswith("Use when") or d.startswith("Use before") or d.startswith("Use at")
                             or d.startswith("Use whenever"), f"{n}: description 应以触发条件开头")
             self.assertLessEqual(len(d), 1024, n)
+            # 未加引号的 YAML 值里出现 ": " 或 " #" 会解析失败，skills CLI 等严格解析器会跳过该技能
+            self.assertNotRegex(d, r": | #", f"{n}: description 不要含 ': ' 或 ' #'（YAML 非法）")
             # 只写触发条件：不概括流程（writing-livepowers-skills 的规则）
             self.assertNotRegex(d, r"\s—\s", f"{n}: description 不要用破折号接流程摘要")
             self.assertNotRegex(d, r"\b(runs|produces|enforces|turns|builds|specifies|evolves|compiles|registers|"
@@ -98,6 +100,12 @@ class TestManifests(unittest.TestCase):
         body = re.sub(r"<style>.*?</style>\s*<rect width=\"1000\" height=\"770\"[^>]*/>\s*", "", body, flags=re.S)
         self.assertEqual(body.strip(), inline.strip(), "docs/panorama.svg 与网站内联全景图不一致，请重新生成")
         self.assertIn("panorama.svg", read(os.path.join(REPO, "README.md")))
+
+    def test_tool_card_template(self):
+        content = read(os.path.join(REPO, "templates", "tool-card.md"))
+        self.assertIn("后置条件", content)
+        self.assertIn("禁止动作", content)
+
 
     def test_evidence_capture_hook(self):
         hooks = json.loads(read(os.path.join(REPO, "hooks", "hooks.json")))["hooks"]

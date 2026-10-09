@@ -1,0 +1,20 @@
+{
+  "surface": "livepowers-surface/1",
+  "id": "pipeline-by-region",
+  "title": "各地区在途商机金额（次抛）",
+  "tier": "ephemeral",
+  "intent": "pipeline by region",
+  "data": {
+    "pipeline": {
+      "source": {"type": "table", "name": "opportunities"},
+      "query": "SELECT c.region AS region, SUM(o.amount) AS amount, COUNT(*) AS n FROM opportunities o JOIN customers c ON o.customer_id = c.id WHERE o.stage NOT IN ('won', 'lost') GROUP BY c.region ORDER BY c.region",
+      "params": {}
+    }
+  },
+  "components": [
+    {"id": "total", "type": "kpi", "data": "pipeline", "value": "amount", "label": "在途金额合计"},
+    {"id": "chart", "type": "bar", "data": "pipeline", "x": "region", "y": "amount", "label": "按地区"},
+    {"id": "detail", "type": "table", "data": "pipeline", "columns": ["region", "amount", "n"]}
+  ],
+  "provenance": {"ontology_version": "0.1.0-draft", "generated_by": "agent-a", "note": "System 2 一次性分析"}
+}

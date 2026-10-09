@@ -11,7 +11,11 @@ implementation:
   entry: "python tools/weekly_revenue.py --region {region} --weeks {weeks}"
   deterministic: true    # 关键计算与事务不调用大模型
 skill: skills/weekly-revenue-analysis/SKILL.md   # 何时用、何时不要用、证据、停止与升级
-ui: dashboards/weekly-revenue.json
+ui: surfaces/weekly-revenue.fixed.json   # 固化展示面（templates/surface.json，tier=fixed）；固定页目录按此字段读取
+ddl: migrations/v_weekly_revenue.sql      # 生长出的新结构（视图 / 物化表）的迁移脚本
+rollback: migrations/v_weekly_revenue.rollback.sql
+materialization: view                     # view / table / incremental
+deployment: .livepowers/deployments/weekly_revenue_by_region/prod.json   # lp surface deploy 的生产回执
 evals:
   normal: tests/weekly_revenue/normal/
   boundary: tests/weekly_revenue/boundary/

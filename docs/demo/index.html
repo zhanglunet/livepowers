@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="活软件演示：智能体用 A2UI 展示面给出次抛分析，申请固化后长成新的视图和固定页。数字全部由浏览器内的 SQLite 计算。">
+<title>活软件生长演示</title>
+<style>
+/* 布局：左侧固定页目录与生长控制，右侧对话；智能体回答是 A2UI 展示面 */
+:root { --bg: #fcfcfb; --panel: #f3f2ee; --bubble: #ebeae5; --fg: #0b0b0b; --fg2: #52514e; --line: #dcdbd5;
+  --series: #2a78d6; --eph: #b87800; --fix: #0b8a0b; --log: #f7f6f2;
+  --font: system-ui, -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #1a1a19; --panel: #212120; --bubble: #2c2c2a;
+  --fg: #ffffff; --fg2: #c3c2b7; --line: #383835; --series: #3987e5; --eph: #d99a1a; --fix: #2fb32f; --log: #232322; color-scheme: dark } }
+:root[data-theme="dark"] { --bg: #1a1a19; --panel: #212120; --bubble: #2c2c2a; --fg: #ffffff; --fg2: #c3c2b7; --line: #383835;
+  --series: #3987e5; --eph: #d99a1a; --fix: #2fb32f; --log: #232322; color-scheme: dark }
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--bg); color: var(--fg); font: 15px/1.55 var(--font); display: grid; grid-template-columns: 280px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); overflow: hidden; }
+aside { background: var(--panel); border-right: 1px solid var(--line); padding: 20px 16px; overflow: auto; display: flex; flex-direction: column; gap: 6px; }
+.brand { font-weight: 700; font-size: 18px; }
+.home { font-size: 13px; color: var(--fg2); text-decoration: none; }
+.home:hover { color: var(--fg); }
+aside a { color: var(--series); }
+code { font: 12px var(--mono); }
+.lede, .muted, .a2ui-caption { color: var(--fg2); font-size: 13px; margin: 0; }
+aside h2 { font-size: 12px; letter-spacing: .06em; color: var(--fg2); margin: 18px 0 2px; font-weight: 600; }
+aside ul { list-style: none; padding: 0; margin: 0; }
+aside li button { width: 100%; text-align: left; background: none; border: 0; padding: 8px; border-radius: 8px; color: var(--fg); font: inherit; cursor: pointer; }
+aside li button:hover, aside li button:focus-visible { background: var(--line); }
+.steps { margin: 4px 0 0; padding-left: 18px; color: var(--fg2); font-size: 13px; }
+.steps li.done { color: var(--fix); }
+main { display: flex; flex-direction: column; min-width: 0; min-height: 0; height: 100%; }
+#thread { flex: 1; overflow: auto; padding: 24px 16px; display: flex; flex-direction: column; gap: 18px; }
+.msg { max-width: 760px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.msg p { margin: 0; }
+.msg.user { align-items: flex-end; }
+.msg.user p { background: var(--bubble); padding: 8px 14px; border-radius: 18px; max-width: 80%; }
+.route { font-size: 12px; color: var(--fg2); }
+.route.ephemeral::before, .route.fixed::before { content: "●"; margin-right: 6px; }
+.route.ephemeral::before { color: var(--eph); }
+.route.fixed::before { color: var(--fix); }
+form { display: flex; gap: 8px; max-width: 760px; width: calc(100% - 32px); margin: 0 auto 16px; padding: 6px; border: 1px solid var(--line); border-radius: 24px; background: var(--bg); }
+input { flex: 1; min-width: 0; border: 0; outline: none; padding: 8px 12px; background: transparent; color: var(--fg); font: inherit; }
+button { padding: 8px 16px; border: 1px solid var(--line); border-radius: 18px; background: var(--panel); color: var(--fg); font: inherit; cursor: pointer; }
+button:focus-visible { outline: 2px solid var(--series); outline-offset: 2px; }
+input:focus-visible { outline: none; }
+form:focus-within { border-color: var(--series); box-shadow: 0 0 0 1px var(--series); }
+button:disabled { opacity: .5; cursor: default; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip { font-size: 13px; padding: 6px 12px; }
+details { font-size: 12px; color: var(--fg2); }
+pre { white-space: pre-wrap; word-break: break-all; background: var(--log); border: 1px solid var(--line); padding: 10px; border-radius: 8px; max-height: 260px; overflow: auto; font: 12px/1.5 var(--mono); color: var(--fg); }
+.a2ui-card { border: 1px solid var(--line); border-radius: 12px; padding: 16px; min-width: 0; }
+.a2ui-col { display: flex; flex-direction: column; gap: 4px; }
+.a2ui-card h2 { font-size: 17px; margin: 0; text-wrap: balance; }
+.a2ui-badge { align-self: flex-start; font-size: 12px; padding: 1px 8px; border-radius: 999px; border: 1px solid; }
+.a2ui-badge.ephemeral { border-color: var(--eph); color: var(--eph); }
+.a2ui-badge.fixed { border-color: var(--fix); color: var(--fix); }
+.a2ui-block { margin-top: 12px; overflow-x: auto; }
+.a2ui-block h3 { font-size: 13px; color: var(--fg2); margin: 0 0 4px; font-weight: 600; }
+.a2ui-kpi { font-size: 28px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.a2ui-button { align-self: flex-start; margin-top: 12px; }
+table { border-collapse: collapse; font-size: 13px; }
+th, td { border-bottom: 1px solid var(--line); padding: 4px 10px; text-align: left; }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+svg { max-width: 100%; }
+svg text { fill: var(--fg2); font-size: 11px; }
+svg .axis { stroke: var(--line); }
+svg .mark { fill: var(--series); }
+svg .series { stroke: var(--series); fill: none; stroke-width: 2; }
+select { padding: 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); }
+#loading { margin: auto; color: var(--fg2); }
+@media (max-width: 760px) {
+  body { grid-template-columns: 1fr; grid-template-rows: auto auto; overflow: visible; height: auto; }
+  aside { border-right: 0; border-bottom: 1px solid var(--line); }
+  main { height: auto; min-height: 75vh; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+</head>
+<body>
+<aside>
+  <a class="home" href="/">← Livepowers</a>
+  <div class="brand">活软件生长演示</div>
+  <p class="lede">固定页由数据库按公式计算；智能体能当场做次抛分析，也能把次抛长成新的固化结构。数据为虚构，全部在你的浏览器里用 SQLite 计算。</p>
+  <h2>固定页</h2>
+  <ul id="pages"></ul>
+  <p id="pages-empty" class="muted">还没有固定页。</p>
+  <h2>生长</h2>
+  <button id="grow" type="button" disabled>模拟生长</button>
+  <ol class="steps" id="steps">
+    <li>写规格，新视图进本体</li><li>生成视图 DDL 与回滚脚本</li><li>孪生库部署，与次抛结果对账</li>
+    <li>评审采纳（采纳人 ≠ 生成者）</li><li>生产部署并核验，留回执</li><li>注册为固定页</li>
+  </ol>
+  <p class="muted">先在右侧申请固化，再点「模拟生长」。</p>
+  <h2>说明</h2>
+  <p class="muted" id="model-status">模型：检测中……</p>
+  <p class="muted">没接模型时，智能体只会挑选预置展示面，覆盖度不够就如实说明，不硬套；接入模型后，模型只写查询、挑组件，输出先按与 <code>lp surface validate</code> 相同的规则校验再执行。对账、部署、注册的规则也与 <code>lp surface</code> 相同。仓库里的参考宿主跑的是真实的 <code>lp</code> 命令：<a href="https://github.com/zhanglunet/livepowers/tree/main/examples/living_app">examples/living_app</a>。</p>
+</aside>
+<main>
+  <div id="thread" aria-live="polite"><p id="loading">正在加载浏览器内的 SQLite……</p></div>
+  <form id="ask">
+    <input id="q" name="q" placeholder="问业务问题，例如：各地区在途商机金额" autocomplete="off" aria-label="问业务问题">
+    <button type="submit">发送</button>
+  </form>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-asm.js" integrity="sha384-vIugRn1oq9Sl9UZMeszGC3jlKfutaSg1XHf8u4TKUWQiXELAVZXcKYualzDkPKrh" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>// 极简 A2UI v0.9.1 渲染器（只认 livepowers 展示面用到的组件）。
+// 只处理数据与组件描述：全部用 textContent / SVG 属性写入，不执行任何来自消息的代码。
+// 组件：Card / Column / Row / Text / Button（与 A2UI 基础组件同形）+ Badge / Kpi / Table / BarChart / LineChart / Filter（自定义组件库）。
+"use strict";
+(function (global) {
+  const SVG = "http://www.w3.org/2000/svg";
+  const fmt = (v) => (typeof v === "number" ? v.toLocaleString("zh-CN") : String(v ?? ""));
+  function el(tag, text, cls) {
+    const e = document.createElement(tag);
+    if (text !== undefined) e.textContent = text;
+    if (cls) e.className = cls;
+    return e;
+  }
+  function svgEl(tag, attrs) {
+    const e = document.createElementNS(SVG, tag);
+    for (const [k, v] of Object.entries(attrs || {})) e.setAttribute(k, v);
+    return e;
+  }
+  function pointer(obj, path) {  // RFC 6901
+    if (!path || path === "/") return obj;
+    return path.split("/").slice(1).reduce((o, k) => (o == null ? undefined : o[k.replace(/~1/g, "/").replace(/~0/g, "~")]), obj);
+  }
+  function setPointer(obj, path, value) {
+    const keys = path.split("/").slice(1);
+    let o = obj;
+    keys.slice(0, -1).forEach((k) => { o = o[k] = o[k] && typeof o[k] === "object" ? o[k] : {}; });
+    o[keys[keys.length - 1]] = value;
+  }
+
+  function chart(kind, rows, x, y, label) {
+    const W = 520, H = 210, L = 72, B = 28, T = 10;
+    const max = Math.max(1, ...rows.map((r) => Number(r[y]) || 0));
+    const s = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, width: "100%", role: "img", "aria-label": label || `${y} 按 ${x}` });
+    s.append(svgEl("line", { x1: L, y1: H - B, x2: W, y2: H - B, class: "axis" }));
+    for (const f of [0, 0.5, 1]) {
+      const t = svgEl("text", { x: L - 6, y: H - B - f * (H - B - T) + 4, "text-anchor": "end" });
+      t.textContent = fmt(Math.round(max * f)); s.append(t);
+    }
+    const step = (W - L) / Math.max(1, rows.length), pts = [];
+    rows.forEach((r, i) => {
+      const v = Number(r[y]) || 0, h = (v / max) * (H - B - T), cx = L + step * i + step / 2;
+      const tip = svgEl("title"); tip.textContent = `${fmt(r[x])}：${fmt(v)}`;
+      let m;
+      if (kind === "BarChart") {
+        const bw = Math.min(48, step - 2);
+        m = svgEl("rect", { x: cx - bw / 2, y: H - B - h, width: bw, height: h, rx: 4, class: "mark" });
+      } else {
+        pts.push(`${cx},${H - B - h}`);
+        m = svgEl("circle", { cx, cy: H - B - h, r: 4, class: "mark" });
+      }
+      m.append(tip); s.append(m);
+      const lab = svgEl("text", { x: cx, y: H - B + 16, "text-anchor": "middle" }); lab.textContent = fmt(r[x]); s.append(lab);
+    });
+    if (kind === "LineChart" && pts.length) s.insertBefore(svgEl("polyline", { points: pts.join(" "), class: "series" }), s.children[1]);
+    return s;
+  }
+
+  class A2UIClient {
+    constructor({ onAction } = {}) { this.surfaces = {}; this.onAction = onAction || (() => {}); }
+
+    // 处理一条 A2UI 消息；返回该 surface 的根元素（新建时）
+    process(msg) {
+      if (msg.createSurface) {
+        const { surfaceId, catalogId } = msg.createSurface;
+        const host = el("div", undefined, "a2ui-surface");
+        this.surfaces[surfaceId] = { catalogId, components: {}, data: {}, host };
+        return host;
+      }
+      const body = msg.updateComponents || msg.updateDataModel || msg.deleteSurface;
+      const sf = body && this.surfaces[body.surfaceId];
+      if (!sf) return null;
+      if (msg.updateComponents) for (const c of msg.updateComponents.components) sf.components[c.id] = c;
+      if (msg.updateDataModel) setPointer(sf.data, msg.updateDataModel.path, msg.updateDataModel.value);
+      if (msg.deleteSurface) { sf.host.remove(); delete this.surfaces[body.surfaceId]; return null; }
+      this.render(body.surfaceId);
+      return null;
+    }
+
+    rows(sf, binding) {
+      const rows = (binding && pointer(sf.data, binding.path)) || [];
+      const filters = sf.data._filters || {};
+      return rows.filter((r) => Object.entries(filters).every(([k, v]) => !v || !(k in r) || String(r[k]) === v));
+    }
+
+    render(surfaceId) {
+      const sf = this.surfaces[surfaceId];
+      if (!sf.components.root) return;  // 规范：root 到达前缓冲
+      sf.host.replaceChildren(this.node(surfaceId, sf, "root"));
+    }
+
+    node(surfaceId, sf, id) {
+      const c = sf.components[id];
+      if (!c) return el("span");
+      const kids = (ids) => (ids || []).map((k) => this.node(surfaceId, sf, k));
+      switch (c.component) {
+        case "Card": { const d = el("div", undefined, "a2ui-card"); d.append(this.node(surfaceId, sf, c.child)); return d; }
+        case "Column": case "Row": {
+          const d = el("div", undefined, c.component === "Row" ? "a2ui-row" : "a2ui-col"); d.append(...kids(c.children)); return d;
+        }
+        case "Text": return el(c.variant === "h2" ? "h2" : c.variant === "caption" ? "p" : "div", c.text,
+          c.variant === "caption" ? "a2ui-caption" : "");
+        case "Badge": return el("span", c.text, "a2ui-badge " + (c.tone || ""));
+        case "Button": {
+          const b = el("button", undefined, "a2ui-button"); b.type = "button";
+          b.append(this.node(surfaceId, sf, c.child));
+          b.addEventListener("click", () => this.onAction({ surfaceId, sourceComponentId: c.id,
+            name: c.action && c.action.event && c.action.event.name, button: b }));
+          return b;
+        }
+        case "Kpi": {
+          const d = el("div", undefined, "a2ui-block"); if (c.label) d.append(el("h3", c.label));
+          const total = this.rows(sf, c.rows).reduce((a, r) => a + (Number(r[c.value]) || 0), 0);
+          d.append(el("div", fmt(total), "a2ui-kpi")); return d;
+        }
+        case "BarChart": case "LineChart": {
+          const d = el("div", undefined, "a2ui-block"); if (c.label) d.append(el("h3", c.label));
+          d.append(chart(c.component, this.rows(sf, c.rows), c.x, c.y, c.label)); return d;
+        }
+        case "Table": {
+          const d = el("div", undefined, "a2ui-block"); if (c.label) d.append(el("h3", c.label));
+          const rows = this.rows(sf, c.rows), cols = c.columns || Object.keys(rows[0] || {});
+          const t = el("table"), head = el("tr");
+          cols.forEach((k) => head.append(el("th", k, rows.length && typeof rows[0][k] === "number" ? "num" : "")));
+          t.append(head);
+          rows.forEach((r) => { const tr = el("tr"); cols.forEach((k) => tr.append(el("td", fmt(r[k]), typeof r[k] === "number" ? "num" : ""))); t.append(tr); });
+          d.append(t); return d;
+        }
+        case "Filter": {
+          const d = el("div", undefined, "a2ui-block"); if (c.label) d.append(el("h3", c.label));
+          const sel = el("select"); sel.append(new Option("全部", ""));
+          (c.options || []).forEach((o) => sel.append(new Option(o, o)));
+          sel.value = pointer(sf.data, c.value.path) || "";
+          sel.addEventListener("change", () => { setPointer(sf.data, c.value.path, sel.value); this.render(surfaceId); });
+          d.append(sel); return d;
+        }
+        default: return el("div", `不支持的组件：${c.component}`, "a2ui-caption");
+      }
+    }
+  }
+  global.A2UIClient = A2UIClient;
+})(window);
+</script>
+<script>// 展示面校验规则（浏览器演示与 Node 测试共用）。与 scripts/lp.py 的 surface_problems 同一套规则：
+// 只读单条查询、只引用本体内对象、不带可执行代码、不内嵌结果、组件类型受限；外加演示专用的两条：
+// 不允许递归 CTE（防止浏览器卡死），不允许读敏感列。
+"use strict";
+(function (root, factory) {
+  const api = factory();
+  if (typeof module !== "undefined" && module.exports) module.exports = api;
+  else root.SurfaceRules = api;
+})(typeof self !== "undefined" ? self : this, function () {
+  const COMPONENTS = { kpi: ["data", "value"], table: ["data"], bar: ["data", "x", "y"], line: ["data", "x", "y"], filter: ["param"] };
+  const CODE_KEYS = new Set(["script", "code", "html", "js", "javascript", "eval", "function", "handler", "onclick"]);
+  const CODE_VALUE = /<\s*script|javascript:|\bon[a-z]+\s*=\s*["']|=>|\bfunction\s*\(|\beval\s*\(/i;
+  const SQL_WRITE = /\b(insert|update|delete|drop|alter|create|replace|truncate|attach|detach|pragma|grant|revoke|merge|call|exec|execute|vacuum|reindex|copy|recursive)\b/i;
+  const SQL_REF = /\b(?:from|join)\s+([A-Za-z_][\w.]*)/gi;
+  const SQL_CTE = /(?:\bwith|,)\s*([A-Za-z_]\w*)\s+as\s*\(/gi;
+  const SENSITIVE = /\b(phone|mobile|email|password|id_?card|address|salary)\b/i;
+  const WILDCARD = /\bselect\s+(?:distinct\s+)?\*|[\w"\]]\.\*|,\s*\*/i;   // 不允许 SELECT * / t.*（count(*) 不受影响）
+
+  function sqlProblems(sql, allowed) {
+    const errs = [];
+    const s = String(sql).replace(/'(?:[^']|'')*'/g, "''").trim().replace(/;\s*$/, "");
+    if (!/^(select|with)\b/i.test(s)) errs.push("查询必须以 SELECT 或 WITH 开头（只读）");
+    if (s.includes(";")) errs.push("查询只能有一条语句");
+    const w = s.match(SQL_WRITE);
+    if (w) errs.push(`查询含不允许的关键字 ${w[1].toUpperCase()}`);
+    if (SENSITIVE.test(s)) errs.push("查询读取了敏感字段");
+    if (WILDCARD.test(s)) errs.push("不允许 SELECT *，请列出需要的列（避免带出敏感字段）");
+    const ctes = new Set([...s.matchAll(SQL_CTE)].map((m) => m[1].toLowerCase()));
+    for (const m of s.matchAll(SQL_REF)) {
+      const name = m[1].toLowerCase().split(".").pop();
+      if (!ctes.has(name) && !allowed.has(name)) errs.push(`查询引用了本体外的对象 ${m[1]}`);
+    }
+    return errs;
+  }
+
+  function codeProblems(obj, path) {
+    const errs = [];
+    if (Array.isArray(obj)) obj.forEach((v, i) => errs.push(...codeProblems(v, `${path}[${i}]`)));
+    else if (obj && typeof obj === "object") {
+      for (const [k, v] of Object.entries(obj)) {
+        if (CODE_KEYS.has(k.toLowerCase()) || /^on[A-Z_]/.test(k)) { errs.push(`${path}.${k}：不允许携带代码或事件处理器`); continue; }
+        if (k !== "query") errs.push(...codeProblems(v, `${path}.${k}`));
+      }
+    } else if (typeof obj === "string" && CODE_VALUE.test(obj)) errs.push(`${path}：值里出现疑似代码`);
+    return errs;
+  }
+
+  // 校验一份展示面；allowed 是本体里可引用的表 / 视图名（小写）
+  function validate(s, allowed) {
+    if (!s || typeof s !== "object" || Array.isArray(s)) return ["展示面必须是 JSON 对象"];
+    const errs = [];
+    for (const k of ["id", "tier", "data", "components"]) if (!(k in s)) errs.push(`缺少字段 ${k}`);
+    if (errs.length) return errs;
+    if (!["ephemeral", "fixed"].includes(s.tier)) errs.push("tier 只能是 ephemeral / fixed");
+    errs.push(...codeProblems(s, "$"));
+    const data = s.data && typeof s.data === "object" && !Array.isArray(s.data) ? s.data : {};
+    const names = Object.keys(data);
+    if (!names.length || names.length > 3) errs.push("data 需要 1–3 个数据源");
+    for (const [name, d] of Object.entries(data)) {
+      const src = (d && d.source) || {};
+      if (!["table", "view"].includes(src.type)) errs.push(`data.${name}.source.type 只能是 table / view`);
+      else if (!allowed.has(String(src.name || "").toLowerCase())) errs.push(`data.${name} 的来源 ${src.name} 不在本体里`);
+      if (!d || typeof d.query !== "string" || !d.query.trim()) errs.push(`data.${name} 缺少 query`);
+      else if (d.query.length > 2000) errs.push(`data.${name} 的查询过长`);
+      else errs.push(...sqlProblems(d.query, allowed).map((e) => `data.${name}：${e}`));
+      if (d && ("rows" in d || "values" in d)) errs.push(`data.${name}：不内嵌结果数据`);
+    }
+    const comps = Array.isArray(s.components) ? s.components : [];
+    if (!comps.length || comps.length > 6) errs.push("components 需要 1–6 个组件");
+    const strList = (v) => Array.isArray(v) && v.length <= 20 && v.every((x) => typeof x === "string");
+    comps.forEach((c, i) => {
+      const need = COMPONENTS[c && c.type];
+      if (!need) { errs.push(`components[${i}].type 不支持：${c && c.type}`); return; }
+      for (const f of need) if (!c[f]) errs.push(`components[${i}]（${c.type}）缺少 ${f}`);
+      for (const f of ["data", "value", "x", "y", "param", "label", "id"])
+        if (f in c && typeof c[f] !== "string") errs.push(`components[${i}].${f} 必须是字符串`);
+      for (const f of ["columns", "options"])
+        if (f in c && !strList(c[f])) errs.push(`components[${i}].${f} 必须是字符串数组`);
+      if (c.data && !(c.data in data)) errs.push(`components[${i}] 引用了未定义的数据 ${c.data}`);
+    });
+    return errs;
+  }
+
+  function tokens(t) {
+    const s = new Set(String(t).toLowerCase().match(/[a-z0-9]+/g) || []);
+    const cjk = String(t).replace(/[^一-鿿]/g, "");
+    for (let i = 0; i < cjk.length - 1; i++) s.add(cjk.slice(i, i + 2));
+    return s;
+  }
+
+  // 问题被候选文本覆盖的比例（0–1）：用来判断预置展示面是否真的回答了这个问题，避免答非所问
+  function coverage(question, candidate) {
+    const q = tokens(question), c = tokens(candidate);
+    if (!q.size) return 0;
+    let n = 0;
+    q.forEach((x) => { if (c.has(x)) n++; });
+    return n / q.size;
+  }
+
+  // 执行后再查一遍结果列：别名或其他写法绕过了查询文本检查时，在下发前拦下
+  function resultProblems(columns) {
+    const bad = (columns || []).filter((c) => SENSITIVE.test(String(c)));
+    return bad.length ? [`结果包含敏感字段：${bad.join(", ")}`] : [];
+  }
+
+  return { validate, sqlProblems, resultProblems, coverage, tokens, COMPONENTS };
+});
+</script>
+<script>
+"use strict";
+const SURFACES = {"pipeline.ephemeral": {"surface": "livepowers-surface/1", "id": "pipeline-by-region", "title": "各地区在途商机金额（次抛）", "tier": "ephemeral", "intent": "pipeline by region", "data": {"pipeline": {"source": {"type": "table", "name": "opportunities"}, "query": "SELECT c.region AS region, SUM(o.amount) AS amount, COUNT(*) AS n FROM opportunities o JOIN customers c ON o.customer_id = c.id WHERE o.stage NOT IN ('won', 'lost') GROUP BY c.region ORDER BY c.region", "params": {}}}, "components": [{"id": "total", "type": "kpi", "data": "pipeline", "value": "amount", "label": "在途金额合计"}, {"id": "chart", "type": "bar", "data": "pipeline", "x": "region", "y": "amount", "label": "按地区"}, {"id": "detail", "type": "table", "data": "pipeline", "columns": ["region", "amount", "n"]}], "provenance": {"ontology_version": "0.1.0-draft", "generated_by": "agent-a", "note": "System 2 一次性分析"}}, "pipeline.fixed": {"surface": "livepowers-surface/1", "id": "pipeline-by-region", "title": "各地区在途商机金额", "tier": "fixed", "intent": "pipeline by region", "data": {"pipeline": {"source": {"type": "view", "name": "v_pipeline_by_region"}, "query": "SELECT region, amount, n FROM v_pipeline_by_region ORDER BY region", "params": {}}}, "components": [{"id": "total", "type": "kpi", "data": "pipeline", "value": "amount", "label": "在途金额合计"}, {"id": "chart", "type": "bar", "data": "pipeline", "x": "region", "y": "amount", "label": "按地区"}, {"id": "detail", "type": "table", "data": "pipeline", "columns": ["region", "amount", "n"]}], "provenance": {"ontology_version": "0.2.0-draft", "generated_by": "agent-a", "accepted_by": "reviewer-b"}}, "monthly.ephemeral": {"surface": "livepowers-surface/1", "id": "followup-by-month", "title": "每月跟进商机金额（次抛）", "tier": "ephemeral", "intent": "每月跟进商机金额 followup amount by month", "data": {"monthly": {"source": {"type": "table", "name": "opportunities"}, "query": "SELECT substr(last_followup_at, 1, 7) AS month, SUM(amount) AS amount, COUNT(*) AS n FROM opportunities GROUP BY month ORDER BY month", "params": {}}}, "components": [{"id": "trend", "type": "line", "data": "monthly", "x": "month", "y": "amount", "label": "按最近跟进月份"}, {"id": "detail", "type": "table", "data": "monthly", "columns": ["month", "amount", "n"]}], "provenance": {"ontology_version": "0.1.0-draft", "generated_by": "agent-a"}}};
+const DDL = {"up": "-- 生长出的固化结构：各地区在途商机金额（由次抛分析固化而来）\nCREATE VIEW IF NOT EXISTS v_pipeline_by_region AS\nSELECT c.region AS region, SUM(o.amount) AS amount, COUNT(*) AS n\nFROM opportunities o JOIN customers c ON o.customer_id = c.id\nWHERE o.stage NOT IN ('won', 'lost')\nGROUP BY c.region;\n", "down": "DROP VIEW IF EXISTS v_pipeline_by_region;\n"};
+// 浏览器内的"lp"：与仓库里的 lp surface record / promote / reconcile / deploy / a2ui 同样的规则，数据全部虚构。
+const $ = (id) => document.getElementById(id);
+const thread = $("thread");
+const state = { db: null, ontology: new Set(["owners", "customers", "opportunities", "activities"]),
+  registry: [], records: {}, promoted: null, counter: 0, evidence: 0, model: false };
+const MATCH = 0.6;   // 问题被预置展示面 / 固定页意图覆盖的比例达到这个值才算命中，否则不硬套
+const client = new A2UIClient({ onAction });
+
+function el(tag, text, cls) { const e = document.createElement(tag); if (text !== undefined) e.textContent = text; if (cls) e.className = cls; return e; }
+
+function makeDemoDb(SQL) {  // 与 examples/make_demo_db.py 相同的虚构数据
+  const db = new SQL.Database();
+  db.run(`create table owners(id integer primary key, name text, region text, phone text);
+    create table customers(id integer primary key, name text, tier text, region text);
+    create table opportunities(id integer primary key, customer_id integer references customers(id), owner_id integer,
+      amount real, stage text, last_followup_at text, version integer default 1);
+    create table activities(id integer primary key, opportunity_id integer, kind text, created_at text);`);
+  db.run("insert into owners values (1,'Owner A','east','000-0000'),(2,'Owner B','south','000-0001')");
+  db.run("insert into customers values (1,'Customer X','A','east'),(2,'Customer Y','B','south')");
+  const stages = ["lead", "qualified", "proposal", "won", "lost"];
+  for (let i = 1; i <= 12; i++) {
+    db.run("insert into opportunities(id,customer_id,owner_id,amount,stage,last_followup_at) values (?,?,?,?,?,?)",
+      [i, 1 + i % 2, 1 + i % 2, 100000 * i, stages[i % 5], `2026-0${1 + i % 9}-1${i % 9}`]);
+  }
+  return db;
+}
+
+function query(db, sql) {
+  const res = db.exec(sql);
+  if (!res.length) return { columns: [], rows: [] };
+  return { columns: res[0].columns, rows: res[0].values };
+}
+
+function refsOk(s) {  // 与 lp surface validate 同一套规则（surface-rules.js）
+  return SurfaceRules.validate(s, state.ontology).join("；");
+}
+
+function computeData(db, s) {
+  const out = {};
+  for (const [name, d] of Object.entries(s.data)) out[name] = query(db, d.query);
+  return out;
+}
+
+function toA2UI(s, data, sid, promotable, version) {  // 与 lp surface a2ui 相同的映射
+  const V = "v0.9.1", eph = s.tier === "ephemeral", prov = s.provenance || {};
+  const kinds = { kpi: "Kpi", table: "Table", bar: "BarChart", line: "LineChart", filter: "Filter" };
+  const comps = [
+    { id: "root", component: "Card", child: "body" },
+    { id: "title", component: "Text", text: s.title || s.id, variant: "h2" },
+    { id: "badge", component: "Badge", tone: s.tier, text: eph ? "次抛，未经验收" : `固化 v${version || "?"}` },
+    { id: "provenance", component: "Text", variant: "caption", text: `本体 ${prov.ontology_version || "?"} · 数字由数据库按查询计算` },
+  ];
+  const body = ["title", "badge", "provenance"];
+  s.components.forEach((c, i) => {
+    const cid = `c${i}-${c.id || c.type}`, comp = { id: cid, component: kinds[c.type], label: c.label || "" };
+    if (c.type === "filter") Object.assign(comp, { param: c.param, options: c.options || [], value: { path: `/_filters/${c.param}` } });
+    else {
+      comp.rows = { path: `/${c.data}` };
+      for (const k of ["value", "x", "y", "columns"]) if (k in c) comp[k] = c[k];
+      if (c.type === "kpi") comp.aggregate = "sum";
+    }
+    comps.push(comp); body.push(cid);
+  });
+  if (eph && promotable) {
+    comps.push({ id: "promote-text", component: "Text", text: "申请固化" },
+      { id: "promote", component: "Button", child: "promote-text", action: { event: { name: "promote_surface" } } });
+    body.push("promote");
+  }
+  comps.splice(1, 0, { id: "body", component: "Column", children: body });
+  const msgs = [{ version: V, createSurface: { surfaceId: sid, catalogId: "urn:livepowers:a2ui-catalog:surface:1" } },
+    { version: V, updateComponents: { surfaceId: sid, components: comps } }];
+  for (const [name, d] of Object.entries(data))
+    msgs.push({ version: V, updateDataModel: { surfaceId: sid, path: `/${name}`,
+      value: d.rows.map((r) => Object.fromEntries(d.columns.map((c, i) => [c, r[i]]))) } });
+  return msgs;
+}
+
+const coverage = SurfaceRules.coverage;
+
+function bubble(role, text) { const m = el("div", undefined, "msg " + role); if (text) m.append(el("p", text)); thread.append(m); m.scrollIntoView({ block: "end" }); return m; }
+
+function assistant({ route, kind, text, messages, log }) {
+  const m = bubble("assistant", text);
+  if (route) m.prepend(el("div", route, "route " + (kind || "")));
+  for (const msg of messages || []) { const host = client.process(msg); if (host) m.append(host); }
+  if (messages && messages.length) {
+    const d = el("details"); d.append(el("summary", "查看 A2UI 消息"));
+    d.append(el("pre", messages.map((x) => JSON.stringify(x)).join("\n"))); m.append(d);
+  }
+  if (log) { const d = el("details"); d.open = true; d.append(el("summary", "生长过程（与 lp 命令同样的检查）")); d.append(el("pre", log)); m.append(d); }
+  m.scrollIntoView({ block: "end" });
+}
+
+function openPage(page, route) {
+  const s = SURFACES[page.surface];
+  assistant({ route, kind: "fixed", text: `这是固定页「${page.name}」，由已固化的视图直接计算，不需要重新分析。`,
+    messages: toA2UI(s, computeData(state.db, s), `${page.id}-${++state.counter}`, false, page.version) });
+}
+
+function showEphemeral(s, key, route, text) {
+  const err = refsOk(s);
+  if (err) return assistant({ route, kind: "none", text: `展示面未通过校验，没有执行：${err}` });
+  let data;
+  try { data = computeData(state.db, s); } catch (e) { return assistant({ route, kind: "none", text: `查询执行失败：${e.message}` }); }
+  const leak = Object.values(data).flatMap((d) => SurfaceRules.resultProblems(d.columns));
+  if (leak.length) return assistant({ route, kind: "none", text: `结果没有展示：${leak.join("；")}` });
+  const sid = `${s.id}-${++state.counter}`;
+  state.records[sid] = { key, intent: s.intent, stats: data };   // 只记摘要：演示里直接保留计算结果用于对账
+  state.evidence++;
+  assistant({ route, kind: "ephemeral", messages: toA2UI(s, data, sid, true), text });
+}
+
+async function ask(q) {
+  bubble("user", q);
+  const hit = state.registry.map((p) => [Math.max(...p.intents.map((i) => coverage(q, i))), p]).sort((a, b) => b[0] - a[0])[0];
+  if (hit && hit[0] >= MATCH) return openPage(hit[1], "System 1 · 命中固定页");
+  const best = Object.entries(SURFACES).filter(([, s]) => s.tier === "ephemeral")
+    .map(([k, s]) => [coverage(q, s.intent + " " + s.title), k, s]).sort((a, b) => b[0] - a[0])[0];
+  if (best && best[0] >= MATCH) return showEphemeral(best[2], best[1], "System 2 · 次抛展示（预置）",
+    "没有现成的固定页，我当场做了一次分析（预置展示面；数字由 SQLite 按查询计算）。觉得以后常看，可以申请固化。");
+  if (!state.model) return assistant({ route: "System 2 · 未命中", kind: "none",
+    text: "演示里没有这个问题的预置分析，模型也还没接入，所以不硬套一个相近的结果。可以试试：各地区在途商机金额、每月跟进商机金额。" });
+  const wait = bubble("assistant", "正在让模型写查询和挑图表……");
+  let res;
+  try {
+    const r = await fetch("/api/agent", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ q }) });
+    res = await r.json();
+  } catch (e) { res = { error: "模型服务连不上" }; }
+  wait.remove();
+  if (res.unsupported) return assistant({ route: "System 2 · 模型", kind: "none", text: `模型认为这个问题不在演示数据范围内：${res.unsupported}` });
+  if (!res.surface) return assistant({ route: "System 2 · 模型", kind: "none", text: res.error || "模型没有给出展示面" });
+  showEphemeral(res.surface, null, "System 2 · 次抛展示（模型生成，已按规则校验）",
+    "模型写了查询、挑了组件；校验通过后由 SQLite 计算出这些数字。觉得以后常看，可以申请固化。");
+}
+
+function onAction({ surfaceId, name, button }) {
+  if (name !== "promote_surface" || !state.records[surfaceId]) return;
+  button.disabled = true;
+  const rec = state.records[surfaceId];
+  if (!rec.key || !SURFACES[rec.key.replace(".ephemeral", ".fixed")]) {
+    return assistant({ text: "已登记为固化候选。这个演示只为「各地区在途商机金额」预置了生长产物，其他分析停在候选状态。" });
+  }
+  state.promoted = { ...rec, task: "t_" + Math.random().toString(16).slice(2, 10) };
+  assistant({ text: `已申请固化，看板任务 ${state.promoted.task}。接下来由智能体生成新结构、评审采纳——点左侧「模拟生长」。` });
+  $("grow").disabled = false;
+}
+
+function hashRows(d) { return JSON.stringify([...d.rows].map((r) => JSON.stringify(r)).sort()); }
+
+function grow() {
+  $("grow").disabled = true;
+  const rec = state.promoted, fixedKey = rec.key.replace(".ephemeral", ".fixed"), fixed = SURFACES[fixedKey];
+  const steps = [...document.querySelectorAll("#steps li")], log = [];
+  const done = (i, line) => { steps[i].classList.add("done"); log.push(line); };
+  state.ontology.add("v_pipeline_by_region");
+  done(0, "1 规格确认；本体新增 views: v_pipeline_by_region（ontology 0.2.0-draft）");
+  done(1, "2 生成 DDL：\n" + DDL.up.trim() + "\n  回滚：" + DDL.down.trim());
+  const twin = new SQL_.Database(state.db.export());
+  twin.run(DDL.up);
+  const err = refsOk(fixed);
+  const base = computeData(twin, SURFACES[rec.key]), next = computeData(twin, fixed);
+  const same = Object.keys(base).every((k) => hashRows(base[k]) === hashRows(next[k]));
+  twin.close();
+  if (err || !same) { log.push("✗ 对账不一致或校验失败：" + (err || "结果不同")); return assistant({ text: "生长中止。", log: log.join("\n") }); }
+  done(2, `3 孪生库部署 ✓；对账：${base.pipeline.rows.length} 行，结果与次抛一致 ✓`);
+  done(3, "4 四道门通过：生成者 agent-a，采纳人 reviewer-b");
+  try {
+    state.db.run(DDL.up);
+    const ok = query(state.db, "select count(*) from sqlite_master where type = 'view' and name = 'v_pipeline_by_region'").rows[0][0];
+    if (!ok) throw new Error("视图不存在");
+    computeData(state.db, fixed);
+  } catch (e) { state.db.run(DDL.down); log.push("✗ 生产部署失败，已回滚：" + e.message); return assistant({ text: "生长中止。", log: log.join("\n") }); }
+  done(4, "5 生产部署 ✓；核验：view v_pipeline_by_region 存在，查询可执行；已写部署回执");
+  state.registry.push({ id: "cap_pipeline_by_region", name: "各地区在途商机", version: "1.0.0", surface: fixedKey,
+    intents: ["pipeline by region", "各地区在途商机", "各地区在途商机金额", "在途商机金额"] });
+  done(5, "6 注册 cap_pipeline_by_region v1.0.0（kind=view，ui → 固化展示面）");
+  renderPages();
+  assistant({ text: "已长成新的固定页「各地区在途商机」。再问一次同样的问题，会直接走固定页。", log: log.join("\n") });
+}
+
+function renderPages() {
+  const ul = $("pages"); ul.replaceChildren();
+  $("pages-empty").hidden = state.registry.length > 0;
+  for (const p of state.registry) {
+    const b = el("button", p.name); b.type = "button";
+    b.addEventListener("click", () => { bubble("user", `打开固定页：${p.name}`); openPage(p, "System 1 · 固定页"); });
+    const li = el("li"); li.append(b); ul.append(li);
+  }
+}
+
+let SQL_;
+initSqlJs().then((SQL) => {
+  SQL_ = SQL; state.db = makeDemoDb(SQL);
+  thread.replaceChildren();
+  const hello = bubble("assistant", "你好，我是这个业务应用里的智能体。先查固定页；没有就当场做一次次抛分析，觉得有用可以申请固化，让它长成新的固定页。");
+  const chips = el("div", undefined, "chips");
+  for (const s of ["各地区在途商机金额", "每月跟进商机金额"]) {
+    const c = el("button", s, "chip"); c.type = "button";
+    c.addEventListener("click", () => ask(s)); chips.append(c);
+  }
+  hello.append(chips);
+  renderPages();
+  fetch("/api/agent").then((r) => (r.ok ? r.json() : { configured: false })).catch(() => ({ configured: false }))
+    .then((r) => { state.model = Boolean(r && r.configured); $("model-status").textContent = state.model
+      ? "模型：已接入。预置分析覆盖不到的问题会交给模型，输出先校验再执行。"
+      : "模型：未接入。只能回答预置的两个分析；接入方法见仓库 examples/living_app/README.md。"; });
+}).catch((e) => { $("loading").textContent = "SQLite 加载失败：" + e.message; });
+
+$("ask").addEventListener("submit", (e) => { e.preventDefault(); const q = $("q").value.trim(); if (!q || !state.db) return; $("q").value = ""; ask(q); });
+$("grow").addEventListener("click", grow);
+
+</script>
+</body>
+</html>
