@@ -165,11 +165,11 @@ function install(opts) {
     if (!isManagedCursorRule(file)) {
       console.log(`${tag}跳过 ${file}（保留未标记的用户规则）`);
     } else {
-    console.log(`${tag}生成 ${file}（Cursor 入口规则）`);
-    if (!opts.dryRun) {
-      fs.mkdirSync(rulesDir, { recursive: true });
-      fs.writeFileSync(file, cursorMdcContent());
-    }
+      console.log(`${tag}生成 ${file}（Cursor 入口规则）`);
+      if (!opts.dryRun) {
+        fs.mkdirSync(rulesDir, { recursive: true });
+        fs.writeFileSync(file, cursorMdcContent());
+      }
     }
   } else if (opts.target === "cursor") {
     console.log("提示：在项目里运行 `livepowers install --target cursor --project`，可在项目的 .cursor/rules/ 生成 livepowers.mdc 入口规则。");
