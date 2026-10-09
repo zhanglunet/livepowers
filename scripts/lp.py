@@ -46,10 +46,12 @@ lp —— Livepowers 命令行工具（只依赖 Python 3.9+ 标准库）
 """
 import argparse
 import contextlib
+import hashlib
 import io
 import json
 import os
 import re
+import shlex
 import sys
 import uuid
 from collections import defaultdict
@@ -648,18 +650,61 @@ def find_task(db, tid):
     die(f"未找到任务 {tid}")
 
 
+def spec_task_ids(path):
+    """Read declarations only inside the Markdown task-list section."""
+    with open(path, encoding="utf-8") as f:
+        content = f.read()
+    ids = set()
+    active = False
+    level = 0
+    fenced = False
+    for line in content.splitlines():
+        if re.match(r"^\s*(```|~~~)", line):
+            fenced = not fenced
+            continue
+        if fenced:
+            continue
+        heading = re.match(r"^(#{1,6})\s+(.+)", line)
+        if heading:
+            if active and len(heading[1]) <= level:
+                active = False
+            if heading[2].strip().startswith("任务清单"):
+                active = True
+                level = len(heading[1])
+            continue
+        match = re.match(r"^\s*-\s+(T\d+)\b", line) if active else None
+        if match:
+            if match[1] in ids:
+                raise ValueError(f"任务 ID 重复声明：{match[1]}")
+            ids.add(match[1])
+    return ids
+
+
 def cmd_task_new(a):
     db = load_tasks()
     tid = a.id or "t_" + uuid.uuid4().hex[:8]
     if any(t["id"] == tid for t in db["tasks"]):
         die(f"任务 {tid} 已存在")
+    spec_val = getattr(a, "spec", "") or ""
+    spec_task_val = getattr(a, "spec_task", "") or ""
+    if spec_task_val and not spec_val:
+        die("指定了 spec_task 但未指定 spec")
+    if spec_val:
+        try:
+            ids = spec_task_ids(spec_val)
+            if spec_task_val and spec_task_val not in ids:
+                die(f"规格文件中未找到任务 ID：{spec_task_val}")
+        except (OSError, ValueError) as e:
+            die(f"规格文件校验失败：{e}")
     t = {"id": tid, "title": a.title, "intent": canon(a.intent), "level": a.level, "owner": a.owner,
          "contract_version": a.contract_version, "max_loops": a.max_loops, "budget": a.budget,
+         "spec": spec_val, "spec_task": spec_task_val,
          "loops": 0, "spent": 0.0, "state": "clarify", "executor": None,
          "history": [{"ts": now(), "to": "clarify", "by": a.owner or "?", "reason": "created"}]}
     db["tasks"].append(t)
     jsave(TASKS, db)
     print(tid)
+
 
 
 def cmd_task_move(a):
@@ -936,6 +981,26 @@ def cmd_job_validate(a):
         ho = j.get("handoff") or {}
         if "handoff" in j and not (isinstance(ho, dict) and ho.get("actual_end_state") and ho.get("checker")):
             errs.append("handoff 须包含 actual_end_state（前段实际终态的位置）与 checker（独立完成度检查者）")
+        spec_file = j.get("spec")
+        spec_task_id = j.get("spec_task")
+        if spec_task_id and not spec_file:
+            errs.append("指定了 spec_task 但未指定 spec 规格文件路径")
+        elif spec_file:
+            # 相对路径以作业文件所在目录为基准，若不存在则尝试当前工作目录
+            base_dir = os.path.dirname(os.path.abspath(a.file))
+            target_path = spec_file if os.path.isabs(spec_file) else os.path.join(base_dir, spec_file)
+            if not os.path.isfile(target_path):
+                alt = os.path.abspath(spec_file)
+                if os.path.isfile(alt):
+                    target_path = alt
+            if not os.path.isfile(target_path):
+                errs.append(f"引用的规格文件不存在：{spec_file}")
+            elif spec_task_id:
+                try:
+                    if spec_task_id not in spec_task_ids(target_path):
+                        errs.append(f"规格文件 {spec_file} 中未找到任务 ID：{spec_task_id}")
+                except (OSError, ValueError) as e:
+                    errs.append(f"读取规格文件失败：{e}")
         if errs:
             bad += 1
             print(f"✗ {j.get('job_id', '?')}: " + "；".join(errs))
@@ -1694,22 +1759,51 @@ def _auto_evidence(**kw):
 
 
 def hook_post_tool(d, st):
-    if d.get("tool_name") != "Bash":
+    tool_name = d.get("tool_name") or d.get("tool")
+    if tool_name and tool_name not in ("Bash", "bash", "sh", "terminal", "Command", "command", "Shell"):
         return
-    cmd = (d.get("tool_input") or {}).get("command") or ""
-    resp = d.get("tool_response") or {}
+    cmd = (d.get("tool_input") or {}).get("command") or d.get("command") or d.get("cmd") or ""
+    if not cmd:
+        return
+    raw_resp = d.get("tool_output")
+    if raw_resp is None:
+        raw_resp = d.get("output")
+    if raw_resp is not None and isinstance(raw_resp, str):
+        try:
+            parsed = json.loads(raw_resp)
+            resp = parsed if isinstance(parsed, dict) else {"stdout": raw_resp}
+        except (TypeError, ValueError):
+            resp = {"stdout": raw_resp}
+    else:
+        resp = d.get("tool_response") or d.get("response") or d.get("result") or raw_resp or {}
     if isinstance(resp, str):
         resp = {"stdout": resp}
-    stdout, stderr = str(resp.get("stdout", "")), str(resp.get("stderr", ""))
-    code = resp.get("exit_code")
+    if not isinstance(resp, dict):
+        resp = {"stdout": str(resp)}
+    stdout = str(resp.get("stdout") if "stdout" in resp else d.get("stdout", ""))
+    stderr = str(resp.get("stderr") if "stderr" in resp else d.get("stderr", ""))
+    code = resp.get("exit_code") if "exit_code" in resp else resp.get("exitCode", d.get("exit_code", d.get("exitCode")))
+    if code is None:
+        exit_match = re.search(r"(?:Process exited with code|exit(?:ed)? code)\s*[:=]?\s*(-?\d+)", stdout, re.I)
+        if exit_match:
+            code = int(exit_match.group(1))
+    try:
+        duration_ms = float(d.get("duration", 0) or 0)
+    except (TypeError, ValueError):
+        duration_ms = 0
+    st["duration_ms"] = st.get("duration_ms", 0) + duration_ms
+    if d.get("sandbox") is not None:
+        st["sandbox"] = d.get("sandbox")
     m = FIND_RE.search(cmd)
     if m:
         q = m.group(1).strip().split("\n")[0].strip().strip("\"'")
         q = re.sub(r"\s+--\S+.*$", "", q).strip().strip("\"'")
-        hit = stdout.lstrip().startswith("HIT") or code == 0 and "HIT" in stdout
+        hit = bool(re.search(r"(?m)^\s*HIT\b", stdout)) and code in (None, 0)
         cm = CAP_RE.search(stdout) if hit else None
         st["pending"] = {"intent": q, "hit": bool(hit), "capability": cm.group(1) if cm else None,
-                         "ts": now(), "s1_calls": 0}
+                         "ts": now(), "s1_calls": 0, "duration_ms": duration_ms,
+                         "sandbox": d.get("sandbox")}
+        st["duration_ms"] = duration_ms
         st["explicit"] = False
         return
     if EVIDENCE_RE.search(cmd):
@@ -1724,18 +1818,123 @@ def hook_post_tool(d, st):
             failed = (code not in (None, 0)) or bool(stderr.strip())
             _auto_evidence(intent=pend["intent"], system="S1", outcome="fail" if failed else "success",
                            capability=pend["capability"], writes_state=bool(cap.get("writes_state")),
-                           note=f"auto: hook 观测到调用 {prefix}" + (f"；exit={code}" if code not in (None, 0) else ""))
+                           seconds=duration_ms / 1000,
+                           note=f"auto: hook 观测到调用 {prefix}" +
+                                (f"；sandbox={d.get('sandbox')}" if d.get("sandbox") is not None else "") +
+                                (f"；exit={code}" if code not in (None, 0) else ""))
             pend["s1_calls"] = pend.get("s1_calls", 0) + 1
 
 
 def hook_stop(d, st):
     pend = st.get("pending")
     if pend and not pend.get("hit") and not st.get("explicit"):
-        tokens = _turn_tokens(d.get("transcript_path") or "")
+        t_path = d.get("transcript_path") or d.get("transcriptPath") or ""
+        tokens = _turn_tokens(t_path)
+        sid = d.get("session_id") or d.get("sessionId") or d.get("conversation_id") or ""
+        sandbox = f"；sandbox={pend['sandbox']}" if pend.get("sandbox") is not None else ""
         _auto_evidence(intent=pend["intent"], system="S2", outcome="partial", tokens=tokens,
-                       note=f"auto: registry find MISS 后本轮未显式记证据，钩子补记；session={d.get('session_id', '')}")
+                       seconds=st.get("duration_ms", 0) / 1000,
+                       note=f"auto: registry find MISS 后本轮未显式记证据，钩子补记；session={sid}{sandbox}")
     st["pending"] = None
     st["explicit"] = False
+    st["duration_ms"] = 0
+
+
+def cmd_hook_watch(a):
+    """轮询或单次解析 transcript 文件（用于 Codex / 无钩子客户端）。"""
+    tpath = getattr(a, "transcript", "")
+    if not tpath:
+        return
+    if not os.path.isabs(tpath):
+        tpath = os.path.abspath(tpath)
+    cwd = os.path.dirname(tpath)
+    if not os.path.isdir(ROOT) and os.path.isdir(os.path.join(cwd, ".livepowers")):
+        os.chdir(cwd)
+    if not os.path.isdir(ROOT):
+        return
+    os.makedirs(SESSIONS, exist_ok=True)
+    sid = "watch_" + hashlib.sha1(tpath.encode("utf-8")).hexdigest()[:8]
+    sp = _session_path(sid)
+    st = jload(sp, {"pending": None, "explicit": False, "offset": 0})
+
+    def process_file():
+        if not os.path.isfile(tpath):
+            return
+        offset = st.get("offset", 0)
+        with open(tpath, "r", encoding="utf-8", errors="replace") as f:
+            f.seek(offset)
+            while True:
+                line = f.readline()
+                if not line:
+                    break
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    obj = json.loads(line)
+                except Exception:
+                    continue
+                if obj.get("type") == "user" and not obj.get("toolUseResult") and not obj.get("tool_use_id"):
+                    hook_stop({"session_id": sid, "transcript_path": tpath}, st)
+                elif obj.get("type") == "response_item" and isinstance(obj.get("payload"), dict):
+                    payload = obj["payload"]
+                    if payload.get("type") == "function_call" and payload.get("name") in ("exec_command", "shell_command", "shell"):
+                        arguments = payload.get("arguments") or {}
+                        if isinstance(arguments, str):
+                            try:
+                                arguments = json.loads(arguments)
+                            except (TypeError, ValueError):
+                                arguments = {}
+                        command = arguments.get("cmd", arguments.get("command")) if isinstance(arguments, dict) else None
+                        if isinstance(command, list):
+                            command = shlex.join(command)
+                        if command:
+                            calls = st.setdefault("codex_calls", {})
+                            calls[payload.get("call_id", "")] = {
+                                "command": command, "cwd": arguments.get("workdir", arguments.get("cwd", ""))}
+                    elif payload.get("type") == "function_call_output":
+                        call = st.setdefault("codex_calls", {}).pop(payload.get("call_id", ""), None)
+                        if call:
+                            output = str(payload.get("output", ""))
+                            ev = {"command": call["command"], "output": output, "session_id": sid}
+                            workdir = call.get("cwd")
+                            if workdir:
+                                ev["cwd"] = workdir if os.path.isabs(workdir) else os.path.abspath(os.path.join(cwd, workdir))
+                            hook_post_tool(ev, st)
+                elif obj.get("type") == "event_msg" and isinstance(obj.get("payload"), dict) and obj["payload"].get("type") == "task_complete":
+                    hook_stop({"session_id": sid, "transcript_path": tpath}, st)
+                else:
+                    ev = None
+                    if "command" in obj or "cmd" in obj or obj.get("tool_name") or obj.get("tool"):
+                        ev = obj
+                    elif obj.get("type") == "assistant":
+                        msg = obj.get("message") or {}
+                        content = msg.get("content") or []
+                        if isinstance(content, list):
+                            for item in content:
+                                if isinstance(item, dict) and item.get("type") == "tool_use":
+                                    hook_post_tool({"tool_name": item.get("name"),
+                                                    "tool_input": item.get("input", {}),
+                                                    "session_id": sid}, st)
+                    if ev:
+                        hook_post_tool(ev, st)
+            st["offset"] = f.tell()
+            jsave(sp, st)
+
+    if getattr(a, "once", False):
+        process_file()
+        hook_stop({"session_id": sid, "transcript_path": tpath}, st)
+        jsave(sp, st)
+        return
+
+    import time
+    try:
+        while True:
+            process_file()
+            time.sleep(getattr(a, "interval", 1.0))
+    except KeyboardInterrupt:
+        hook_stop({"session_id": sid, "transcript_path": tpath}, st)
+        jsave(sp, st)
 
 
 def cmd_hook(a):
@@ -1743,14 +1942,18 @@ def cmd_hook(a):
     try:
         if os.environ.get("LP_HOOK_CAPTURE", "1") == "0":
             return
+        if getattr(a, "event", "") == "watch" or getattr(a, "transcript", ""):
+            cmd_hook_watch(a)
+            return
         d = json.loads(sys.stdin.read() or "{}")
-        cwd = d.get("cwd")
+        cwd = d.get("cwd") or ((d.get("workspace_roots") or [None])[0]) or os.environ.get("CURSOR_PROJECT_DIR")
         if cwd and os.path.isdir(cwd):
             os.chdir(cwd)
         if not os.path.isdir(ROOT):
             return
         os.makedirs(SESSIONS, exist_ok=True)
-        sp = _session_path(d.get("session_id"))
+        sid = d.get("session_id") or d.get("sessionId") or d.get("conversation_id")
+        sp = _session_path(sid)
         st = jload(sp, {"pending": None, "explicit": False})
         if a.event == "post-tool":
             hook_post_tool(d, st)
@@ -1761,7 +1964,7 @@ def cmd_hook(a):
         try:
             os.makedirs(ROOT, exist_ok=True) if os.path.isdir(ROOT) else None
             with open(os.path.join(ROOT, "hook-errors.log"), "a", encoding="utf-8") as f:
-                f.write(f"{now()} {a.event}: {e!r}\n")
+                f.write(f"{now()} {getattr(a, 'event', 'hook')}: {e!r}\n")
         except Exception:  # noqa: BLE001
             pass
 
@@ -1865,6 +2068,8 @@ def main(argv=None):
     tn.add_argument("--contract-version", default="", help="契约版本")
     tn.add_argument("--max-loops", type=int, default=5, help="最大探索轮次（止损）")
     tn.add_argument("--budget", type=float, default=0, help="探索预算（0 为不限）")
+    tn.add_argument("--spec", default="", help="关联的规格文件路径（specs/<feature>.md）")
+    tn.add_argument("--spec-task", default="", help="关联的规格任务 ID（如 T001）")
     tn.set_defaults(fn=cmd_task_new)
     tm = tk.add_parser("move", help="迁移状态：" + " → ".join(STATE_CN[x] for x in STATES[:6]) + "；任何状态可 → 异常接管")
     tm.add_argument("id")
@@ -2047,8 +2252,12 @@ def main(argv=None):
     pgl = pg.add_parser("list", help="带展示面且有生产部署回执的 active 能力（JSON）")
     pgl.set_defaults(fn=cmd_pages_list)
 
-    hk = sp.add_parser("hook", help="钩子入口（Claude Code PostToolUse / Stop 调用；stdin 为钩子 JSON）")
-    hk.add_argument("event", choices=["post-tool", "stop"])
+    hk = sp.add_parser("hook", help="钩子与转录监听入口（Claude Code / Cursor / Codex 自动采集证据）")
+    hk.add_argument("event", nargs="?", default="post-tool", choices=["post-tool", "stop", "watch"],
+                    help="钩子事件或监听模式")
+    hk.add_argument("--transcript", default="", help="transcript 文件路径（Codex / 无钩子客户端）")
+    hk.add_argument("--once", action="store_true", help="watch 模式只扫描一次当前文件即退出（用于批处理或测试）")
+    hk.add_argument("--interval", type=float, default=1.0, help="watch 轮询间隔秒数（默认 1.0）")
     hk.set_defaults(fn=cmd_hook)
 
     rp = sp.add_parser("report", help="生成晨间报告 Markdown（固化候选、能力复核、看板、台账、待决事项）")
