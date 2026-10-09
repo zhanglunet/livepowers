@@ -76,12 +76,27 @@ class TestInstaller(unittest.TestCase):
     def test_cursor_and_project_targets(self):
         self.cli("install", "--target", "cursor")
         self.assert_skills(os.path.join(self.home, ".cursor", "skills"))
+        self.assertFalse(os.path.exists(os.path.join(self.proj, ".cursor", "rules", "livepowers.mdc")))
         self.cli("install", "--target", "claude", "--project")
         self.assert_skills(os.path.join(self.proj, ".claude", "skills"))
         other = os.path.join(self._tmp.name, "other")
         os.makedirs(other)
         self.cli("install", "--target", "agents", "--project", other)
         self.assert_skills(os.path.join(other, ".agents", "skills"))
+        # Cursor 项目级安装生成 .cursor/rules/livepowers.mdc，uninstall 清理
+        self.cli("install", "--target", "cursor", "--project")
+        self.assert_skills(os.path.join(self.proj, ".cursor", "skills"))
+        mdc = os.path.join(self.proj, ".cursor", "rules", "livepowers.mdc")
+        self.assertTrue(os.path.isfile(mdc))
+        content = read(mdc)
+        self.assertIn("alwaysApply: true", content)
+        self.assertIn("七条铁律", content)
+        self.assertIn("路由表", content)
+        self.assertIn(START, content)
+        self.assertIn(END, content)
+        self.cli("uninstall", "--target", "cursor", "--project")
+        self.assertFalse(os.path.exists(mdc))
+
 
     def test_codex_project_merges_agents_md_and_uninstall_cleans_up(self):
         agents = os.path.join(self.proj, "AGENTS.md")
@@ -110,6 +125,36 @@ class TestInstaller(unittest.TestCase):
         self.assertIn("system1-first", out)
         self.assertEqual(os.listdir(self.proj), [])
         self.assertEqual(os.listdir(self.home), [])
+
+    def test_cursor_project_dry_run_does_not_write_mdc(self):
+        out = self.cli("install", "--target", "cursor", "--project", "--dry-run").stdout
+        self.assertIn("livepowers.mdc", out)
+        self.assertFalse(os.path.exists(os.path.join(self.proj, ".cursor", "rules", "livepowers.mdc")))
+        self.assertEqual(os.listdir(self.proj), [])
+
+    def test_cursor_preserves_unmarked_user_rule(self):
+        mdc = os.path.join(self.proj, ".cursor", "rules", "livepowers.mdc")
+        original = "---\nalwaysApply: true\n---\nUser rules\n"
+        write(mdc, original)
+        for args in (("install",), ("install", "--force"),
+                     ("install", "--dry-run"), ("uninstall",),
+                     ("uninstall", "--dry-run")):
+            self.cli(*args, "--target", "cursor", "--project")
+            self.assertEqual(read(mdc), original)
+
+    def test_cursor_updates_managed_rule_and_preserves_dry_run(self):
+        mdc = os.path.join(self.proj, ".cursor", "rules", "livepowers.mdc")
+        original = START + "\nold managed content\n" + END
+        write(mdc, original)
+        self.cli("install", "--target", "cursor", "--project", "--dry-run")
+        self.assertEqual(read(mdc), original)
+        self.cli("install", "--target", "cursor", "--project")
+        self.assertIn("alwaysApply: true", read(mdc))
+        self.assertNotIn("globs: *", read(mdc))
+        self.cli("uninstall", "--target", "cursor", "--project", "--dry-run")
+        self.assertTrue(os.path.exists(mdc))
+        self.cli("uninstall", "--target", "cursor", "--project")
+        self.assertFalse(os.path.exists(mdc))
 
     def test_list_and_path(self):
         self.assertIn("未安装", self.cli("list").stdout)

@@ -31,6 +31,7 @@ const USAGE = `livepowers ${VERSION} · 活产品范式技能包
   --dry-run   只打印将要做的事，不写任何文件
 
 codex / agents 加 --project 时，会把入口说明合并进项目的 AGENTS.md。
+cursor 加 --project 时，会在项目的 .cursor/rules/ 生成 livepowers.mdc 入口规则。
 lp 命令：npm i -g livepowers 后可直接运行 lp。
 官网：https://livepowers.pages.dev`;
 
@@ -94,6 +95,30 @@ function withAgentsMd(opts) {
   return opts.project && (opts.target === "codex" || opts.target === "agents");
 }
 
+function withCursorRule(opts) {
+  return opts.project && opts.target === "cursor";
+}
+
+function isManagedCursorRule(file) {
+  if (!fs.existsSync(file)) return true;
+  const text = fs.readFileSync(file, "utf8");
+  return text.includes(START) && text.includes(END);
+}
+
+function cursorMdcContent() {
+  const text = fs.readFileSync(path.join(ROOT, "skills", "using-livepowers", "SKILL.md"), "utf8");
+  const body = text.replace(/^---[\s\S]*?---\n/, "").trim();
+  return `---
+description: Livepowers 活产品范式入口规则与技能路由表
+alwaysApply: true
+---
+
+${START}
+${body}
+${END}
+`;
+}
+
 function install(opts) {
   const dest = destOf(opts);
   const prev = readManifest(dest);
@@ -133,6 +158,23 @@ function install(opts) {
   } else if (opts.target === "codex" || opts.target === "agents") {
     console.log("提示：在项目里运行 `livepowers install --target codex --project`，可把入口说明合并进项目的 AGENTS.md。");
   }
+
+  if (withCursorRule(opts)) {
+    const rulesDir = path.join(opts.project, ".cursor", "rules");
+    const file = path.join(rulesDir, "livepowers.mdc");
+    if (!isManagedCursorRule(file)) {
+      console.log(`${tag}跳过 ${file}（保留未标记的用户规则）`);
+    } else {
+      console.log(`${tag}生成 ${file}（Cursor 入口规则）`);
+      if (!opts.dryRun) {
+        fs.mkdirSync(rulesDir, { recursive: true });
+        fs.writeFileSync(file, cursorMdcContent());
+      }
+    }
+  } else if (opts.target === "cursor") {
+    console.log("提示：在项目里运行 `livepowers install --target cursor --project`，可在项目的 .cursor/rules/ 生成 livepowers.mdc 入口规则。");
+  }
+
   if (opts.target === "claude") {
     console.log("提示：想在会话启动时自动注入入口技能，推荐用插件方式安装：\n  /plugin marketplace add zhanglunet/livepowers\n  /plugin install livepowers@livepowers-marketplace");
   }
@@ -162,6 +204,15 @@ function uninstall(opts) {
         if (rest) fs.writeFileSync(file, rest + "\n");
         else fs.rmSync(file);
       }
+    }
+  }
+  if (withCursorRule(opts)) {
+    const file = path.join(opts.project, ".cursor", "rules", "livepowers.mdc");
+    if (fs.existsSync(file) && !isManagedCursorRule(file)) {
+      console.log(`${tag}跳过 ${file}（保留未标记的用户规则）`);
+    } else if (fs.existsSync(file)) {
+      console.log(`${tag}删除 ${file}（Cursor 入口规则）`);
+      if (!opts.dryRun) fs.rmSync(file, { force: true });
     }
   }
 }

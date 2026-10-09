@@ -519,6 +519,8 @@ ok
 <span class="k">npx livepowers install</span>
 <span class="c"># 其他客户端：--target codex | cursor | agents</span>
 <span class="k">npx livepowers install</span> --target cursor
+<span class="c"># 项目级安装：生成 Cursor 入口规则</span>
+<span class="k">npx livepowers install</span> --target cursor --project
 <span class="c"># 装到当前项目；codex 会同时合并 AGENTS.md 入口说明</span>
 <span class="k">npx livepowers install</span> --target codex --project
 <span class="c"># 全局安装后可直接用 lp 命令（需要 Python 3.9+）</span>
@@ -543,6 +545,8 @@ cp -r livepowers/skills/* your-repo/.claude/skills/</pre></div>
 <span class="c"># 或作为插件：.codex-plugin/plugin.json</span>
 <span class="c"># Cursor：个人技能目录 ~/.cursor/skills</span>
 <span class="k">npx livepowers install</span> --target cursor
+<span class="c"># 项目级安装：生成 Cursor 入口规则</span>
+<span class="k">npx livepowers install</span> --target cursor --project
 <span class="c"># 或作为插件：.cursor-plugin/plugin.json + hooks/hooks-cursor.json</span></pre></div>
     <div id="i4" class="pane"><pre><span class="c"># 每个技能单独打包为 zip，在设置的技能页逐个上传</span>
 bash livepowers/scripts/package-skills.sh
@@ -599,13 +603,13 @@ ls livepowers/dist/skills/</pre></div>
     <tr><td>Palantir AIP / Ontology</td><td>商业企业平台</td><td>Agent + Ontology 公式；行动审批审计</td><td>开源、零依赖、可装进任意 Agent；缺本体运行时</td></tr>
     <tr><td>Devin Playbooks</td><td>可复用流程 prompt</td><td>Playbook ≈ 工具卡 + 剧本</td><td>固化物是代码而非 prompt；缺从会话自动生成</td></tr>
     <tr><td>Voyager 式自增长技能库</td><td>自动蒸馏技能</td><td>探索留证据 → 固化</td><td>独有 n*、生成者 ≠ 采纳人、去固化；缺 hook 自动采集</td></tr>
-    <tr><td>skills.sh · Cursor rules</td><td>分发渠道</td><td>npx skills 与 livepowers 对应这些渠道</td><td>支持 skills.sh 安装全部技能；Cursor 入口规则待对应功能合并</td></tr>
+    <tr><td>skills.sh · Cursor rules</td><td>分发渠道</td><td>npx skills 与 livepowers 对应这些渠道</td><td>支持 skills.sh 安装全部技能；Cursor 加 --project 支持生成 .mdc</td></tr>
   </tbody>
 </table>
 
 <h2 id="faq">FAQ</h2>
 <details><summary>和 Superpowers 能同时装吗？会打架吗？</summary><p>能，而且建议同装。Livepowers 决定"做什么、要不要固化、算不算完成"，Superpowers 决定"固化代码怎么写好"。两者的入口技能都在会话启动时注入，互不覆盖；固化流水线里 Livepowers 挑候选并验收，Superpowers 的 brainstorming → writing-plans → TDD 负责实现。</p></details>
-<details><summary>不用 Claude Code 能用吗？</summary><p>能。<code>npx livepowers install --target cursor | codex | agents</code> 装到对应客户端的技能目录；任何支持 Agent Skills 标准的客户端都能读 <code>skills/*/SKILL.md</code>。区别是只有 Claude Code 插件自带 SessionStart 钩子自动注入入口技能，其他客户端靠技能描述触发，Codex 可以把入口说明合并进项目的 AGENTS.md（安装器会做）。</p></details>
+<details><summary>不用 Claude Code 能用吗？</summary><p>能。<code>npx livepowers install --target cursor | codex | agents</code> 装到对应客户端的技能目录；任何支持 Agent Skills 标准的客户端都能读 <code>skills/*/SKILL.md</code>。Claude Code 插件自带 SessionStart 钩子自动注入入口技能；Cursor 加 <code>--project</code> 会在 <code>.cursor/rules/livepowers.mdc</code> 生成注入规则；Codex 可以把入口说明合并进项目的 AGENTS.md（安装器会做）。</p></details>
 <details><summary><code>lp</code> 命令在哪里？</summary><p><code>npm i -g livepowers</code> 后直接用（需要 Python 3.9+）；Claude Code 插件里是 <code>python3 ${CLAUDE_PLUGIN_ROOT}/scripts/lp.py</code>，钩子会告诉 Agent 路径；仅复制技能的用户给仓库脚本起个别名。<code>lp --help</code> 列出全部子命令。</p></details>
 <details><summary>数据存在哪？要不要进 git？</summary><p>全部在项目的 <code>.livepowers/</code> 下（证据、注册表、看板、台账、金丝雀、晨报、夜间产物），建议纳入 git——它就是产品"变熟练"的记录。本仓库自己的 .gitignore 忽略它只是因为仓库不是业务项目，不要照抄。</p></details>
 <details><summary>必须先有本体才能开始吗？</summary><p>不必。用 <code>env-scan-ontology</code> 扫出的草稿本体（版本 0.1.0-draft）就能走通第一个任务，规格里引用草稿对象名，等业务确认后升版。但铁律 4 不变：缺对象、缺口径时提本体变更，不要用脚本掩盖。</p></details>
