@@ -1,0 +1,20 @@
+{
+  "surface": "livepowers-surface/1",
+  "id": "pipeline-by-region",
+  "title": "各地区在途商机金额",
+  "tier": "fixed",
+  "intent": "pipeline by region",
+  "data": {
+    "pipeline": {
+      "source": {"type": "view", "name": "v_pipeline_by_region"},
+      "query": "SELECT region, amount, n FROM v_pipeline_by_region ORDER BY region",
+      "params": {}
+    }
+  },
+  "components": [
+    {"id": "total", "type": "kpi", "data": "pipeline", "value": "amount", "label": "在途金额合计"},
+    {"id": "chart", "type": "bar", "data": "pipeline", "x": "region", "y": "amount", "label": "按地区"},
+    {"id": "detail", "type": "table", "data": "pipeline", "columns": ["region", "amount", "n"]}
+  ],
+  "provenance": {"ontology_version": "0.2.0-draft", "generated_by": "agent-a", "accepted_by": "reviewer-b"}
+}

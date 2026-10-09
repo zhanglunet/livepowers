@@ -1,0 +1,41 @@
+{
+  "surface": "livepowers-surface/1",
+  "id": "followup-by-month",
+  "title": "每月跟进商机金额（次抛）",
+  "tier": "ephemeral",
+  "intent": "每月跟进商机金额 followup amount by month",
+  "data": {
+    "monthly": {
+      "source": {
+        "type": "table",
+        "name": "opportunities"
+      },
+      "query": "SELECT substr(last_followup_at, 1, 7) AS month, SUM(amount) AS amount, COUNT(*) AS n FROM opportunities GROUP BY month ORDER BY month",
+      "params": {}
+    }
+  },
+  "components": [
+    {
+      "id": "trend",
+      "type": "line",
+      "data": "monthly",
+      "x": "month",
+      "y": "amount",
+      "label": "按最近跟进月份"
+    },
+    {
+      "id": "detail",
+      "type": "table",
+      "data": "monthly",
+      "columns": [
+        "month",
+        "amount",
+        "n"
+      ]
+    }
+  ],
+  "provenance": {
+    "ontology_version": "0.1.0-draft",
+    "generated_by": "agent-a"
+  }
+}
