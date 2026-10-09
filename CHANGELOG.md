@@ -6,6 +6,7 @@
 
 ### 新增
 
+- **在线演示接入模型的通道（不绑定具体模型）**：`functions/api/agent.js`（Cloudflare Pages Function）调用任何兼容 OpenAI Chat Completions 的接口，由环境变量配置；限流用 D1 单条 upsert 原子计数（未绑定或计数出错时默认拒绝）。模型只输出展示面 JSON，页面按 `web/surface-rules.js`（与 `lp surface validate` 同一套规则，外加禁止递归查询、`SELECT *`、敏感字段，组件字段类型检查）校验后才执行，执行后再检查结果列不含敏感字段。未配置时退回预置展示面；预置匹配改为覆盖度 ≥ 60%，不再答非所问。配置方法见 `examples/living_app/README.md`。
 - **活软件生长面**（#21，PRD 见 `docs/prd-living-surface.md`）：
   - 展示面描述 `templates/surface.json`（结构与数据分离，对齐 A2UI 思路，不传可执行代码）；组件 kpi / table / bar / line / filter。
   - `lp surface validate`：格式、组件、数据引用在本体内、只读单语句查询、无可执行代码、不内嵌结果数据、不引用写操作能力。
