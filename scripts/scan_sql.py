@@ -81,6 +81,7 @@ def run_query(dsn_info, sql, params=None):
             with psycopg.connect(
                 host=dsn_info["host"], port=dsn_info["port"], dbname=dsn_info["database"],
                 user=dsn_info["user"], password=dsn_info["password"],
+                options="-c default_transaction_read_only=on",
             ) as conn:
                 with conn.cursor() as cur:
                     cur.execute(sql)
@@ -95,6 +96,7 @@ def run_query(dsn_info, sql, params=None):
             with psycopg2.connect(
                 host=dsn_info["host"], port=dsn_info["port"], dbname=dsn_info["database"],
                 user=dsn_info["user"], password=dsn_info["password"],
+                options="-c default_transaction_read_only=on",
             ) as conn:
                 with conn.cursor() as cur:
                     cur.execute(sql)
@@ -111,7 +113,8 @@ def run_query(dsn_info, sql, params=None):
             env = dict(os.environ)
             env["MYSQL_PWD"] = dsn_info["password"]
             cmd = ["mysql", "--connect-timeout=10", "-h", dsn_info["host"], "-P", str(dsn_info["port"]),
-                   "-u", dsn_info["user"], "-D", dsn_info["database"], "-B", "-e", sql]
+                   "-u", dsn_info["user"], "-D", dsn_info["database"], "-B", "-e",
+                   "START TRANSACTION READ ONLY; " + sql + "; ROLLBACK;"]
             res = subprocess.run(cmd, env=env, capture_output=True, text=True)
             if res.returncode != 0:
                 raise RuntimeError(f"mysql 执行失败: {res.stderr.strip()}")
@@ -127,6 +130,7 @@ def run_query(dsn_info, sql, params=None):
                 user=dsn_info["user"], password=dsn_info["password"],
             )
             with conn.cursor() as cur:
+                cur.execute("START TRANSACTION READ ONLY")
                 cur.execute(sql)
                 cols = [d[0] for d in cur.description] if cur.description else []
                 rows = cur.fetchall()
@@ -134,22 +138,6 @@ def run_query(dsn_info, sql, params=None):
             return cols, rows
         except ImportError:
             pass
-
-        if shutil.which("mysql"):
-            cmd = [
-                "mysql", "-h", dsn_info["host"], "-P", str(dsn_info["port"]),
-                "-u", dsn_info["user"], f"-p{dsn_info['password']}" if dsn_info["password"] else "-p",
-                "-D", dsn_info["database"], "-B", "-e", sql
-            ]
-            res = subprocess.run(cmd, capture_output=True, text=True)
-            if res.returncode != 0:
-                raise RuntimeError(f"mysql 执行失败: {res.stderr.strip()}")
-            lines = [l for l in res.stdout.strip().splitlines() if l]
-            if not lines:
-                return [], []
-            cols = lines[0].split("\t")
-            rows = [line.split("\t") for line in lines[1:]]
-            return cols, rows
 
         raise RuntimeError("未找到 MySQL 客户端驱动或 mysql 命令行工具（请安装 mysql 客户端或 pymysql）")
 
@@ -200,14 +188,19 @@ def scan(dsn, sample=20, query_executor=run_query):
         ORDER BY c.table_name, c.ordinal_position;
         """
         fks_sql = """
-        SELECT kcu.table_name, kcu.column_name, ccu.table_name AS foreign_table_name, ccu.column_name AS foreign_column_name
-        FROM information_schema.table_constraints tc
+        SELECT kcu.table_name, kcu.column_name, kcu2.table_name AS foreign_table_name, kcu2.column_name AS foreign_column_name
+        FROM information_schema.referential_constraints rc
         JOIN information_schema.key_column_usage kcu
-          ON tc.constraint_name = kcu.constraint_name AND tc.table_schema = kcu.table_schema
-        JOIN information_schema.constraint_column_usage ccu
-          ON ccu.constraint_name = kcu.constraint_name AND ccu.constraint_schema = kcu.constraint_schema
-         AND ccu.ordinal_position = kcu.position_in_unique_constraint
-        WHERE tc.constraint_type = 'FOREIGN KEY' AND tc.table_schema = 'public';
+          ON kcu.constraint_catalog = rc.constraint_catalog
+         AND kcu.constraint_schema = rc.constraint_schema
+         AND kcu.constraint_name = rc.constraint_name
+        JOIN information_schema.key_column_usage kcu2
+          ON kcu2.constraint_catalog = rc.unique_constraint_catalog
+         AND kcu2.constraint_schema = rc.unique_constraint_schema
+         AND kcu2.constraint_name = rc.unique_constraint_name
+         AND kcu2.ordinal_position = kcu.position_in_unique_constraint
+        WHERE kcu.table_schema = 'public'
+        ORDER BY kcu.table_name, kcu.constraint_name, kcu.ordinal_position;
         """
     else:
         cols_sql = f"""

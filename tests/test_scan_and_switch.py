@@ -34,6 +34,8 @@ class TestScan(Workdir):
             self.assertFalse(any(arg == '-p' or arg.startswith('-p') for arg in cmd))
             self.assertNotIn('secret', cmd)
             self.assertEqual(kwargs['env']['MYSQL_PWD'], 'secret')
+            self.assertIn('START TRANSACTION READ ONLY', cmd[-1])
+            self.assertTrue(cmd[-1].endswith('ROLLBACK;'))
 
             calls.clear()
             info = scan_sql.parse_dsn('mysql://user@localhost/db')
@@ -58,17 +60,21 @@ class TestScan(Workdir):
                     ['parents', 'a', 'integer', 'NO', 1], ['parents', 'b', 'integer', 'NO', 1],
                     ['children', 'a', 'integer', 'NO', 0], ['children', 'b', 'integer', 'NO', 0],
                 ]
-            if 'information_schema.constraint_column_usage' in clean:
+            if 'information_schema.referential_constraints' in clean:
                 observed_fk_sql.append(clean)
                 # Simulate the rows after ordinal pairing; the old unconstrained join produces 4.
-                return [], [['children', 'a', 'parents', 'b'], ['children', 'b', 'parents', 'a']]
+                return [], [['children', 'a', 'parents', 'a'], ['children', 'b', 'parents', 'b']]
             if 'count(*)' in clean:
                 return [], [['0']]
             return [], []
         fp = scan_sql.scan('postgres://user@localhost/db', query_executor=executor)
-        self.assertEqual(fp['tables']['children']['fks'], [['a', 'parents', 'b'], ['b', 'parents', 'a']])
+        self.assertEqual(fp['tables']['children']['fks'], [['a', 'parents', 'a'], ['b', 'parents', 'b']])
         self.assertIn('position_in_unique_constraint', observed_fk_sql[0])
-        self.assertIn('ordinal_position', observed_fk_sql[0])
+        self.assertIn('kcu2.ordinal_position = kcu.position_in_unique_constraint', observed_fk_sql[0])
+        self.assertNotIn('constraint_column_usage', observed_fk_sql[0])
+        for column in ('catalog', 'schema', 'name'):
+            self.assertIn(f'kcu.constraint_{column} = rc.constraint_{column}', observed_fk_sql[0])
+            self.assertIn(f'kcu2.constraint_{column} = rc.unique_constraint_{column}', observed_fk_sql[0])
 
     def test_draft_fingerprint_and_drift(self):
         db = os.path.join(self.dir, "d.sqlite")
