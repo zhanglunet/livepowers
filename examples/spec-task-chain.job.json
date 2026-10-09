@@ -1,0 +1,30 @@
+{
+  "model_horizon_minutes": {"medium": 60},
+  "jobs": [
+    {
+      "job_id": "contract-fields-001",
+      "spec": "examples/spec-task-chain.spec.md",
+      "spec_task": "T001",
+      "tenant": "demo",
+      "stage_id": "define-fields",
+      "dependency": [],
+      "priority": 2,
+      "earliest_start": "20:00",
+      "deadline": "08:00",
+      "model_capability": "medium",
+      "quality_floor": "all_fields_have_source=true",
+      "expected_minutes": 30,
+      "resources": {"cpu": 2, "expected_tokens": 20000},
+      "max_cost": 5,
+      "retry_limit": 1,
+      "stop_condition": "one failed validation",
+      "checkpoint": "artifacts/contract-fields-001/",
+      "preemptible": true,
+      "resume_policy": "from_checkpoint",
+      "data_classification": "internal",
+      "allowed_location": "on-prem",
+      "handoff": {"actual_end_state": "artifacts/contract-fields-001/fields.json", "checker": "schema-checker"},
+      "acceptance": "field schema validates and each field has a source citation"
+    }
+  ]
+}

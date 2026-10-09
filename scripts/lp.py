@@ -648,18 +648,61 @@ def find_task(db, tid):
     die(f"未找到任务 {tid}")
 
 
+def spec_task_ids(path):
+    """Read declarations only inside the Markdown task-list section."""
+    with open(path, encoding="utf-8") as f:
+        content = f.read()
+    ids = set()
+    active = False
+    level = 0
+    fenced = False
+    for line in content.splitlines():
+        if re.match(r"^\s*(```|~~~)", line):
+            fenced = not fenced
+            continue
+        if fenced:
+            continue
+        heading = re.match(r"^(#{1,6})\s+(.+)", line)
+        if heading:
+            if active and len(heading[1]) <= level:
+                active = False
+            if heading[2].strip().startswith("任务清单"):
+                active = True
+                level = len(heading[1])
+            continue
+        match = re.match(r"^\s*-\s+(T\d+)\b", line) if active else None
+        if match:
+            if match[1] in ids:
+                raise ValueError(f"任务 ID 重复声明：{match[1]}")
+            ids.add(match[1])
+    return ids
+
+
 def cmd_task_new(a):
     db = load_tasks()
     tid = a.id or "t_" + uuid.uuid4().hex[:8]
     if any(t["id"] == tid for t in db["tasks"]):
         die(f"任务 {tid} 已存在")
+    spec_val = getattr(a, "spec", "") or ""
+    spec_task_val = getattr(a, "spec_task", "") or ""
+    if spec_task_val and not spec_val:
+        die("指定了 spec_task 但未指定 spec")
+    if spec_val:
+        try:
+            ids = spec_task_ids(spec_val)
+            if spec_task_val and spec_task_val not in ids:
+                die(f"规格文件中未找到任务 ID：{spec_task_val}")
+        except (OSError, ValueError) as e:
+            die(f"规格文件校验失败：{e}")
     t = {"id": tid, "title": a.title, "intent": canon(a.intent), "level": a.level, "owner": a.owner,
          "contract_version": a.contract_version, "max_loops": a.max_loops, "budget": a.budget,
+         "spec": spec_val, "spec_task": spec_task_val,
          "loops": 0, "spent": 0.0, "state": "clarify", "executor": None,
          "history": [{"ts": now(), "to": "clarify", "by": a.owner or "?", "reason": "created"}]}
     db["tasks"].append(t)
     jsave(TASKS, db)
     print(tid)
+
 
 
 def cmd_task_move(a):
@@ -936,6 +979,26 @@ def cmd_job_validate(a):
         ho = j.get("handoff") or {}
         if "handoff" in j and not (isinstance(ho, dict) and ho.get("actual_end_state") and ho.get("checker")):
             errs.append("handoff 须包含 actual_end_state（前段实际终态的位置）与 checker（独立完成度检查者）")
+        spec_file = j.get("spec")
+        spec_task_id = j.get("spec_task")
+        if spec_task_id and not spec_file:
+            errs.append("指定了 spec_task 但未指定 spec 规格文件路径")
+        elif spec_file:
+            # 相对路径以作业文件所在目录为基准，若不存在则尝试当前工作目录
+            base_dir = os.path.dirname(os.path.abspath(a.file))
+            target_path = spec_file if os.path.isabs(spec_file) else os.path.join(base_dir, spec_file)
+            if not os.path.isfile(target_path):
+                alt = os.path.abspath(spec_file)
+                if os.path.isfile(alt):
+                    target_path = alt
+            if not os.path.isfile(target_path):
+                errs.append(f"引用的规格文件不存在：{spec_file}")
+            elif spec_task_id:
+                try:
+                    if spec_task_id not in spec_task_ids(target_path):
+                        errs.append(f"规格文件 {spec_file} 中未找到任务 ID：{spec_task_id}")
+                except (OSError, ValueError) as e:
+                    errs.append(f"读取规格文件失败：{e}")
         if errs:
             bad += 1
             print(f"✗ {j.get('job_id', '?')}: " + "；".join(errs))
@@ -1865,6 +1928,8 @@ def main(argv=None):
     tn.add_argument("--contract-version", default="", help="契约版本")
     tn.add_argument("--max-loops", type=int, default=5, help="最大探索轮次（止损）")
     tn.add_argument("--budget", type=float, default=0, help="探索预算（0 为不限）")
+    tn.add_argument("--spec", default="", help="关联的规格文件路径（specs/<feature>.md）")
+    tn.add_argument("--spec-task", default="", help="关联的规格任务 ID（如 T001）")
     tn.set_defaults(fn=cmd_task_new)
     tm = tk.add_parser("move", help="迁移状态：" + " → ".join(STATE_CN[x] for x in STATES[:6]) + "；任何状态可 → 异常接管")
     tm.add_argument("id")
