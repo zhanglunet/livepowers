@@ -20,6 +20,10 @@
   - 参考宿主 `examples/living_app/`（零依赖：`http.server` + 原生 JS）：对话式页面，智能体回答以 A2UI 展示面嵌在对话里，「申请固化」是 A2UI Button 事件，「模拟生长」运行 `grow.sh`；walkthrough 增加活软件一段。
   - 网站新增在线演示页 `/demo/`（`docs/demo/index.html`，由 `examples/living_app/build_site.py` 生成）：对话式页面，浏览器内 SQLite（sql.js，带 SRI 校验）跑真实查询，演示次抛 → 申请固化 → 生长 → 命中固定页。
 
+### 修复
+
+- `fde-delivery` 引用的 `docs/paradigm.md` 在 npm / ZIP 安装后不存在（#6）：五类底座资产细项、节奏建议与警示信号移到随技能安装的 `skills/fde-delivery/cadence.md`；新增测试，技能目录内的文件不得引用 `docs/`，引用的同目录附属文件必须存在。
+
 ## [1.4.0] - 2026-10-07
 
 ### 新增

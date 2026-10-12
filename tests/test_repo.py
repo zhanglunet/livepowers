@@ -65,6 +65,23 @@ class TestSkills(unittest.TestCase):
                 if ref not in allow:
                     self.assertIn(ref, self.names, f"{n} 引用了不存在的技能 {ref}")
 
+    def test_skill_references_survive_install(self):
+        # npm / ZIP 安装只复制技能目录：不能引用 docs/，引用的同目录附属文件必须存在
+        for n in self.names:
+            d = os.path.join(SKILLS, n)
+            for fn in os.listdir(d):
+                if not fn.endswith(".md"):
+                    continue
+                text = read(os.path.join(d, fn))
+                self.assertFalse("docs/" in text, f"{n}/{fn} 引用了安装后不存在的 docs/ 文件")
+                self.assertFalse("../" in text, f"{n}/{fn} 引用了技能目录以外的文件")
+                refs = re.findall(r"`([\w-]+\.md)`", text)
+                refs += [t.split("#")[0] for t in re.findall(r"\]\(([^)\s]+)\)", text)
+                         if not re.match(r"[a-z]+:|#", t)]
+                for ref in refs:
+                    if ref and ref != "SKILL.md":
+                        self.assertTrue(os.path.exists(os.path.join(d, ref)), f"{n}/{fn} 引用了不存在的 {ref}")
+
     def test_triggers_coverage_and_ranking(self):
         sys.path.insert(0, os.path.join(REPO, "scripts"))
         import lp
