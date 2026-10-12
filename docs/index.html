@@ -90,7 +90,7 @@ footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);font-si
     <p class="lead">业务智能体每次都从零推理，同一件事做一千次就付一千次的钱，结果还是概率性的；用 AI 更快写出的软件，业务含义仍然写死在代码里，交付即冻结。Livepowers 是一套装进 Claude Code、Codex、Cursor 的工作方法，让智能体<b>先复用已固化的能力，没有才去探索并留下证据，把成功路径固化成经测试的代码，一切成果过独立验收</b>——越用越熟练。</p>
     <div class="formula">Agentic AI = Agent + Ontology + Harness</div>
     <div class="install"><pre><span class="k">npx livepowers install</span>   <span class="c"># Claude Code · Cursor · Codex</span></pre><a class="btn" href="#demo">五分钟 demo</a><a class="btn ghost" href="/demo/">在线演示：活软件生长</a><a class="btn ghost" href="#install">其他安装方式</a></div>
-    <div class="badges"><span class="badge">全部技能</span><span class="badge">4 个零依赖脚本</span><span class="badge">8 个模板</span><span class="badge">3 个命令</span><span class="badge">SessionStart 自动注入</span><span class="badge">钩子自动采集证据</span><span class="badge">npx 一键安装</span><span class="badge">12 个场景</span><span class="badge">47 项自动化测试</span><span class="badge">结构借鉴 obra/superpowers</span></div>
+    <div class="badges"><span class="badge">全部技能</span><span class="badge">6 个零依赖脚本</span><span class="badge">9 个模板</span><span class="badge">3 个命令</span><span class="badge">SessionStart 自动注入</span><span class="badge">钩子自动采集证据</span><span class="badge">npx 一键安装</span><span class="badge">12 个场景</span><span class="badge">87 项自动化测试</span><span class="badge">结构借鉴 obra/superpowers</span></div>
     <div class="badges"><a class="badge" href="https://github.com/zhanglunet/livepowers">github.com/zhanglunet/livepowers</a><a class="badge" href="https://www.npmjs.com/package/livepowers">npm: livepowers</a><a class="badge" href="#feedback">提反馈</a></div>
   </div>
   <figure>
@@ -314,6 +314,7 @@ footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);font-si
   <div class="card"><span class="tag t-safe">验收 · NEW</span><h3>acceptance-gates <small>四道门禁</small></h3><p>四道门依次是：形式检查、契约测试、独立对抗审查、人工采纳。以回执为准，不认声明；派工、执行、验证、采纳、运营五种职责分开。</p><div class="when"><b>何时：</b>任何成果要进生产或要说"完成"时。</div></div>
   <div class="card"><span class="tag t-safe">安全</span><h3>oltp-action-safety <small>写操作门禁</small></h3><p>先仿真后执行；八项检查各配对应测试；审批后重新校验；超时先查状态再决定是否重试；写清存量系统能保证到什么程度。</p><div class="when"><b>何时：</b>任何写生产状态的动作。</div></div>
   <div class="card"><span class="tag t-safe">接管 · NEW</span><h3>takeover-handling <small>异常接管</small></h3><p>止损后先冻结、交付诊断包；七类主因只选一个（规格不清 / 本体缺口 / 环境漂移 / 能力失效 / 预算太低 / 工具故障 / 不该做）；换人重开、重定规格或关闭，接管成本入账。</p><div class="when"><b>何时：</b>任务被止损、Agent 反复失败、人要接手时。</div></div>
+  <div class="card"><span class="tag t-s1">活软件 · NEW</span><h3>living-surface <small>生长面</small></h3><p>活软件同时有三类需求：固定页、当场的次抛分析、从次抛长出来的新固化结构。展示面只描述组件和只读查询，数字由数据库算；校验不过不展示，次抛只记元数据；验收、孪生演练、带回滚的部署之后才变成固定页。</p><div class="when"><b>何时：</b>业务应用里要一次性分析展示，或想把它长成固定页时。</div></div>
   <div class="card"><span class="tag t-night">夜间</span><h3>night-loop-planning <small>长程任务</small></h3><p>强模型规划、便宜模型执行；按模型能稳定运行的时长切段；交接时写实际终态并指定独立检查者；用 DAG 拆任务、设止损和熔断，统一填作业契约。</p><div class="when"><b>何时：</b>跨小时或跨夜的任务。</div></div>
   <div class="card"><span class="tag t-night">夜间</span><h3>nightly-crystallization-review <small>固化评审</small></h3><p>看 System 2 占比的变化趋势，挑出固化候选，复核已有能力（失败、闲置、久未复验、换了模型），跑金丝雀评测，生成晨报。</p><div class="when"><b>何时：</b>收工或夜间作业开始时。</div></div>
   <div class="card"><span class="tag t-safe">协作</span><h3>auditable-agent-comms <small>可审计协作</small></h3><p>按信任域分级；协调消息和大块内容分两条线；所有 Agent 共用一个任务标识和契约版本；哈希链防篡改，支持回放和审计。</p><div class="when"><b>何时：</b>多个 Agent 互相通信时。</div></div>
@@ -563,12 +564,14 @@ ls livepowers/dist/skills/</pre></div>
 │   ├── lp.py                 证据 · 路由 · 评分 · 看板 · 台账 · 资产 · 晨报
 │   ├── agent_switch.py       交换机 · 回放 · 校验 · 审计
 │   ├── scan_sqlite.py        扫描 · 指纹 · 漂移
+│   ├── scan_sql.py           PostgreSQL / MySQL 扫描（输出同构）
+│   ├── eval_triggers.py      技能触发率评测
 │   └── package-skills.sh     打包
 ├── templates/                ontology · ontology-delta · action · spec
 │                             tool-card · capability-package
-│                             digital-role · job-contract
+│                             digital-role · job-contract · surface
 ├── examples/walkthrough.sh   五分钟完整体验
-├── tests/                    47 项测试（CI）
+├── tests/                    87 项测试（CI）
 ├── docs/                     范式 · 场景 · 对比 · 开发日志 · 测试 · 本站
 ├── package.json  AGENTS.md  CHANGELOG.md  LICENSE (MIT)
 └── README.md</div>
