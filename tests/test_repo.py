@@ -73,9 +73,13 @@ class TestSkills(unittest.TestCase):
                 if not fn.endswith(".md"):
                     continue
                 text = read(os.path.join(d, fn))
-                self.assertFalse(re.search(r"`docs/", text), f"{n}/{fn} 引用了安装后不存在的 docs/ 文件")
-                for ref in re.findall(r"`([\w-]+\.md)`", text):
-                    if ref != "SKILL.md":
+                self.assertFalse("docs/" in text, f"{n}/{fn} 引用了安装后不存在的 docs/ 文件")
+                self.assertFalse("../" in text, f"{n}/{fn} 引用了技能目录以外的文件")
+                refs = re.findall(r"`([\w-]+\.md)`", text)
+                refs += [t.split("#")[0] for t in re.findall(r"\]\(([^)\s]+)\)", text)
+                         if not re.match(r"[a-z]+:|#", t)]
+                for ref in refs:
+                    if ref and ref != "SKILL.md":
                         self.assertTrue(os.path.exists(os.path.join(d, ref)), f"{n}/{fn} 引用了不存在的 {ref}")
 
     def test_triggers_coverage_and_ranking(self):
