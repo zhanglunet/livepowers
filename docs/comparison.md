@@ -88,7 +88,7 @@ Superpowers 的 `requesting-code-review` 评审子 Agent 充当 `acceptance-gate
 
 - ~~hook 自动采集证据，给能力加随成功 / 失败升降的置信度（借 continuous-learning v2）。~~ v1.3.0 已做。
 - 技能触发率自动评测，替代纯手工压力情境（借 Anthropic skill-creator / superpowers-evals）。
-- 意图同义词表 v1.4.0 已支持；语义探测（`--semantic`）作为 MAYBE HIT 候选提示，概念组可在 `.livepowers/concepts.json` 审阅调整，不会自动 HIT。严格路由与 `intents suggest` 使用保守匹配，避免概念近似直接扩展为别名或写操作。
+- 意图同义词表 v1.4.0 已支持；v1.5.0 起语义探测（`--semantic`）作为 MAYBE HIT 候选提示，概念组可在 `.livepowers/concepts.json` 审阅调整，不会自动 HIT。严格路由与 `intents suggest` 使用保守匹配，避免概念近似直接扩展为别名或写操作。
 - 规格产物链与稳定任务 ID，让夜间 DAG 直接引用（借 spec-kit）。
 - 工具卡补后置条件与禁止动作字段（借 Devin Playbook）。
 - 支持 skills.sh 安装；Cursor 加 `--project` 支持生成 `.mdc` 入口规则。

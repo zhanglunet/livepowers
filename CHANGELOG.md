@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-10-12
+
 ### 新增
 
 - **在线演示接入模型的通道（不绑定具体模型）**：`functions/api/agent.js`（Cloudflare Pages Function）调用任何兼容 OpenAI Chat Completions 的接口，由环境变量配置；限流用 D1 单条 upsert 原子计数（未绑定或计数出错时默认拒绝）。模型只输出展示面 JSON，页面按 `web/surface-rules.js`（与 `lp surface validate` 同一套规则，外加禁止递归查询、`SELECT *`、敏感字段，组件字段类型检查）校验后才执行，执行后再检查结果列不含敏感字段。未配置时退回预置展示面；预置匹配改为覆盖度 ≥ 60%，不再答非所问。配置方法见 `examples/living_app/README.md`。
@@ -20,8 +22,23 @@
   - 参考宿主 `examples/living_app/`（零依赖：`http.server` + 原生 JS）：对话式页面，智能体回答以 A2UI 展示面嵌在对话里，「申请固化」是 A2UI Button 事件，「模拟生长」运行 `grow.sh`；walkthrough 增加活软件一段。
   - 网站新增在线演示页 `/demo/`（`docs/demo/index.html`，由 `examples/living_app/build_site.py` 生成）：对话式页面，浏览器内 SQLite（sql.js，带 SRI 校验）跑真实查询，演示次抛 → 申请固化 → 生长 → 命中固定页。
 
+- **零依赖语义匹配**（#19）：`lp registry find --semantic` 在未严格命中时给出 MAYBE HIT 候选（exit 3），概念组存于 `.livepowers/concepts.json` 可审阅；严格路由与 `intents suggest` 不受影响，MAYBE 不会自动当作 HIT。
+- **PostgreSQL / MySQL 扫描**（#15）：`scripts/scan_sql.py --dsn` 只读查询 `information_schema`，输出与 `scan_sqlite.py` 同构的本体草稿与指纹，可跨脚本 `--diff`。
+- **证据自动采集扩展到 Cursor / Codex**（#17）：Cursor 用 `hooks/hooks-cursor.json`；Codex 等无钩子客户端用 `lp hook watch --transcript` 从会话记录补采。
+- **规格产物链与稳定任务 ID**（#14）：规格模板带任务 ID（如 T001），`lp task new --spec --spec-task` 关联规格任务，并校验 ID 存在且不重复；示例见 `examples/spec-task-chain.md`。
+- **技能触发率评测**（#16）：`scripts/eval_triggers.py` 按 `tests/triggers/*.jsonl` 评测触发与混淆，可记录金丝雀并与上次比较；测试要求每个技能至少 3 条正例、2 条反例。
+- **Cursor 项目级入口规则**（#12）：项目级安装生成 `.cursor/rules/livepowers.mdc`，不覆盖用户自己的规则。
+- **工具卡补后置条件与禁止动作**（#11）：`templates/tool-card.md` 与 `agent-harness-for-tools`。
+- **skills.sh 安装**（#18）：文档补充 `npx skills add zhanglunet/livepowers`。
+
+### 变更
+
+- `fde-delivery` 瘦身（#13）：只保留交付流程，验收、台账、角色规格的细则回到对应技能。
+
 ### 修复
 
+- `oltp-action-safety` 的 frontmatter 不是合法 YAML，skills CLI 会漏装（#20）；测试禁止描述里出现 `: ` 与 ` #`。
+- 参考宿主 `grow.sh` 在 macOS 的 bash 上报变量未绑定（#25）。
 - `fde-delivery` 引用的 `docs/paradigm.md` 在 npm / ZIP 安装后不存在（#6）：五类底座资产细项、节奏建议与警示信号移到随技能安装的 `skills/fde-delivery/cadence.md`；新增测试，技能目录内的文件不得引用 `docs/`，引用的同目录附属文件必须存在。
 
 ## [1.4.0] - 2026-10-07
