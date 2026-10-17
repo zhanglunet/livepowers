@@ -1,0 +1,27 @@
+# 本体变更提案（Ontology Delta）
+delta_id: D-0007
+change: add              # add 新增 / modify 修改 / deprecate 废弃
+channel: minor           # minor 小调整（轻量评审）/ major 大调整（完整评审 + 迁移 + 回归）
+state: candidate         # candidate → validated → confirmed → published
+target: OwnershipHistory
+definition: 商机归属变更的历史记录，每次移交一条，含原负责人、新负责人、依据与审批
+source:                  # 来源：制度、接口说明、样例、用户说法（标明是假设还是已确认）
+  - type: policy
+    ref: docs/policies/opportunity-transfer.md#3
+  - type: user_statement
+    ref: "需要能查到谁在什么时候把商机转给了谁"
+    assumption: false
+scope: client            # domain / client / config
+effective_from: 2026-01-01
+recompute_history: false # 历史结果是否需要按新口径重算
+affected_capabilities: [cap_transfer_stale_opportunity]
+validation:
+  evidence: ""           # 用真实记录 / 案例核对的结果
+  conflicts: []
+confirmation:
+  by: ""                 # 有权主体
+  at: ""
+  basis: ""
+publish:
+  ontology_version: ""   # 例如 1.4.0
+  migration: ""

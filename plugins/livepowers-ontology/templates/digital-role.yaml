@@ -1,0 +1,33 @@
+# 数字岗位规格
+role: 合同经办（数字岗位）
+version: 0.1.0
+responsibilities:
+  - 合同录入核验
+  - 到期提醒与续签跟进
+agent_team:
+  conductor: role-conductor
+  members: [intake-agent, check-agent, followup-agent, verifier-agent]
+ontology_scope: [Contract, Customer, Approval, Obligation]
+skills: [contract-intake, renewal-followup]
+tools: [contract.get, contract.validate, approval.submit, notify.send]
+permissions:
+  - {action: contract.validate, limit: none}
+  - {action: approval.submit, limit: "amount < 500000"}
+budget: {tokens_per_task: 200000, minutes_per_task: 20}
+tasks:                    # auto 已固化 / agent 剧本执行+抽检 / handoff Agent 起草人确认 / human 必须人做
+  - {task: 合同字段核验, freq_per_week: 120, owner: auto}
+  - {task: 异常条款识别, freq_per_week: 30, owner: handoff}
+  - {task: 续签沟通草稿, freq_per_week: 25, owner: agent}
+  - {task: 对外承诺与例外审批, freq_per_week: 5, owner: human}
+human_in_the_loop:
+  confirm_before: [approval.submit, notify.send(external)]
+  takeover_when: ["连续失败 2 次", "金额 ≥ 500000", "条款不在本体中"]
+  takeover_by: contract-specialist
+kpi:
+  outcome: {metric: 合同处理周期（天）, baseline: 5.0, target: 2.0}
+  cost_per_accepted_task: true
+  takeover_ratio_max: 0.15
+escalation:
+  - "agent 任务连续 20 次成功且可验证 → 提交固化候选"
+  - "human 任务出现稳定模式 → 评估改为 handoff"
+ratio_tracking: {human: 3, digital: 1}
