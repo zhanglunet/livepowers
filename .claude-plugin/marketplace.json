@@ -1,14 +1,30 @@
 {
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "livepowers-marketplace",
-  "description": "Marketplace for the Livepowers skills library",
-  "owner": {"name": "Livepowers contributors", "url": "https://github.com/zhanglunet"},
+  "description": "Marketplace for the Livepowers skills library: Agent + Ontology + Harness, the Live Product paradigm for business agents.",
+  "owner": {
+    "name": "Livepowers contributors",
+    "url": "https://github.com/zhanglunet"
+  },
   "plugins": [
     {
       "name": "livepowers",
       "description": "Live Product paradigm skills for agents: Agent + Ontology + Harness. System 1 first, explore with evidence, crystallize proven paths into tested capabilities, accept through independent gates; night loops, auditable agent comms, FDE delivery and outcome ledger. 活产品范式技能包。",
       "version": "1.5.0",
       "source": "./",
-      "author": {"name": "Livepowers contributors"}
+      "author": {
+        "name": "Livepowers contributors"
+      },
+      "license": "MIT",
+      "keywords": [
+        "agentic",
+        "ontology",
+        "harness",
+        "live-product",
+        "system1-system2",
+        "crystallization",
+        "skills"
+      ]
     }
   ]
 }
