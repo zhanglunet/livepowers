@@ -1,0 +1,55 @@
+{
+    "$schema": "https://skills.sh/schemas/skills.sh.schema.json",
+    "groupings": [
+        {
+            "description": "Core workflow: System 1 first, explore with evidence, crystallize proven paths into tested capabilities.",
+            "skills": [
+                "system1-first",
+                "explore-with-evidence",
+                "crystallize-to-system1",
+                "ontology-grounded-spec",
+                "using-livepowers"
+            ],
+            "title": "Core"
+        },
+        {
+            "description": "Ontology: environment scan, knowledge evolution, digital role specs and living surfaces.",
+            "skills": [
+                "env-scan-ontology",
+                "ontology-evolution",
+                "digital-role-spec",
+                "living-surface"
+            ],
+            "title": "Ontology"
+        },
+        {
+            "description": "Delivery and safety: acceptance gates, FDE delivery, outcome ledger and auditable agent comms.",
+            "skills": [
+                "acceptance-gates",
+                "fde-delivery",
+                "outcome-ledger",
+                "oltp-action-safety",
+                "auditable-agent-comms",
+                "takeover-handling"
+            ],
+            "title": "Delivery"
+        },
+        {
+            "description": "Night loops: nightly planning and morning crystallization review.",
+            "skills": [
+                "night-loop-planning",
+                "nightly-crystallization-review"
+            ],
+            "title": "Night"
+        },
+        {
+            "description": "Tooling: agent harness for tools and the guide to writing livepowers skills.",
+            "skills": [
+                "agent-harness-for-tools",
+                "writing-livepowers-skills"
+            ],
+            "title": "Tooling"
+        }
+    ],
+    "notGrouped": "bottom"
+}
