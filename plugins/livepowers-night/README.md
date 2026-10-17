@@ -17,3 +17,13 @@
 ```
 
 skill 内容与仓库根 `skills/` 全量入口保持一致（只搬目录，不改内容）。
+
+## 自带运行时资产
+
+`templates/job-contract.json`、`commands/lp-nightly.md`、`commands/lp-morning.md`。
+
+## 依赖与推荐安装
+
+`nightly-crystallization-review` 晨报里的"自动采集待确认"列依赖 `livepowers-core` 的证据钩子（单装本插件无自动采集，需手动 `lp evidence add`）；`/lp-morning` 的验收环节会引用 `livepowers-delivery` 的 `acceptance-gates` / `takeover-handling`（缺失时相关验收步骤需手动执行）。
+
+推荐：`livepowers-night` + `livepowers-core` 一起装。

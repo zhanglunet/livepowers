@@ -101,10 +101,14 @@ npm i -g livepowers                               # 全局安装后可直接用 
 
 ```text
 /plugin marketplace add zhanglunet/livepowers
-/plugin install livepowers@livepowers-marketplace
+/plugin install livepowers-core@livepowers-marketplace
+/plugin install livepowers-ontology@livepowers-marketplace
+/plugin install livepowers-delivery@livepowers-marketplace
+/plugin install livepowers-night@livepowers-marketplace
+/plugin install livepowers-tooling@livepowers-marketplace
 ```
 
-插件自带 `SessionStart` 钩子，自动注入 `using-livepowers`；`PostToolUse` / `Stop` 钩子自动采集证据（命中能力后的每次调用记 S1；探索后忘了记的补一条 `partial` 的 S2，晨报列为待确认；`LP_HOOK_CAPTURE=0` 关闭）；另带三个命令：`/lp-route`、`/lp-nightly`、`/lp-morning`。
+按需单装（各插件 README 有依赖说明，一次装全 5 个最省心）。`livepowers-core` 自带 `SessionStart` 钩子（自动注入 `using-livepowers`）、`PostToolUse` / `Stop` 钩子（自动采集证据：命中能力后的每次调用记 S1；探索后忘了记的补一条 `partial` 的 S2，晨报列为待确认；`LP_HOOK_CAPTURE=0` 关闭）与 `/lp-route` 命令；`livepowers-night` 带 `/lp-nightly`、`/lp-morning` 命令。
 
 **Claude Code（仅技能）**：把 `skills/*` 复制到 `~/.claude/skills/`（个人）或项目的 `.claude/skills/`（团队）。
 

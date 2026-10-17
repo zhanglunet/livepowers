@@ -1,0 +1,28 @@
+{
+  "_doc": "展示面描述（结构与数据分离，对齐 A2UI 的思路：只传数据与组件描述，不传可执行代码）。tier=ephemeral 为次抛，fixed 为固化固定页。data 里的每个数据源必须引用本体中的表 / 视图或已注册的只读能力，并带只读查询；结果数据由宿主按 query 计算后单独下发，不内嵌在这里。校验：lp surface validate <file>",
+  "surface": "livepowers-surface/1",
+  "id": "weekly-revenue-by-region",
+  "title": "各地区周收入",
+  "tier": "ephemeral",
+  "intent": "weekly revenue by region",
+  "data": {
+    "revenue": {
+      "source": {"type": "view", "name": "v_weekly_revenue"},
+      "query": "SELECT region, week, revenue FROM v_weekly_revenue WHERE week >= :since ORDER BY week",
+      "params": {"since": "2026-01-01"}
+    }
+  },
+  "components": [
+    {"id": "total", "type": "kpi", "data": "revenue", "value": "revenue", "label": "收入合计"},
+    {"id": "trend", "type": "line", "data": "revenue", "x": "week", "y": "revenue", "label": "周趋势"},
+    {"id": "by-region", "type": "bar", "data": "revenue", "x": "region", "y": "revenue", "label": "按地区"},
+    {"id": "detail", "type": "table", "data": "revenue", "columns": ["region", "week", "revenue"]},
+    {"id": "region", "type": "filter", "param": "region", "options": ["east", "south"]}
+  ],
+  "provenance": {
+    "ontology_version": "1.3.0",
+    "capability": "",
+    "generated_by": "",
+    "accepted_by": ""
+  }
+}

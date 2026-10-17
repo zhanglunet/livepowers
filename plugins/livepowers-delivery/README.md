@@ -21,3 +21,7 @@
 ```
 
 skill 内容与仓库根 `skills/` 全量入口保持一致（只搬目录，不改内容）。
+
+## 依赖与推荐安装
+
+本插件可独立使用（验收门、现场交付、结果账本），无运行时资产依赖。`livepowers-core` 的路由表会引用 `acceptance-gates`；`livepowers-night` 的 `/lp-morning` 命令验收环节会用到 `acceptance-gates` 与 `takeover-handling`。

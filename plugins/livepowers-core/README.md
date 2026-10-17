@@ -20,3 +20,13 @@
 ```
 
 skill 内容与仓库根 `skills/` 全量入口保持一致（只搬目录，不改内容）。
+
+## 自带运行时资产
+
+`scripts/lp.py`、`templates/`（capability-package.yaml、ontology.yaml、spec.md）、`commands/lp-route.md`、`hooks/`（SessionStart / PostToolUse / Stop），单装即可工作。
+
+## 依赖与推荐安装
+
+`using-livepowers` 的路由表会引用其他插件的 skill：`env-scan-ontology`、`ontology-evolution`（livepowers-ontology），`acceptance-gates`（livepowers-delivery），`night-loop-planning`（livepowers-night）。单装本插件时这些路由不可用。
+
+推荐：`livepowers-core` + `livepowers-ontology` 起步，按需加装 delivery / night / tooling；或一次装全 5 个。
