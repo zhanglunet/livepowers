@@ -1,0 +1,15 @@
+{
+  "name": "livepowers-tooling",
+  "version": "1.5.0",
+  "description": "工具：agent harness 与 skill 编写指南。Tooling: agent harness for tools and the guide to writing livepowers skills.",
+  "author": {
+    "name": "Livepowers contributors"
+  },
+  "license": "MIT",
+  "keywords": [
+    "harness",
+    "skill-authoring",
+    "tooling",
+    "live-product"
+  ]
+}
