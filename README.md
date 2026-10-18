@@ -12,7 +12,7 @@
 > 结构借鉴 [obra/superpowers](https://github.com/obra/superpowers)，两者可以同时安装：
 > Superpowers 负责"固化代码怎么写好"，Livepowers 负责"做什么、要不要固化、算不算完成"。
 
-<!-- GIF demo 位：T3（trend #238）制作中，先占位 -->
+![livepowers 一键安装演示](docs/assets/livepowers-demo.gif)
 
 **Livepowers 是一套给智能体用的工作方法。**它让业务智能体按「活产品（Live Product）」范式工作：在本体划定的业务世界里行动；能复用的直接复用；不能复用的先探索，并留下证据；把成功路径固化成经过测试的能力；所有成果都要过独立验收。用得越多，产品越熟练。
 
