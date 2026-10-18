@@ -118,10 +118,21 @@ npm i -g livepowers                               # 全局安装后可直接用 
 
 其他支持 Agent Skills 标准的客户端：把 `skills/*` 放进客户端的技能目录。
 
-**skills.sh（Vercel 技能市场）**
+**skills.sh（Vercel 技能市场，一键安装）**
 
 ```bash
-npx skills add zhanglunet/livepowers
+npx skills add zhanglunet/livepowers -y        # 一键装到当前项目（无人工干预）
+npx skills add zhanglunet/livepowers --all -g  # 一键装到全局（全部 skill、全部 agent）
+```
+
+注意两点（实测结论，详见 `docs/plans/2026-10-18-npx-install-t1-report.md`）：
+- 不带 `-y` 的裸命令会停在"选择 skill"交互步骤，无 TTY 时直接取消；一键安装必须带 `-y`。
+- `-y` 默认装到项目级 `./.agents/skills`，加 `-g` 才进全局 `~/.agents/skills`。
+
+安装后验证（应看到 19 个 skill）：
+
+```bash
+npx skills list   # 确认 acceptance-gates … writing-livepowers-skills 都在列表中
 ```
 
 支持 20+ 款兼容 Agent Skills 标准的客户端。注意：skills.sh 仅安装技能定义，不带 `SessionStart` 钩子与 Python 脚本；如需使用 `lp` 命令行工具（任务看板、证据统计、结果台账等），仍需全局安装 `npm i -g livepowers`（需 Python 3.9+）。
