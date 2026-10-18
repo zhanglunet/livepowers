@@ -17,6 +17,7 @@ TRIGGERS_DIR = os.path.join(REPO, "tests", "triggers")
 SCRIPTS_DIR = os.path.join(REPO, "scripts")
 sys.path.insert(0, SCRIPTS_DIR)
 import lp
+import lp_output  # PRD-046/T3：简洁输出开关
 
 
 def load_skill_descriptions():
@@ -93,23 +94,40 @@ def main():
 
     descs = load_skill_descriptions()
     stats, total_pos, total_hit = run_deterministic_eval(descs)
-
-    print("=" * 70)
-    print("Livepowers 技能触发率评测结果（基于 tests/triggers/*.jsonl）")
-    print("模式: 确定性打分（零依赖，词集/二元组重叠）")
-    print("=" * 70)
-    print(f"{'技能名称':<32} {'正例 Top-2 命中率':<18} {'反例排斥率':<12} {'主要混淆'}")
-    print("-" * 70)
-
-    for s, st in sorted(stats.items()):
-        pos_rate = f"{st['pos_hit']}/{st['pos_total']} ({st['pos_hit']/st['pos_total']:.0%})" if st['pos_total'] else "N/A"
-        neg_rate = f"{st['neg_ok']}/{st['neg_total']} ({st['neg_ok']/st['neg_total']:.0%})" if st['neg_total'] else "N/A"
-        conf = ", ".join(f"{k}({v})" for k, v in st["confused_with"].items()) or "—"
-        print(f"{s:<32} {pos_rate:<18} {neg_rate:<12} {conf}")
-
-    print("=" * 70)
     overall_rate = total_hit / total_pos if total_pos else 0
-    print(f"总计正例: {total_hit}/{total_pos}（总体 Top-2 触发率: {overall_rate:.1%}）")
+
+    if lp_output.is_verbose():
+        print("=" * 70)
+        print("Livepowers 技能触发率评测结果（基于 tests/triggers/*.jsonl）")
+        print("模式: 确定性打分（零依赖，词集/二元组重叠）")
+        print("=" * 70)
+        print(f"{'技能名称':<32} {'正例 Top-2 命中率':<18} {'反例排斥率':<12} {'主要混淆'}")
+        print("-" * 70)
+
+        for s, st in sorted(stats.items()):
+            pos_rate = f"{st['pos_hit']}/{st['pos_total']} ({st['pos_hit']/st['pos_total']:.0%})" if st['pos_total'] else "N/A"
+            neg_rate = f"{st['neg_ok']}/{st['neg_total']} ({st['neg_ok']/st['neg_total']:.0%})" if st['neg_total'] else "N/A"
+            conf = ", ".join(f"{k}({v})" for k, v in st["confused_with"].items()) or "—"
+            print(f"{s:<32} {pos_rate:<18} {neg_rate:<12} {conf}")
+
+        print("=" * 70)
+        print(f"总计正例: {total_hit}/{total_pos}（总体 Top-2 触发率: {overall_rate:.1%}）")
+    else:
+        print(f"总体 Top-2 触发率 {overall_rate:.1%}（{total_hit}/{total_pos}）")
+        conf_list = []
+        for s, st in stats.items():
+            n = sum(st["confused_with"].values())
+            if n:
+                top = ", ".join(f"{k}({v})" for k, v in
+                                sorted(st["confused_with"].items(), key=lambda kv: -kv[1])[:3])
+                conf_list.append((n, s, top))
+        conf_list.sort(key=lambda x: -x[0])
+        if conf_list:
+            print("混淆最严重 Top 5：")
+            for _n, s, top in conf_list[:5]:
+                print(f"- {s}: {top}")
+        print(f"总计正例: {total_hit}/{total_pos}（总体 Top-2 触发率: {overall_rate:.1%}）")
+        print("…明细表格已折叠（LIVEPOWERS_VERBOSE=1 显示全部）")
 
     if args.record_canary:
         canary_file = os.path.join(REPO, ".livepowers", "canary.jsonl")

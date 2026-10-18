@@ -53,6 +53,18 @@
 - 默认：简洁模式开启。
 - 调试/排障场景文档中注明可临时关闭。
 
+> T3 落地（PRD-046/T3）：开关实现为 `scripts/lp_output.py` 的 `is_verbose()`，
+> 供 `scripts/lp.py`、`agent_switch.py`、`scan_sqlite.py`、`scan_sql.py`、
+> `eval_triggers.py` 调用。
+> - 临时恢复全量：`LIVEPOWERS_VERBOSE=1 <原命令>`（调试/排障时用）。
+> - 持久开启：在 `<LIVEPOWERS_HOME>/config.yaml`（默认 `.livepowers/config.yaml`）写 `verbose: true`。
+>   选址理由：仓库惯例是全部状态都放在 `.livepowers/` 下，且 `LIVEPOWERS_HOME`
+>   可整体搬移工作区，配置跟工作区走；解析只认顶层 `verbose:` 一行，保持纯标准库。
+> - 全量输出与改造前逐字节一致（回归基线见 `tests/test_verbose_switch.py`；
+>   存量测试默认跑 `LIVEPOWERS_VERBOSE=1` 锁定该行为）。
+> - 机器消费端（如 `examples/living_app/server.py` 解析 `registry find` 输出）
+>   应固定 `LIVEPOWERS_VERBOSE=1`，不受简洁模式影响。
+
 ## 5. 高风险清单（T2 输入）
 
 以下 skill 的输出可能被下游脚本解析，改造时**机器可读部分不动**，只改人类可读展示：

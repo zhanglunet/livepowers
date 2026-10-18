@@ -28,6 +28,9 @@ from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib import request as urlreq
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import lp_output  # PRD-046/T3：简洁输出开关
+
 TYPES = {"task", "result", "question", "review", "control", "receipt"}
 MAX_BODY = int(os.environ.get("SWITCH_MAX_BODY", "4000"))
 BLOCK_WORDS = [w for w in os.environ.get("SWITCH_BLOCK_WORDS", "").split(",") if w]
@@ -150,19 +153,47 @@ def cmd_replay(a):
     prev_t = None
     with open(a.log, encoding="utf-8") as f:
         lines = f.readlines()
+
+    def render(r):
+        mark = "" if r["policy"]["decision"] == "allow" else f"  ⛔ {r['policy']['reason']}"
+        ref = f"  ↗ {r['ref']}" if r.get("ref") else ""
+        return (f"#{r['seq']:>4} {r['ts'][11:23]} [{r.get('trace_id')}] {r['from']} → {r['to']} "
+                f"({r['type']}): {r['body']}{ref}{mark}")
+
+    if lp_output.is_verbose():
+        for line in lines:
+            if not line.strip():
+                continue
+            r = json.loads(line)
+            if a.trace and r.get("trace_id") != a.trace:
+                continue
+            t = datetime.fromisoformat(r["ts"])
+            if a.speed and prev_t:
+                time.sleep(max(0, (t - prev_t).total_seconds() / a.speed))
+            prev_t = t
+            print(render(r))
+        return
+    recs = []
     for line in lines:
         if not line.strip():
             continue
         r = json.loads(line)
         if a.trace and r.get("trace_id") != a.trace:
             continue
-        t = datetime.fromisoformat(r["ts"])
-        if a.speed and prev_t:
-            time.sleep(max(0, (t - prev_t).total_seconds() / a.speed))
-        prev_t = t
-        mark = "" if r["policy"]["decision"] == "allow" else f"  ⛔ {r['policy']['reason']}"
-        ref = f"  ↗ {r['ref']}" if r.get("ref") else ""
-        print(f"#{r['seq']:>4} {r['ts'][11:23]} [{r.get('trace_id')}] {r['from']} → {r['to']} ({r['type']}): {r['body']}{ref}{mark}")
+        recs.append(r)
+    traces = {r.get("trace_id") for r in recs}
+    print(f"回放 {len(recs)} 条消息，trace {len(traces)} 个")
+    out = [render(r) for r in recs]
+    if len(out) > 20:
+        for ln in out[:10]:
+            print(ln)
+        print("…")
+        for ln in out[-10:]:
+            print(ln)
+        print(f"…共 {len(out)} 条，已折叠（LIVEPOWERS_VERBOSE=1 显示全部）")
+    else:
+        for ln in out:
+            print(ln)
 
 
 def cmd_verify(a):
@@ -190,14 +221,26 @@ def cmd_audit(a):
         traces.setdefault(r.get("trace_id"), []).append(r)
     open_traces = [t for t, rs in traces.items() if not any(x["type"] in ("review", "receipt") for x in rs)]
     no_ref = [r for r in recs if r["type"] == "result" and r["policy"]["decision"] == "allow" and not r.get("ref")]
-    print(f"消息 {len(recs)} 条；trace {len(traces)} 个")
-    print(f"被拒绝 {len(denied)} 条" + "".join(f"\n  - #{r['seq']} {r['from']}→{r['to']}: {r['policy']['reason']}" for r in denied))
-    print(f"未见审查 / 回执的 trace {len(open_traces)} 个：{open_traces}")
-    print(f"声称结果但无产物引用 {len(no_ref)} 条：{[r['seq'] for r in no_ref]}")
-    agents = {}
-    for r in recs:
-        agents[r["from"]] = agents.get(r["from"], 0) + 1
-    print("按 Agent 计消息数：" + ", ".join(f"{k}={v}" for k, v in sorted(agents.items())))
+    if lp_output.is_verbose():
+        print(f"消息 {len(recs)} 条；trace {len(traces)} 个")
+        print(f"被拒绝 {len(denied)} 条" + "".join(f"\n  - #{r['seq']} {r['from']}→{r['to']}: {r['policy']['reason']}" for r in denied))
+        print(f"未见审查 / 回执的 trace {len(open_traces)} 个：{open_traces}")
+        print(f"声称结果但无产物引用 {len(no_ref)} 条：{[r['seq'] for r in no_ref]}")
+        agents = {}
+        for r in recs:
+            agents[r["from"]] = agents.get(r["from"], 0) + 1
+        print("按 Agent 计消息数：" + ", ".join(f"{k}={v}" for k, v in sorted(agents.items())))
+        return
+    cats = [("被拒绝", denied), ("未见审查/回执的 trace", open_traces), ("无产物引用", no_ref)]
+    bad = [(n, v) for n, v in cats if v]
+    if not bad:
+        print("审计通过：无问题")
+        print(f"消息 {len(recs)} 条；trace {len(traces)} 个")
+        return
+    print(f"审计完成：发现 {len(bad)} 类问题")
+    for n, v in bad:
+        print(f"- {n} {len(v)}")
+    print("…明细已折叠（LIVEPOWERS_VERBOSE=1 显示全部）")
 
 
 def main():
