@@ -31,8 +31,11 @@ STATIC = {"/": ("index.html", "text/html"), "/app.js": ("app.js", "text/javascri
 
 
 def lp(workdir, *args):
+    # 本演示宿主会解析 registry find 的输出行（机器消费），固定走全量输出，
+    # 不受 PRD-046 简洁模式开关影响。
     return subprocess.run([sys.executable, LP, *args], cwd=workdir, capture_output=True, text=True,
-                          env={**os.environ, "LIVEPOWERS_HOME": ".livepowers"})
+                          env={**os.environ, "LIVEPOWERS_HOME": ".livepowers",
+                               "LIVEPOWERS_VERBOSE": "1"})
 
 
 def bootstrap(workdir):

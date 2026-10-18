@@ -15,9 +15,13 @@ scan_sqlite —— 环境感知示例：只读扫描一个 SQLite 数据库，�
 """
 import argparse
 import json
+import os
 import re
 import sqlite3
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import lp_output  # PRD-046/T3：简洁输出开关
 
 SENSITIVE = re.compile(r"(phone|mobile|tel|email|id_?card|idno|ssn|passport|password|passwd|secret|token|"
                        r"bank|card_?no|account_?no|address|birth|salary|身份证|手机|电话|密码|银行卡|住址)", re.I)
@@ -131,8 +135,8 @@ def main():
             print("无漂移")
             return
         print("环境漂移：")
-        for c in ch:
-            print(f"- {c}")
+        for line in lp_output.fold([f"- {c}" for c in ch], 5, "项"):
+            print(line)
         sys.exit(5)
     if not a.db:
         p.error("需要 DB 路径或 --diff")
@@ -140,7 +144,15 @@ def main():
     if a.fingerprint:
         with open(a.fingerprint, "w", encoding="utf-8") as f:
             json.dump(fp, f, ensure_ascii=False, indent=2)
-    print(to_yaml(fp))
+    if lp_output.should_summarize_scan():
+        n_t = len(fp["tables"])
+        n_c = sum(len(t["columns"]) for t in fp["tables"].values())
+        msg = f"扫描完成：{n_t} 表 {n_c} 列"
+        if a.fingerprint:
+            msg += f"，指纹已写 {a.fingerprint}"
+        print(msg)
+    else:
+        print(to_yaml(fp))
 
 
 if __name__ == "__main__":
