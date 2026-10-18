@@ -24,6 +24,12 @@
 
 *English summary: Livepowers is a skills library that turns coding/business agents into "live products": work inside an ontology, reuse crystallized deterministic capabilities first (System 1), explore with LLM reasoning only for gaps (System 2) while recording evidence, crystallize proven paths into tested capability packages, and accept everything through independent gates. Skill bodies are in Chinese; descriptions are bilingual.*
 
+## 愿景：活的产品
+
+- **越用越熟练**：System 2 探索成功一次，就固化成 System 1 的确定性能力——经验不流失，越用成本越低。
+- **做事有谱**：探索讲证据、交付过验收、结果记台账，夜间自己复盘进化。
+- **最终图景**：成为"活软件"的基础设施——软件不再是写完就冻住的产品，而是能自己生长、自己沉淀的活体。
+
 ## 全景：它是怎么运转的
 
 ![Livepowers 全景：一个请求的旅程、三块地基、一天的节律与四道护栏](https://livepowers.pages.dev/panorama.svg)
