@@ -7,6 +7,13 @@
 
 **官网：<https://livepowers.pages.dev>**（介绍与安装）
 
+> **业务智能体的 Superpowers：19 个强制工作流技能，决定"做什么、要不要固化、算不算完成"。**
+>
+> 结构借鉴 [obra/superpowers](https://github.com/obra/superpowers)，两者可以同时安装：
+> Superpowers 负责"固化代码怎么写好"，Livepowers 负责"做什么、要不要固化、算不算完成"。
+
+<!-- GIF demo 位：T3（trend #238）制作中，先占位 -->
+
 **Livepowers 是一套给智能体用的工作方法。**它让业务智能体按「活产品（Live Product）」范式工作：在本体划定的业务世界里行动；能复用的直接复用；不能复用的先探索，并留下证据；把成功路径固化成经过测试的能力；所有成果都要过独立验收。用得越多，产品越熟练。
 
 > **Agentic AI = Agent + Ontology + Harness**
@@ -16,8 +23,6 @@
 > 探索留证据，成功路径固化，失效就去固化。白天探索，夜间固化，早晨验收。
 
 *English summary: Livepowers is a skills library that turns coding/business agents into "live products": work inside an ontology, reuse crystallized deterministic capabilities first (System 1), explore with LLM reasoning only for gaps (System 2) while recording evidence, crystallize proven paths into tested capability packages, and accept everything through independent gates. Skill bodies are in Chinese; descriptions are bilingual.*
-
-结构借鉴 [obra/superpowers](https://github.com/obra/superpowers)：技能是强制工作流，会话启动时自动注入入口技能。两者可以同时安装：Livepowers 决定"做什么、要不要固化、算不算完成"，Superpowers 负责"固化代码怎么写好"。
 
 ## 全景：它是怎么运转的
 
