@@ -31,7 +31,8 @@ description: Use when a job role or recurring function is to be carried by human
 
 ## 岗位经济账
 
-成本归集、定价区间与接管成本遵循 `outcome-ledger` 的岗位经济账；岗位规格保留任务归属与人在回路。
+成本归集、定价区间与接管成本遵循 `outcome-ledger` 的岗位经济账（四个可+全成本归集）；岗位规格保留任务归属与人在回路。
+本 skill 只解决分析结构问题（任务拆分与归属）；度量诚实问题归 `outcome-ledger`。
 
 ## 红线
 
