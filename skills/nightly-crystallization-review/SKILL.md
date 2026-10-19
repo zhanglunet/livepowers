@@ -33,6 +33,7 @@ description: Use at end of day, when a nightly job starts, or when asked "what c
      --location "<分支或目录>" --generated-by <夜间Agent> [--writes-state] --model <模型>
    ```
    没有登记的产物不会出现在晨报里，早晨也不会被验收。
+   - 单次成功路径的固化质量门见 `crystallize-to-system1`（F-V-S-R）；本 skill 负责批量评审与退役。
 
 5. **复核已固化能力。**
    ```bash

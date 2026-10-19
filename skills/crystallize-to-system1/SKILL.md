@@ -74,6 +74,7 @@ lp registry add --name "<名称>" --kind cli|sql|script|skill|view|mcp|workflow 
 
 - 修改已注册能力 = 发新版本：`lp registry add --id <新id> --version 2.0.0 --supersedes <旧id> ...`。旧版本自动退役并记录 `superseded_by`，注册表仍能查到它供调用方迁移；同一 id 不能重复注册。
 - 口径变化或连续失败 → `lp registry retire <id> --reason ...`，回到 System 2。
+- 批量沉淀与退役走 `nightly-crystallization-review`：夜间评审是固化机制的批量运营层；单次固化走本 skill 的 F-V-S-R 门禁。
 - 已提交的业务动作通过有记录的补偿行动纠正；代码回退只控制后续执行。
 
 ## 反模式
