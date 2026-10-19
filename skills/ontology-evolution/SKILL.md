@@ -49,3 +49,10 @@ description: Use when a task needs an object, relation, state, metric definition
 - Agent 可以**提出**本体修订，正式业务规则的变更必须获得授权。
 - 不在会话里"悄悄"改口径。
 - 客户数据、凭证、专有制度不进入公共参考本体。
+
+## 简洁输出规范
+
+人类可读输出遵循三段式：**结论**（一句话，≤50 字）/ **关键信息**（≤5 条，每条 ≤30 字）/ **详情**（折叠，需要时展开）。`--json`、退出码、机器协议逐字节不动。
+全量输出：`LIVEPOWERS_VERBOSE=1 <命令>`（临时）；`<LIVEPOWERS_HOME>/config.yaml` 写 `verbose: true`（持久）。
+- 本 skill 终端输出极少（流程型）；终端只打结论行，如 `Delta 已提出：ontology/deltas/<id>.yaml（待业务裁定）`。
+- 产出文件本身即详情。

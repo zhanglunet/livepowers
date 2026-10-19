@@ -48,3 +48,10 @@ python scripts/eval_triggers.py           # 输出所有技能的触发率与混
 ## 固化的类比
 
 技能本身也是能力：被反复使用、判据稳定的技能步骤，应考虑固化为脚本（交给 `crystallize-to-system1`），技能里只保留需要判断的部分。
+
+## 简洁输出规范
+
+人类可读输出遵循三段式：**结论**（一句话，≤50 字）/ **关键信息**（≤5 条，每条 ≤30 字）/ **详情**（折叠，需要时展开）。`--json`、退出码、机器协议逐字节不动。
+全量输出：`LIVEPOWERS_VERBOSE=1 <命令>`（临时）；`<LIVEPOWERS_HOME>/config.yaml` 写 `verbose: true`（持久）。
+- `eval_triggers.py` 结论首行：`总体 Top-2 触发率 x%（a/b）`；关键信息：混淆最严重的 Top 5；明细表格折叠（"总计正例"行保留原文）。
+- 新 skill 的 SKILL.md 必须包含"简洁输出规范"节（见 `templates/skill.md`）。

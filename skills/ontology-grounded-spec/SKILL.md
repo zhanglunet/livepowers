@@ -59,3 +59,10 @@ description: Use before implementing any business feature, report, dashboard, qu
 - `ontology/deltas/<id>.yaml`（如有本体级变更）
 
 分段给用户确认（每段 200–300 字），确认后再实现；看板 `lp task move <id> spec --by <你> --reason "规格确认"`。
+
+## 简洁输出规范
+
+人类可读输出遵循三段式：**结论**（一句话，≤50 字）/ **关键信息**（≤5 条，每条 ≤30 字）/ **详情**（折叠，需要时展开）。`--json`、退出码、机器协议逐字节不动。
+全量输出：`LIVEPOWERS_VERBOSE=1 <命令>`（临时）；`<LIVEPOWERS_HOME>/config.yaml` 写 `verbose: true`（持久）。
+- 产出物（`specs/<feature>.md` + `ontology/deltas/<id>.yaml`）为文件，终端只打结论行：`规格已生成：specs/<feature>.md（待分段确认）`。
+- 分段给用户确认时，每段按三段式：结论（本段确认什么）/ 关键信息（≤5 条）/ 详情（规格原文节选）。

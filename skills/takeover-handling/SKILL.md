@@ -70,3 +70,11 @@ description: Use when a task has been stopped by the loop or budget limit and mo
 - 接管人就是原执行者。
 - 从接管直接进入生产运行。
 - 接管成本不记账，台账里只剩"成功"的任务。
+
+## 简洁输出规范
+
+人类可读输出遵循三段式：**结论**（一句话，≤50 字）/ **关键信息**（≤5 条，每条 ≤30 字）/ **详情**（折叠，需要时展开）。`--json`、退出码、机器协议逐字节不动。
+全量输出：`LIVEPOWERS_VERBOSE=1 <命令>`（临时）；`<LIVEPOWERS_HOME>/config.yaml` 写 `verbose: true`（持久）。
+- 诊断包为文件（结构已有：任务/假设/事实/主因/建议），终端结论行：`诊断包已生成：<路径>（主因：<归因>）`。
+- 晨报口径：结论（任务 t_x 三轮未收敛）/ 关键信息（主因、已回到的环节）/ 详情（诊断包路径）。
+- `lp task show` JSON 逐字节不动。

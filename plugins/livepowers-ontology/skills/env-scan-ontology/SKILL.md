@@ -62,3 +62,10 @@ python scan_sqlite.py --diff .livepowers/env/fp-yesterday.json .livepowers/env/f
 - 敏感字段（证件号、手机号、银行卡、密码等）只记字段名与类型，不抽样、不写日志（脚本已自动跳过）。
 - 推断出的关系和口径必须标"推断"，确认后才能被 Harness 使用。
 - 孪生要记录数据更新时间与同步方式，不能默认是真实系统的实时完整副本。
+
+## 简洁输出规范
+
+人类可读输出遵循三段式：**结论**（一句话，≤50 字）/ **关键信息**（≤5 条，每条 ≤30 字）/ **详情**（折叠，需要时展开）。`--json`、退出码、机器协议逐字节不动。
+全量输出：`LIVEPOWERS_VERBOSE=1 <命令>`（临时）；`<LIVEPOWERS_HOME>/config.yaml` 写 `verbose: true`（持久）。
+- `scan_sqlite.py`/`scan_sql.py` 指纹：tty 下先打摘要行 `扫描完成：N 表 M 列，指纹已写 <路径>`，YAML 全文进折叠；管道/重定向时保持原样（被 `--diff` 消费）。
+- 漂移检测：结论行保留原文（`无漂移`/`环境漂移：N 项`），变化列表 >5 条折叠（exit 5 不动）。

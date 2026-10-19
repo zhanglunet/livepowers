@@ -33,6 +33,7 @@ description: Use at end of day, when a nightly job starts, or when asked "what c
      --location "<分支或目录>" --generated-by <夜间Agent> [--writes-state] --model <模型>
    ```
    没有登记的产物不会出现在晨报里，早晨也不会被验收。
+   - 单次成功路径的固化质量门见 `crystallize-to-system1`（F-V-S-R）；本 skill 负责批量评审与退役。
 
 5. **复核已固化能力。**
    ```bash
@@ -66,3 +67,10 @@ description: Use at end of day, when a nightly job starts, or when asked "what c
 ## 提醒
 
 自动固化并不可靠——已有研究表明从交互轨迹自动生成技能可能迁移失败、不如简单频率基线。夜间产出的永远是"草稿 + 测试证据"，最终决定权在人。
+
+## 简洁输出规范
+
+人类可读输出遵循三段式：**结论**（一句话，≤50 字）/ **关键信息**（≤5 条，每条 ≤30 字）/ **详情**（折叠，需要时展开）。`--json`、退出码、机器协议逐字节不动。
+全量输出：`LIVEPOWERS_VERBOSE=1 <命令>`（临时）；`<LIVEPOWERS_HOME>/config.yaml` 写 `verbose: true`（持久）。
+- 晨报文件头加结论摘要区（三段式）；既有章节不动（"自动采集待确认"列可能被脚本解析）；终端只打印路径单行。
+- `lp canary compare` 结论行保留原文，回归 issues 列表折叠（exit 5 不动）；`lp pending list` 行数 >20 折叠（manifest.json 不动）。
