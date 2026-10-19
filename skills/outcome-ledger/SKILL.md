@@ -73,3 +73,10 @@ description: Use when committing to a business outcome, choosing pilot scenarios
 ## 岗位经济账
 
 数字岗位总成本按成本归集步骤统计人工、推理、工具、返工、运维、摊销与接管，失败成本也计入。只有数字岗位总成本 < 价格 < 同等人工岗位全成本时，岗位化交付对双方成立；客户节省 = 人工成本 − 价格，供方毛利 = 价格 − 数字岗位总成本。接管比例高时先固化、补 Harness，再谈规模。岗位权限与任务归属见 `digital-role-spec`。
+
+## 简洁输出规范
+
+人类可读输出遵循三段式：**结论**（一句话，≤50 字）/ **关键信息**（≤5 条，每条 ≤30 字）/ **详情**（折叠，需要时展开）。`--json`、退出码、机器协议逐字节不动。
+全量输出：`LIVEPOWERS_VERBOSE=1 <命令>`（临时）；`<LIVEPOWERS_HOME>/config.yaml` 写 `verbose: true`（持久）。
+- `lp outcome report` 结论首行：`场景 X：ΔV=…，验收任务平均成本=…`；关键信息≤5 条（增量、ΔV、平均成本、首次交付时间、复用率）；完整台账折叠。
+- `lp outcome measure/cost` 的 `ok` 保持。

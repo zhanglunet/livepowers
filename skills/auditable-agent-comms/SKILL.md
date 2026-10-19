@@ -60,3 +60,10 @@ python <plugin>/scripts/agent_switch.py audit                         # 审计�
 - 与 A2A / MCP 等开放协议对齐，由网关承担身份与策略；本脚本的信封与哈希链可作为日志格式参考。
 - 日志字段对齐 OpenTelemetry GenAI 语义约定（`invoke_agent`、`execute_tool` span）。
 - 规模上来后中心交换会成为瓶颈：沙箱内允许直连，只在信任域边界审计。
+
+## 简洁输出规范
+
+人类可读输出遵循三段式：**结论**（一句话，≤50 字）/ **关键信息**（≤5 条，每条 ≤30 字）/ **详情**（折叠，需要时展开）。`--json`、退出码、机器协议逐字节不动。
+全量输出：`LIVEPOWERS_VERBOSE=1 <命令>`（临时）；`<LIVEPOWERS_HOME>/config.yaml` 写 `verbose: true`（持久）。
+- `agent_switch.py audit` 结论首行：`审计完成：发现 N 类问题` / `审计通过：无问题`；关键信息每类一行（≤4 条）；明细折叠（✗/✓ 标记保留原文）。
+- `replay` 结论行：`回放 N 条消息，trace M 个`，明细折叠（>20 行只显首尾）；`verify` 的 ✓/✗ 行保留原文。

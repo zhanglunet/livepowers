@@ -39,3 +39,10 @@ description: Use when a job role or recurring function is to be carried by human
 - 数字岗位不拥有超出岗位定义的权限；派工者不得自行扩大授权。
 - 对外承诺、不可逆动作、法律与合规裁定保留给人。
 - 岗位规格本身版本化；改权限等同于改本体级约束，走 `acceptance-gates`。
+
+## 简洁输出规范
+
+人类可读输出遵循三段式：**结论**（一句话，≤50 字）/ **关键信息**（≤5 条，每条 ≤30 字）/ **详情**（折叠，需要时展开）。`--json`、退出码、机器协议逐字节不动。
+全量输出：`LIVEPOWERS_VERBOSE=1 <命令>`（临时）；`<LIVEPOWERS_HOME>/config.yaml` 写 `verbose: true`（持久）。
+- 本 skill 产出为文件（岗位规格 YAML），无终端输出；终端只打结论行。
+- 将来若 CLI 化输出，按执行类三段式。

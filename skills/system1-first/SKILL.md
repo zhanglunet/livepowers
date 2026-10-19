@@ -46,3 +46,11 @@ description: Use when handling any business request (query, report, dashboard, b
 ## 汇报方式
 
 一句话说明走了哪条路径，例如："已用固化能力 `cap_weekly_revenue_by_region` v1.2 直接生成（未调用大模型推理）。"
+
+## 简洁输出规范
+
+人类可读输出遵循三段式：**结论**（一句话，≤50 字）/ **关键信息**（≤5 条，每条 ≤30 字）/ **详情**（折叠，需要时展开）。`--json`、退出码、机器协议逐字节不动。
+全量输出：`LIVEPOWERS_VERBOSE=1 <命令>`（临时）；`<LIVEPOWERS_HOME>/config.yaml` 写 `verbose: true`（持久）。
+- `lp registry find` 结论行保留原文（HIT/MAYBE/MISS 首行可能被 grep）；关键信息只留 Top 3 候选（一行一条：id+置信度）；其余进折叠（退出码 0/2/3 不动）。
+- `lp registry review` 结论行：`复核完成：N 项待处理` / `复核完成：无待处理项`，列表 >5 条折叠；`lp intents list` 表格 >20 行只显前 10 + "共 N 条，已折叠"。
+- agent 汇报"一句话说明走了哪条路径"已符合结论段，保持。

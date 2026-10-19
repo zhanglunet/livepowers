@@ -83,3 +83,10 @@ lp registry add --name "<名称>" --kind cli|sql|script|skill|view|mcp|workflow 
 - 固化代码里藏着一次 LLM 调用。
 - 没有测试的"固化"——那只是把概率性换了个位置。
 - 生成者自己签字验收。
+
+## 简洁输出规范
+
+人类可读输出遵循三段式：**结论**（一句话，≤50 字）/ **关键信息**（≤5 条，每条 ≤30 字）/ **详情**（折叠，需要时展开）。`--json`、退出码、机器协议逐字节不动。
+全量输出：`LIVEPOWERS_VERBOSE=1 <命令>`（临时）；`<LIVEPOWERS_HOME>/config.yaml` 写 `verbose: true`（持久）。
+- `lp score` 结论首行：`建议固化：评分 7/10，n*=12` 或 `建议保持 System 2：V=0 一票否决`；关键信息：分项分数 + n*；详情：c2' 计算过程（exit 0/3 不动）。
+- `lp candidates` 结论行保留，>5 条折叠（`--json` 逐字节不动）。
