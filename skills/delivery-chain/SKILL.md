@@ -13,11 +13,11 @@ description: Use when a business request must be delivered end-to-end as one pip
 
 | 段 id | skill | 输入（按名引用） | 产出 | 门 / 备注 |
 |---|---|---|---|---|
-| scan | env-scan-ontology | 链输入 `request` | `ontology-draft` | 无 |
-| specify | ontology-grounded-spec | `ontology-draft` | `spec-doc` | 无 |
-| explore | explore-with-evidence | `spec-doc` | `analysis-result` | 无 |
-| accept | acceptance-gates | `analysis-result` | `acceptance-record` | **gate: human**，人工采纳后才继续 |
-| ledger | outcome-ledger | `acceptance-record` | `ledger-entry` | optional，可跳过 |
+| scan | env-scan-ontology | 链输入 `request` | ontology-draft | 无 |
+| specify | ontology-grounded-spec | ontology-draft | spec-doc | 无 |
+| explore | explore-with-evidence | spec-doc | analysis-result | 无 |
+| accept | acceptance-gates | analysis-result | acceptance-record | **gate: human**，人工采纳后才继续 |
+| ledger | outcome-ledger | acceptance-record | ledger-entry | optional，可跳过 |
 
 运行产物落在工作区 `.livepowers/chains/delivery-chain/runs/<run-id>/`：每段一个子目录，含产物文件与 `manifest.json`；下游只读上游 manifest 中按名声明的产物，不猜目录结构。产物 ≤100KB 全量落盘；大文件只在 manifest 登记路径与 sha256（定稿口径 4B）。
 

@@ -12,6 +12,7 @@
 - `oltp-action-safety`
 - `auditable-agent-comms`
 - `takeover-handling`
+- `delivery-chain`
 
 ## 安装
 
