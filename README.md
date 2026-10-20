@@ -77,6 +77,7 @@
 | 交付 | `fde-delivery` | 五类底座资产、先白盒再契约后证据闭环、双轨选点、资产四道门与回流率 |
 | 价值 | `outcome-ledger` | 先登记基线；验收任务平均成本、首次价值交付时间、增量价值 ΔV = B × u |
 | 价值 | `digital-role-spec` | 数字岗位规格：任务归属（auto / agent / handoff / human）、人在回路、岗位经济账 |
+| 泛化 · NEW | `generalizing-skills` | 把项目专属 skill 拆成本体契约 + 方法 + 环境绑定；规则模式进本体、取值进绑定；首次初始化写绑定与环境指纹，复用前比对漂移；第二个 workspace 跑通才算泛化成立 |
 | 元 | `writing-livepowers-skills` | 先看 Agent 失败再写技能；描述只写触发条件；结构测试 |
 
 ## 脚本（纯 Python 3.9+ 标准库，零依赖）
@@ -201,6 +202,7 @@ K 是固化成本，M 是维护成本，c1 和 c2 是单次执行成本，p 是 
 
 - [官网 livepowers.pages.dev](https://livepowers.pages.dev)：图文说明页（含场景、demo、对比、FAQ、开发日志）
 - [docs/paradigm.md](docs/paradigm.md)：范式要点（一页纸）
+- [docs/lightweight.md](docs/lightweight.md)：轻量接入——只借概念、不搭全套时最少用哪些技能与命令
 - [docs/scenarios.md](docs/scenarios.md)：12 个场景与应用案例，每个带命令与产出
 - [docs/comparison.md](docs/comparison.md)：与 Superpowers 逐项对比、三种串联用法、9 个同类产品
 - [docs/devlog.md](docs/devlog.md)：开发日志（做了什么、为什么、放弃了什么）

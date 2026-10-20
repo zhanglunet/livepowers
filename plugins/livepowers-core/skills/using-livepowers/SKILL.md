@@ -49,6 +49,7 @@ Livepowers 让智能体按「活产品（Live Product）」范式工作：
 | 把领域产品交付到客户现场（存量改造或新建） | `fde-delivery` |
 | 要衡量业务结果、核算单位成本、论证价值 | `outcome-ledger` |
 | 要把一个岗位的工作交给"人 + 智能体团队"共同承担 | `digital-role-spec` |
+| 某个 skill 只能在写它的项目里用、同类 skill 每个项目重写一份；或泛化后的 skill 在新 workspace 首次使用 | `generalizing-skills` |
 | 新建或修改 Livepowers 技能本身 | `writing-livepowers-skills` |
 
 ## 工具
@@ -83,6 +84,7 @@ Livepowers 让智能体按「活产品（Live Product）」范式工作：
 | `.livepowers/ontology.draft.yaml` | `env-scan-ontology` 生成的本体草稿 | 是 |
 | `ontology/ontology.yaml` | 已确认的本体（按 `templates/ontology.yaml`），版本号写在文件里 | 是 |
 | `ontology/deltas/` | 本体变更提案（`ontology-evolution`） | 是 |
+| `.livepowers/bindings/<skill>.yaml` | 泛化 skill 在本 workspace 的环境绑定：结构角色、实例参数、产物、本体版本、环境指纹、确认人（`generalizing-skills`） | 是 |
 | `specs/<feature>.md` | 规格（`ontology-grounded-spec`） | 是 |
 | 能力实现与测试 | 项目自己的代码目录；能力包清单路径写进 `lp registry add --package` | 是 |
 

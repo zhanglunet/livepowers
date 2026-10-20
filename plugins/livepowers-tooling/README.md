@@ -7,6 +7,7 @@
 ## 包含的 skills
 
 - `agent-harness-for-tools`
+- `generalizing-skills`
 - `writing-livepowers-skills`
 
 ## 安装

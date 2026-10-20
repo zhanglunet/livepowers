@@ -330,6 +330,7 @@ footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);font-si
   <div class="card"><span class="tag t-core">交付</span><h3>fde-delivery <small>现场交付</small></h3><p>五类底座资产；先白盒、再契约、后证据闭环；同时选一个降本场景和一个增收场景；现场成果过四道门进资产库，并统计回流率；FDE 考核看两项指标。</p><div class="when"><b>何时：</b>把领域产品交付到客户现场时。</div></div>
   <div class="card"><span class="tag t-night">价值 · NEW</span><h3>outcome-ledger <small>结果台账</small></h3><p>价值闸门：可量化、可归因、可复现、可经营。先登记基线，再算单位验收任务成本（失败的成本也计入）、首次价值交付时间，以及增量价值 ΔV = B × u。</p><div class="when"><b>何时：</b>承诺结果、论证价值、讨论计价时。</div></div>
   <div class="card"><span class="tag t-night">价值 · NEW</span><h3>digital-role-spec <small>数字岗位</small></h3><p>岗位 = 角色 + 职责 + 智能体团队 + 本体 + 技能 + 工具 + 权限 + KPI + 升级路径 + 人在回路。每项任务标明归属，并算清岗位的经济账。</p><div class="when"><b>何时：</b>把一个岗位交给"人 + 智能体团队"时。</div></div>
+  <div class="card"><span class="tag t-core">泛化 · NEW</span><h3>generalizing-skills <small>跨项目复用</small></h3><p>把只能在一个项目用的 skill 拆成业务本体、方法、环境实例三层：规则只在本体里有一份，取值进每个 workspace 的绑定。首次使用时初始化并记下环境指纹，之后先比对再跑；另一个项目只写绑定就能跑通，才算泛化成立。</p><div class="when"><b>何时：</b>同一种 skill 每个项目重写一份，或想把它带到另一个项目时。</div></div>
   <div class="card"><span class="tag t-core">元 · NEW</span><h3>writing-livepowers-skills <small>编写技能</small></h3><p>先看 Agent 在没有技能时如何失败，再写最小的技能去纠正它。description 只写触发条件，写完用结构测试检查。</p><div class="when"><b>何时：</b>新建或修改技能时。</div></div>
 </div>
 
@@ -621,6 +622,7 @@ ls livepowers/dist/skills/</pre></div>
 </table>
 
 <h2 id="faq">FAQ</h2>
+<details><summary>只想借几个概念，不想搭全套，可以吗？</summary><p>可以。按目标挑最小组合：想让 skill 跨项目复用，用 <code>generalizing-skills</code> + <code>acceptance-gates</code>；想让做过的事直接复用，用 <code>system1-first</code> + <code>explore-with-evidence</code> + <code>crystallize-to-system1</code>。Claude Code 可以只装对应的主题插件。夜间固化、交换机、台账都可以等需要时再加。见 <a href="https://github.com/zhanglunet/livepowers/blob/main/docs/lightweight.md">轻量接入</a>。</p></details>
 <details><summary>和 Superpowers 能同时装吗？会打架吗？</summary><p>能，而且建议同装。Livepowers 决定"做什么、要不要固化、算不算完成"，Superpowers 决定"固化代码怎么写好"。两者的入口技能都在会话启动时注入，互不覆盖；固化流水线里 Livepowers 挑候选并验收，Superpowers 的 brainstorming → writing-plans → TDD 负责实现。</p></details>
 <details><summary>不用 Claude Code 能用吗？</summary><p>能。<code>npx livepowers install --target cursor | codex | agents</code> 装到对应客户端的技能目录；任何支持 Agent Skills 标准的客户端都能读 <code>skills/*/SKILL.md</code>。Claude Code 插件自带 SessionStart 钩子自动注入入口技能；Cursor 加 <code>--project</code> 会在 <code>.cursor/rules/livepowers.mdc</code> 生成注入规则；Codex 可以把入口说明合并进项目的 AGENTS.md（安装器会做）。</p></details>
 <details><summary><code>lp</code> 命令在哪里？</summary><p><code>npm i -g livepowers</code> 后直接用（需要 Python 3.9+）；Claude Code 插件里是 <code>python3 ${CLAUDE_PLUGIN_ROOT}/scripts/lp.py</code>，钩子会告诉 Agent 路径；仅复制技能的用户给仓库脚本起个别名。<code>lp --help</code> 列出全部子命令。</p></details>

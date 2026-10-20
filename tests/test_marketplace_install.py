@@ -10,7 +10,7 @@
    `templates/<文件>` 引用，在插件目录内真实存在（装完不会 404）；
 3. 有 hooks/ 的插件：hooks.json 合法，引用的 .sh 存在且可执行；
 4. 有 commands/ 的插件：每个 .md 有 frontmatter 且 description 非空；
-5. 5 个插件的 skill 集合恰好覆盖根 skills/ 的 19 个（不多、不少、不重复）。
+5. 5 个插件的 skill 集合恰好覆盖根 skills/ 的 20 个（不多、不少、不重复）。
 
 CI 每次 push/PR 自动跑（`python -m unittest discover -s tests`）。
 Python 3.9 兼容。
@@ -26,7 +26,7 @@ REPO = Path(__file__).resolve().parents[1]
 MARKETPLACE = REPO / ".claude-plugin" / "marketplace.json"
 PLUGINS_DIR = REPO / "plugins"
 ROOT_SKILLS = REPO / "skills"
-EXPECTED_SKILL_COUNT = 19  # 2026-10-17 盘点数；增减 skill 时同步改
+EXPECTED_SKILL_COUNT = 20  # 2026-10-20 盘点数（新增 generalizing-skills）；增减 skill 时同步改
 
 PLUGIN_ROOT_REF = re.compile(r"\$\{CLAUDE_PLUGIN_ROOT\}/([A-Za-z0-9_./-]+)")
 TEMPLATE_REF = re.compile(r"templates/([A-Za-z0-9_.-]+)")

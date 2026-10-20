@@ -46,6 +46,7 @@
             "description": "Tooling: agent harness for tools and the guide to writing livepowers skills.",
             "skills": [
                 "agent-harness-for-tools",
+                "generalizing-skills",
                 "writing-livepowers-skills"
             ],
             "title": "Tooling"
