@@ -7,7 +7,7 @@
 
 **官网：<https://livepowers.pages.dev>**（介绍与安装）
 
-> **业务智能体的 Superpowers：19 个强制工作流技能，决定"做什么、要不要固化、算不算完成"。**
+> **业务智能体的 Superpowers：20 个强制工作流技能，决定"做什么、要不要固化、算不算完成"。**
 >
 > 结构借鉴 [obra/superpowers](https://github.com/obra/superpowers)，两者可以同时安装：
 > Superpowers 负责"固化代码怎么写好"，Livepowers 负责"做什么、要不要固化、算不算完成"。
@@ -75,6 +75,7 @@
 | 接管 · NEW | `takeover-handling` | 止损后冻结并交付诊断包；归因七类主因只选一个；换人重开（`--reset-loops` / `--extend-budget`）、重定规格或关闭；接管成本入账 |
 | 协作 | `auditable-agent-comms` | 信任域分级、协调线 / 内容线、共享任务标识、哈希链、回放与审计 |
 | 交付 | `fde-delivery` | 五类底座资产、先白盒再契约后证据闭环、双轨选点、资产四道门与回流率 |
+| 交付链 · NEW | `delivery-chain` | 五段链编排：扫描 → 规格 → 探索 → 验收（人工门）→ 台账；段间产物哈希契约、每段可独立调用、失败留痕可续跑 |
 | 价值 | `outcome-ledger` | 先登记基线；验收任务平均成本、首次价值交付时间、增量价值 ΔV = B × u |
 | 价值 | `digital-role-spec` | 数字岗位规格：任务归属（auto / agent / handoff / human）、人在回路、岗位经济账 |
 | 泛化 · NEW | `generalizing-skills` | 把项目专属 skill 拆成本体契约 + 方法 + 环境绑定；规则模式进本体、取值进绑定；首次初始化写绑定与环境指纹，复用前比对漂移；第二个 workspace 跑通才算泛化成立 |
@@ -141,7 +142,7 @@ npx skills add zhanglunet/livepowers --all -g  # 一键装到全局（全部 ski
 - 不带 `-y` 的裸命令会停在"选择 skill"交互步骤，无 TTY 时直接取消；一键安装必须带 `-y`。
 - `-y` 默认装到项目级 `./.agents/skills`，加 `-g` 才进全局 `~/.agents/skills`。
 
-安装后验证（应看到 19 个 skill）：
+安装后验证（应看到 20 个 skill）：
 
 ```bash
 npx skills list   # 确认 acceptance-gates … writing-livepowers-skills 都在列表中

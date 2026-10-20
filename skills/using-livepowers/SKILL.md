@@ -47,6 +47,7 @@ Livepowers 让智能体按「活产品（Live Product）」范式工作：
 | 收工或夜间：回顾证据、挑固化候选、复核能力、出晨报 | `nightly-crystallization-review` |
 | 多个 Agent 互相通信，需要可审计、可回放 | `auditable-agent-comms` |
 | 把领域产品交付到客户现场（存量改造或新建） | `fde-delivery` |
+| 把多个技能按固定顺序串成一条交付链，带人工验收门与段间产物契约 | `delivery-chain` |
 | 要衡量业务结果、核算单位成本、论证价值 | `outcome-ledger` |
 | 要把一个岗位的工作交给"人 + 智能体团队"共同承担 | `digital-role-spec` |
 | 某个 skill 只能在写它的项目里用、同类 skill 每个项目重写一份；或泛化后的 skill 在新 workspace 首次使用 | `generalizing-skills` |

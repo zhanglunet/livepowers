@@ -1,0 +1,81 @@
+# 链描述文件：业务交付链（PRD-095/T2 示范链，选材口径 6A）
+# 格式约束（沿 T1 设计 §2.4）：2 空格缩进、字符串加引号；
+# 不使用锚点/别名、流式集合、块标量（故 needs/outputs 一律块式列表书写），
+# 以便被最小 YAML 子集解析器读取。retry_limit 全段 0（定稿口径 5B）。
+name: delivery-chain
+description: "一条业务请求的端到端交付流水线：环境扫描 → 规格 → 探索 → 验收门 → 结果台账"
+version: "0.1.0"
+inputs:
+  - name: request
+    help: "业务请求原文，如 '按区域统计上周营收'"
+
+stages:
+  - id: scan
+    skill: env-scan-ontology
+    inputs:
+      from: chain
+      needs:
+        - request
+    outputs:
+      - ontology-draft
+    params:
+      start: "brownfield"
+    optional: false
+    gate: none
+    retry_limit: 0
+
+  - id: specify
+    skill: ontology-grounded-spec
+    inputs:
+      from: scan
+      needs:
+        - ontology-draft
+    outputs:
+      - spec-doc
+    params:
+      spec_template: "templates/spec.md"
+    optional: false
+    gate: none
+    retry_limit: 0
+
+  - id: explore
+    skill: explore-with-evidence
+    inputs:
+      from: specify
+      needs:
+        - spec-doc
+    outputs:
+      - analysis-result
+    params:
+      max_rounds: 3
+    optional: false
+    gate: none
+    retry_limit: 0
+
+  - id: accept
+    skill: acceptance-gates
+    inputs:
+      from: explore
+      needs:
+        - analysis-result
+    outputs:
+      - acceptance-record
+    params:
+      require_independent_review: true
+    optional: false
+    gate: human
+    retry_limit: 0
+
+  - id: ledger
+    skill: outcome-ledger
+    inputs:
+      from: accept
+      needs:
+        - acceptance-record
+    outputs:
+      - ledger-entry
+    params:
+      scenario: "delivery-chain-run"
+    optional: true
+    gate: none
+    retry_limit: 0

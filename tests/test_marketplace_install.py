@@ -26,7 +26,7 @@ REPO = Path(__file__).resolve().parents[1]
 MARKETPLACE = REPO / ".claude-plugin" / "marketplace.json"
 PLUGINS_DIR = REPO / "plugins"
 ROOT_SKILLS = REPO / "skills"
-EXPECTED_SKILL_COUNT = 20  # 2026-10-20 盘点数（新增 generalizing-skills）；增减 skill 时同步改
+EXPECTED_SKILL_COUNT = 21  # 2026-10-20 盘点数（新增 delivery-chain）；增减 skill 时同步改
 
 PLUGIN_ROOT_REF = re.compile(r"\$\{CLAUDE_PLUGIN_ROOT\}/([A-Za-z0-9_./-]+)")
 TEMPLATE_REF = re.compile(r"templates/([A-Za-z0-9_.-]+)")
