@@ -5,6 +5,8 @@
   "author": {
     "name": "Livepowers contributors"
   },
+  "homepage": "https://livepowers.pages.dev",
+  "repository": "https://github.com/zhanglunet/livepowers",
   "license": "MIT",
   "keywords": [
     "delivery",
