@@ -1,0 +1,6 @@
+{"prompt": "这个 skill 只能在本项目用，路径、列名、阈值都写死了，想改成别的项目也能复用", "expect": ["generalizing-skills"], "reject": ["writing-livepowers-skills"]}
+{"prompt": "每个项目都在重写一份同样的月报 skill，怎么泛化成跨项目复用", "expect": ["generalizing-skills"], "reject": ["crystallize-to-system1"]}
+{"prompt": "A skill only works in the project it was written for, with hard-coded sheets and columns; reuse it across workspaces", "expect": ["generalizing-skills"], "reject": ["system1-first"]}
+{"prompt": "泛化后的 skill 在新 workspace 首次使用，需要初始化环境绑定", "expect": ["generalizing-skills"], "reject": ["env-scan-ontology"]}
+{"prompt": "新建一个 Livepowers 技能并写触发用例", "expect": ["writing-livepowers-skills"], "reject": ["generalizing-skills"]}
+{"prompt": "收到业务请求，先查注册表有没有已固化能力", "expect": ["system1-first"], "reject": ["generalizing-skills"]}
