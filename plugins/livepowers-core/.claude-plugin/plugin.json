@@ -2,6 +2,7 @@
   "name": "livepowers-core",
   "version": "1.6.0",
   "description": "核心工作流：先查固化能力（System 1 first）、带证据探索、把验证过的路径固化成可测试能力。Core workflow: System 1 first, explore with evidence, crystallize proven paths into tested capabilities.",
+  "icon": "assets/icon.svg",
   "author": {
     "name": "Livepowers contributors"
   },
