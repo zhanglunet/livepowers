@@ -1,0 +1,5 @@
+{"prompt": "有个业务请求要端到端交付：先扫描环境和本体，再写规格、探索分析、过验收门，最后记进结果台账", "expect": ["delivery-chain"], "reject": ["explore-with-evidence"]}
+{"prompt": "把扫描、规格、探索、验收、台账串成一条可续跑的交付流水线来做", "expect": ["delivery-chain"], "reject": ["fde-delivery"]}
+{"prompt": "Deliver this request end-to-end as one pipeline with a human acceptance gate and an outcome ledger entry", "expect": ["delivery-chain"], "reject": ["acceptance-gates"]}
+{"prompt": "只帮我扫描一下新接入数据库的表结构，生成本体草稿", "expect": ["env-scan-ontology"], "reject": ["delivery-chain"]}
+{"prompt": "这个分析结果做完了，帮我单独过一下验收门确认", "expect": ["acceptance-gates"], "reject": ["delivery-chain"]}
