@@ -208,6 +208,7 @@ K 是固化成本，M 是维护成本，c1 和 c2 是单次执行成本，p 是 
 - [docs/comparison.md](docs/comparison.md)：与 Superpowers 逐项对比、三种串联用法、9 个同类产品
 - [docs/devlog.md](docs/devlog.md)：开发日志（做了什么、为什么、放弃了什么）
 - [docs/testing.md](docs/testing.md)：如何测试脚本与技能
+- [docs/chained-skills-guide.md](docs/chained-skills-guide.md)：链式 skill 使用指南——怎么跑一条链、怎么编排新链、链上架 checklist
 - [CHANGELOG.md](CHANGELOG.md)：版本记录
 
 ## 反馈与参与

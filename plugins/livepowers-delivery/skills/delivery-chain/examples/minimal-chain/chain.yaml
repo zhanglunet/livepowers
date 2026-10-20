@@ -1,0 +1,40 @@
+# 最小链示例：只串两段，演示链的最小可用形态。
+# 字段逐项说明见使用指南的「chain.yaml 字段逐项」一节；
+# 格式约束与示范链相同：2 空格缩进、字符串加引号，不用锚点/流式集合/块标量。
+# 段选材 = 示范链 delivery-chain 的前两段，产物契约原样沿用；
+# 本链无人工门、无 optional 段，一次 run 即可全链完成（退出码 0）。
+name: minimal-chain
+description: "最小链示例：环境扫描 → 规格，两段演示链的输入/输出契约与运行产物结构"
+version: "0.1.0"
+inputs:
+  - name: request
+    help: "业务请求原文，如 '统计本月退款率'"
+
+stages:
+  - id: scan
+    skill: env-scan-ontology
+    inputs:
+      from: chain
+      needs:
+        - request
+    outputs:
+      - ontology-draft
+    params:
+      start: "brownfield"
+    optional: false
+    gate: none
+    retry_limit: 0
+
+  - id: specify
+    skill: ontology-grounded-spec
+    inputs:
+      from: scan
+      needs:
+        - ontology-draft
+    outputs:
+      - spec-doc
+    params:
+      spec_template: "templates/spec.md"
+    optional: false
+    gate: none
+    retry_limit: 0
