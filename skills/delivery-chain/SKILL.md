@@ -32,7 +32,7 @@ description: Use when a business request must be delivered end-to-end as one pip
 
 ## 命令
 
-当前运行器是独立脚本原型（定稿口径 2A：先脚本、稳定后并入 `lp chain` 子命令组，届时命令一一对应：`lp chain validate / run / status`）。
+当前运行器是独立脚本原型（定稿口径 2A：先脚本、稳定后并入 `lp chain` 子命令组，届时命令一一对应：`lp chain validate / run / status / stage`）。
 
 ```bash
 # 校验链描述（段引用存在、from 无悬空/无环、契约自洽）
@@ -44,6 +44,10 @@ python scripts/chain_runner.py run skills/delivery-chain --workspace . \
 
 # 查看某次运行的段状态与产物
 python scripts/chain_runner.py status <run-id> --workspace .
+
+# 段独立调用（只跑一段；不带 --run 时自成一次运行，带 --run 时产物写进指定运行目录，供后续整链 run --from 复用）
+python scripts/chain_runner.py stage skills/delivery-chain scan --workspace . \
+  --param request="按区域统计上周营收"
 
 # 人工采纳后从验收段续跑到全链完成
 python scripts/chain_runner.py run skills/delivery-chain --workspace . \

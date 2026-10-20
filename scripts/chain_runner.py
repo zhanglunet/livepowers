@@ -881,6 +881,164 @@ def cmd_run(args):
     return EXIT_OK
 
 
+def cmd_stage(args):
+    """段独立调用（T1 §3.2 的 `chain stage`；T2 原型未实现，T3 验证时补齐的最小实现）。
+
+    stage <chain> <stage-id> [--workspace DIR] [--repo-root DIR]
+          [--param k=v ...] [--run <run-id>] [--json]
+    不带 --run：开新 run-id，产物自成一次运行（写入 chain-manifest 骨架，
+    其余段 pending）；带 --run：写入指定运行目录（无 chain-manifest 时按
+    新运行骨架创建），供后续 run --from 复用（T1 §2.6 验证点 5）。
+    单段执行块（输入解析/ctx/模拟执行/manifest/gate 语义）与 cmd_run 同源。
+    链级状态流转仍归 run：stage 只落本段状态；gate: human 时置 awaiting。
+    """
+    chain_dir, data = load_chain(args.chain)
+    repo_root = resolve_repo_root(chain_dir, args.repo_root)
+    errors = validate_chain(data, chain_dir, repo_root)
+    if errors:
+        for e in errors:
+            print("校验失败：%s" % e, file=sys.stderr)
+        return EXIT_FAIL
+    chain_name = data["name"]
+    stages = data["stages"]
+    by_id = {s["id"]: s for s in stages}
+    if args.stage_id not in by_id:
+        raise ChainError(
+            "未知段：%s（链 %s 的段：%s）"
+            % (args.stage_id, chain_name, "、".join(by_id)), EXIT_FAIL)
+    stage = by_id[args.stage_id]
+    sid = args.stage_id
+    workspace = Path(args.workspace)
+    runs_root = _runs_root(workspace, chain_name)
+
+    declared = [it["name"] for it in data.get("inputs") or []]
+    provided = {}
+    for pair in args.param or []:
+        if "=" not in pair:
+            raise ChainError("--param 须为 k=v 形式：%s" % pair, EXIT_USAGE)
+        k, v = pair.split("=", 1)
+        if k not in declared:
+            raise ChainError("未声明的链输入参数：%s" % k, EXIT_USAGE)
+        provided[k] = v
+
+    # ---- 定位/创建运行目录与 chain-manifest（骨架结构与 cmd_run 一致）
+    if args.run_id:
+        run_id = args.run_id
+        run_dir = runs_root / run_id
+        cm = _read_json(run_dir / "chain-manifest.json")
+        if cm is None:
+            (run_dir / "inputs").mkdir(parents=True, exist_ok=True)
+            cm = {"chain": chain_name, "run_id": run_id, "status": "running",
+                  "stage_order": [s["id"] for s in stages],
+                  "inputs": {}, "skipped": [],
+                  "stages": {s["id"]: "pending" for s in stages},
+                  "current_stage": None, "created": _now()}
+        cm.setdefault("inputs", {})
+        for k, v in provided.items():
+            f = run_dir / "inputs" / (k + ".txt")
+            if not f.exists():
+                f.parent.mkdir(parents=True, exist_ok=True)
+                f.write_text(v, encoding="utf-8")
+            cm["inputs"].setdefault(k, v)
+        chain_inputs = cm["inputs"]
+        _save_cm(run_dir, cm)
+    else:
+        run_id = _new_run_id(runs_root)
+        run_dir = runs_root / run_id
+        (run_dir / "inputs").mkdir(parents=True)
+        for k, v in provided.items():
+            (run_dir / "inputs" / (k + ".txt")).write_text(v, encoding="utf-8")
+        chain_inputs = provided
+        cm = {"chain": chain_name, "run_id": run_id, "status": "running",
+              "stage_order": [s["id"] for s in stages],
+              "inputs": chain_inputs, "skipped": [],
+              "stages": {s["id"]: "pending" for s in stages},
+              "current_stage": None, "created": _now()}
+        _save_cm(run_dir, cm)
+
+    # ---- 执行单个段（与 cmd_run 逐段执行块同语义）
+    sdir = run_dir / sid
+    if sdir.exists():
+        shutil.rmtree(sdir)
+    resolved = _resolve_inputs(stage, by_id, run_dir)
+    ctx = {"request": chain_inputs.get("request", ""),
+           "params": stage.get("params") or {},
+           "inputs": {},
+           "input_digests": {e["name"]: e["sha256"][:12] for e in resolved},
+           "run_id": run_id, "decided_by": None}
+    for e in resolved:
+        f = Path(e["path"]) if not (run_dir / e["path"]).exists() else run_dir / e["path"]
+        if f.exists() and f.stat().st_size <= LARGE_ARTIFACT_BYTES:
+            ctx["inputs"][e["name"]] = f.read_text(encoding="utf-8", errors="replace")
+        if e["from_stage"] != "chain":
+            pman = _read_json(run_dir / e["from_stage"] / "manifest.json") or {}
+            if pman.get("decided_by"):
+                ctx["decided_by"] = pman["decided_by"]
+    artifacts, last_err = None, None
+    for _attempt in range(int(stage.get("retry_limit") or 0) + 1):
+        try:
+            artifacts = simulate_stage(stage, ctx)
+            last_err = None
+            break
+        except SimFail as exc:
+            last_err = exc
+    started = _now()
+    if artifacts is None:
+        sdir.mkdir(parents=True, exist_ok=True)
+        _write_json(sdir / "manifest.json",
+                    {"chain": chain_name, "run_id": run_id, "stage": sid,
+                     "skill": stage["skill"], "status": "failed",
+                     "inputs": resolved, "outputs": [],
+                     "params": stage.get("params") or {},
+                     "note": "段执行失败：%s" % last_err, "created": started})
+        cm["status"] = "failed"
+        cm["current_stage"] = sid
+        cm["stages"][sid] = "failed"
+        _save_cm(run_dir, cm)
+        raise ChainError(
+            "段 %s 执行失败（retry_limit=%s）：%s"
+            % (sid, stage.get("retry_limit", 0), last_err), EXIT_FAIL)
+    outputs_meta = _materialize(run_dir, chain_name, run_id, workspace, sid, artifacts)
+    _write_json(sdir / "manifest.json",
+                {"chain": chain_name, "run_id": run_id, "stage": sid,
+                 "skill": stage["skill"], "status": "done",
+                 "inputs": resolved, "outputs": outputs_meta,
+                 "params": stage.get("params") or {},
+                 "generated_by": "scripts/chain_runner.py stage（T3 补齐子命令；模拟执行器）",
+                 "model": "simulated",
+                 "note": "原型模拟产物（段独立调用）：仅验证编排/契约语义，非段 skill 的真实业务执行",
+                 "created": started, "finished": _now()})
+    cm["stages"][sid] = "done"
+    gate = stage.get("gate", "none")
+    if gate == "human":
+        cm["status"] = "awaiting"
+        cm["current_stage"] = sid
+        _save_cm(run_dir, cm)
+        _emit(args,
+              {"ok": False, "run_id": run_id, "status": "awaiting", "stage": sid,
+               "via": "stage"},
+              ["结论：段独立调用停在验收门：%s（待采纳后以 run 续跑）" % sid,
+               "关键信息：run-id %s；验收记录 %s" % (run_id, outputs_meta[0]["path"]),
+               "详情：采纳后续跑：run %s --workspace %s --run-id %s --from %s --approve --by <采纳人>"
+               % (args.chain, args.workspace, run_id, sid)])
+        return EXIT_AWAITING
+    if isinstance(gate, str) and gate.startswith("checker:"):
+        cm["status"] = "failed"
+        cm["current_stage"] = sid
+        _save_cm(run_dir, cm)
+        raise ChainError(
+            "段 %s 的 checker 校验器 %s 未在原型中实现，拒绝静默放行"
+            % (sid, gate[8:]), EXIT_FAIL)
+    _save_cm(run_dir, cm)
+    _emit(args,
+          {"ok": True, "run_id": run_id, "stage": sid, "status": "done",
+           "outputs": [o["name"] for o in outputs_meta], "via": "stage"},
+          ["结论：段独立调用完成：%s（run-id %s）" % (sid, run_id),
+           "关键信息：产物 %s；清单 %s/manifest.json"
+           % ("、".join(o["name"] for o in outputs_meta), sid)])
+    return EXIT_OK
+
+
 def cmd_status(args):
     workspace = Path(args.workspace)
     base = workspace / ".livepowers" / "chains"
@@ -936,6 +1094,16 @@ def build_parser():
     p.add_argument("--by")
     p.add_argument("--json", action="store_true")
     p.set_defaults(func=cmd_run)
+
+    p = sub.add_parser("stage", help="段独立调用（T1 §3.2；T3 补齐）")
+    p.add_argument("chain")
+    p.add_argument("stage_id")
+    p.add_argument("--workspace", default=".")
+    p.add_argument("--repo-root")
+    p.add_argument("--param", action="append", default=[])
+    p.add_argument("--run", dest="run_id")
+    p.add_argument("--json", action="store_true")
+    p.set_defaults(func=cmd_stage)
 
     p = sub.add_parser("status", help="查看某次运行的状态")
     p.add_argument("run_id")
