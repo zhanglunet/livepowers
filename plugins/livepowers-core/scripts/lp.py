@@ -57,6 +57,8 @@ import uuid
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 
+import lp_output  # PRD-046/T3：简洁输出开关（LIVEPOWERS_VERBOSE / config.yaml）
+
 __version__ = "1.6.0"
 
 ROOT = os.environ.get("LIVEPOWERS_HOME", ".livepowers")
@@ -330,9 +332,12 @@ def cmd_intents_list(a):
         counts[e.get("intent")] += 1
     r = jload(REG, {"capabilities": []})
     covered = {i.lower() for c in r["capabilities"] if c["status"] == "active" for i in c["intents"]}
+    lines = []
     for c, g in sorted(intents.items()):
         reg = " [已固化]" if c.lower() in covered else ""
-        print(f"- {c}{reg}  证据 {counts.get(c, 0)}  别名：{', '.join(g.get('aliases', [])) or '—'}")
+        lines.append(f"- {c}{reg}  证据 {counts.get(c, 0)}  别名：{', '.join(g.get('aliases', [])) or '—'}")
+    for line in lp_output.fold(lines, 10):
+        print(line)
 
 
 def cmd_intents_suggest(a):
@@ -409,20 +414,37 @@ def cmd_evidence_stats(a):
         s2 = [e for e in es if e.get("system") == "S2"]
         rows.append((intent, n, ok / n if n else 0, len(s1), len(s2), avg(s2, "cost"), avg(s1, "cost")))
     rows.sort(key=lambda r: -r[1])
-    print(f"{'intent':40} {'n':>4} {'成功率':>6} {'S1':>4} {'S2':>4} {'S2均成本':>9} {'S1均成本':>9}")
-    for r in rows:
-        print(f"{r[0][:40]:40} {r[1]:>4} {r[2]:>6.0%} {r[3]:>4} {r[4]:>4} {r[5]:>9.4f} {r[6]:>9.4f}")
     tot = len(ev)
-    if tot:
-        s2n = sum(1 for e in ev if e.get("system") == "S2")
-        auto = [e for e in ev if e.get("auto")]
+    if lp_output.is_verbose():
+        print(f"{'intent':40} {'n':>4} {'成功率':>6} {'S1':>4} {'S2':>4} {'S2均成本':>9} {'S1均成本':>9}")
+        for r in rows:
+            print(f"{r[0][:40]:40} {r[1]:>4} {r[2]:>6.0%} {r[3]:>4} {r[4]:>4} {r[5]:>9.4f} {r[6]:>9.4f}")
+        if tot:
+            s2n = sum(1 for e in ev if e.get("system") == "S2")
+            auto = [e for e in ev if e.get("auto")]
+            pend = sum(1 for e in auto if e.get("outcome") == "partial")
+            print(f"\n总计 {tot} 次；System 2 调用占比 {s2n / tot:.0%}（健康的活产品应随时间下降）")
+            if auto:
+                print(f"钩子自动采集 {len(auto)} 条，其中自动补记、待确认结论 {pend} 条")
+            weekly = s2_share_by_week(ev)
+            if len(weekly) > 1:
+                print("按周 S2 占比：" + "  ".join(f"{w}:{v:.0%}" for w, v in weekly))
+        return
+    if not tot:
+        print("暂无证据。")
+        return
+    s2n = sum(1 for e in ev if e.get("system") == "S2")
+    weekly = s2_share_by_week(ev)
+    trend = ""
+    if len(weekly) > 1:
+        arrow = "↓" if weekly[-1][1] < weekly[0][1] else ("↑" if weekly[-1][1] > weekly[0][1] else "→")
+        trend = f"（周趋势 {arrow}）"
+    print(f"共 {tot} 次，S2 占比 {s2n / tot:.0%}{trend}")
+    auto = [e for e in ev if e.get("auto")]
+    if auto:
         pend = sum(1 for e in auto if e.get("outcome") == "partial")
-        print(f"\n总计 {tot} 次；System 2 调用占比 {s2n / tot:.0%}（健康的活产品应随时间下降）")
-        if auto:
-            print(f"钩子自动采集 {len(auto)} 条，其中自动补记、待确认结论 {pend} 条")
-        weekly = s2_share_by_week(ev)
-        if len(weekly) > 1:
-            print("按周 S2 占比：" + "  ".join(f"{w}:{v:.0%}" for w, v in weekly))
+        print(f"钩子自动采集 {len(auto)} 条，其中自动补记、待确认结论 {pend} 条")
+    print(f"意图明细 {len(rows)} 行已折叠（LIVEPOWERS_VERBOSE=1 显示全部）")
 
 
 def s2_share_by_week(ev):
@@ -538,13 +560,20 @@ def cmd_registry_find(a):
     strong_hits = [h for h in hits if h[0] >= a.min_score]
     if strong_hits:
         print("HIT —— 命中已固化能力 → 走 System 1 执行：")
-        for s, c in strong_hits[: a.top]:
-            flag = "  [写操作]" if c.get("writes_state") else ""
-            print(f"  [{s}] {c['id']} v{c['version']} ({c['kind']}) entry: {c['entry']}{flag}  置信度 {confidence(c):.2f}")
-            if c.get("preconditions"):
-                print(f"       前置条件: {c['preconditions']}")
-            if c.get("ui"):
-                print(f"       固定页: {c['ui']}（直接打开，不必重新分析）")
+        hits = strong_hits[: a.top]
+        if lp_output.is_verbose():
+            for s, c in hits:
+                flag = "  [写操作]" if c.get("writes_state") else ""
+                print(f"  [{s}] {c['id']} v{c['version']} ({c['kind']}) entry: {c['entry']}{flag}  置信度 {confidence(c):.2f}")
+                if c.get("preconditions"):
+                    print(f"       前置条件: {c['preconditions']}")
+                if c.get("ui"):
+                    print(f"       固定页: {c['ui']}（直接打开，不必重新分析）")
+        else:
+            for s, c in hits[:3]:
+                print(f"  [{s}] {c['id']}  置信度 {confidence(c):.2f}")
+            if len(hits) > 3:
+                print(f"…共 {len(hits)} 个候选，已折叠（LIVEPOWERS_VERBOSE=1 显示全部）")
         return
 
     if getattr(a, "semantic", False):
@@ -560,13 +589,20 @@ def cmd_registry_find(a):
         sem_hits.sort(key=lambda x: -x[0])
         if sem_hits:
             print("MAYBE HIT —— 语义推测可能命中（未严格匹配，需核对前置条件）:")
-            for s, c in sem_hits[: a.top]:
-                flag = "  [写操作，严禁盲目执行]" if c.get("writes_state") else ""
-                print(f"  [~{s:.2f}] {c['id']} v{c['version']} ({c['kind']}) entry: {c['entry']}{flag}  置信度 {confidence(c):.2f}")
-                if c.get("preconditions"):
-                    print(f"         前置条件: {c['preconditions']}")
-                if c.get("ui"):
-                    print(f"         候选固定页: {c['ui']}（确认适用后再打开）")
+            hits = sem_hits[: a.top]
+            if lp_output.is_verbose():
+                for s, c in hits:
+                    flag = "  [写操作，严禁盲目执行]" if c.get("writes_state") else ""
+                    print(f"  [~{s:.2f}] {c['id']} v{c['version']} ({c['kind']}) entry: {c['entry']}{flag}  置信度 {confidence(c):.2f}")
+                    if c.get("preconditions"):
+                        print(f"         前置条件: {c['preconditions']}")
+                    if c.get("ui"):
+                        print(f"         候选固定页: {c['ui']}（确认适用后再打开）")
+            else:
+                for s, c in hits[:3]:
+                    print(f"  [~{s:.2f}] {c['id']}  置信度 {confidence(c):.2f}")
+                if len(hits) > 3:
+                    print(f"…共 {len(hits)} 个候选，已折叠（LIVEPOWERS_VERBOSE=1 显示全部）")
             print("\n提示：若适用请走 System 1 并用 lp intents alias 补录别名；不适用请转 System 2 探索。")
             sys.exit(3)
 
@@ -582,10 +618,13 @@ def confidence(c):
 
 def cmd_registry_list(a):
     r = jload(REG, {"capabilities": []})
+    lines = []
     for c in r["capabilities"]:
         if a.all or c["status"] == "active":
-            print(f"{c['status']:8} {c['id']:36} v{c['version']:6} {c['kind']:7} calls={c.get('calls', 0):<4} "
-                  f"置信度={confidence(c):.2f} intents={','.join(c['intents'])}")
+            lines.append(f"{c['status']:8} {c['id']:36} v{c['version']:6} {c['kind']:7} calls={c.get('calls', 0):<4} "
+                         f"置信度={confidence(c):.2f} intents={','.join(c['intents'])}")
+    for line in lp_output.fold(lines, 20):
+        print(line)
 
 
 def cmd_registry_retire(a):
@@ -650,11 +689,16 @@ def cmd_registry_review(a):
     r = jload(REG, {"capabilities": []})
     f = review_findings(r["capabilities"], jsonl_read(EVID), a.idle_days, a.verify_days, a.current_model)
     if not f:
-        print("复核：无待处理项。")
+        print("复核：无待处理项。" if lp_output.is_verbose() else "复核完成：无待处理项")
         return
-    print("复核发现：")
-    for cid, why in f:
-        print(f"- {cid}: {why}")
+    if lp_output.is_verbose():
+        print("复核发现：")
+        for cid, why in f:
+            print(f"- {cid}: {why}")
+        return
+    print(f"复核完成：{len(f)} 项待处理")
+    for line in lp_output.fold([f"- {cid}: {why}" for cid, why in f], 5, "项"):
+        print(line)
 
 
 # ---------------------------------------------------------------- score
@@ -676,15 +720,27 @@ def cmd_score(a):
     sc, parts = fvsr(a.freq, a.verifiable, a.stability, a.writes_state)
     n_star, c2e = breakeven(a.c2, a.c1, a.K, a.M, a.p, a.h)
     calls = a.freq * a.months
-    print(f"F-V-S-R 评分: {sc}/10  分项 {parts}")
-    print(f"System 2 有效单次成本 c2' = {c2e:.4f}（含失败重试与人工兜底）")
-    print(f"盈亏平衡调用次数 n* = {n_star:.1f}；预计 {a.months:g} 个月内调用 {calls:.0f} 次")
-    if a.verifiable < 1:
-        print("⚠ 不可验证（V=0）——即使高频也不应固化")
     ok = a.verifiable >= 1 and calls > n_star and sc >= 5
-    print(f"建议: {'固化' if ok else '保持 System 2 / 会话级'}")
+    if lp_output.is_verbose():
+        print(f"F-V-S-R 评分: {sc}/10  分项 {parts}")
+        print(f"System 2 有效单次成本 c2' = {c2e:.4f}（含失败重试与人工兜底）")
+        print(f"盈亏平衡调用次数 n* = {n_star:.1f}；预计 {a.months:g} 个月内调用 {calls:.0f} 次")
+        if a.verifiable < 1:
+            print("⚠ 不可验证（V=0）——即使高频也不应固化")
+        print(f"建议: {'固化' if ok else '保持 System 2 / 会话级'}")
+        if ok and a.writes_state:
+            print("提示: 写操作——固化前必须完成 oltp-action-safety 八项检查测试")
+        sys.exit(0 if ok else 3)
+    if ok:
+        print(f"建议固化：评分 {sc}/10，n*={n_star:.1f}")
+    elif a.verifiable < 1:
+        print("建议保持 System 2：V=0 一票否决")
+    else:
+        print(f"建议保持 System 2：评分 {sc}/10 未达固化线")
+    print(f"分项 F={parts['F']} V={parts['V']} S={parts['S']} R={parts['R']}；预计 {a.months:g} 个月调用 {calls:.0f} 次")
     if ok and a.writes_state:
         print("提示: 写操作——固化前必须完成 oltp-action-safety 八项检查测试")
+    print("…计算过程已折叠（LIVEPOWERS_VERBOSE=1 显示全部）")
     sys.exit(0 if ok else 3)
 
 
@@ -722,12 +778,15 @@ def cmd_candidates(a):
         print("暂无固化候选。")
         return
     print("固化候选（按 调用次数 × 可验证度 排序）：")
+    lines = []
     for c in cands:
         flag = "（写操作：需 oltp-action-safety）" if c["writes_state"] else ""
         if c.get("promoted"):
             flag += f"（用户申请固化：任务 {', '.join(c['promoted'])}）"
-        print(f"- {c['intent']}: S2 {c['s2_calls']} 次, 成功率 {c['success']:.0%}, "
-              f"可验证 {c['verifiable_ratio']:.0%}, 均成本 {c['avg_cost']:.4f} {flag}")
+        lines.append(f"- {c['intent']}: S2 {c['s2_calls']} 次, 成功率 {c['success']:.0%}, "
+                     f"可验证 {c['verifiable_ratio']:.0%}, 均成本 {c['avg_cost']:.4f} {flag}")
+    for line in lp_output.fold(lines, 5):
+        print(line)
 
 
 # ---------------------------------------------------------------- task board
@@ -965,6 +1024,7 @@ def cmd_outcome_report(a):
         return
     for name, s in scen.items():
         print(f"### 场景 {name}")
+        detail, dv_total = [], 0.0
         for metric, b in s["baselines"].items():
             ms = s["measures"].get(metric, [])
             cur = ms[-1]["value"] if ms else None
@@ -978,15 +1038,27 @@ def cmd_outcome_report(a):
                     rate = -rate
                 line += f"；当前 {cur}（Δ {delta:+g}，{rate:+.1%}）"
                 if b.get("base"):
-                    line += f"；增量价值 ΔV = B×u = {b['base']:,.10g}×{rate:.4f} = {b['base'] * rate:,.2f}"
-            print(line)
+                    dv = b["base"] * rate
+                    line += f"；增量价值 ΔV = B×u = {b['base']:,.10g}×{rate:.4f} = {dv:,.2f}"
+                    dv_total += dv
+            detail.append(line)
         total = sum(s["cost"].values())
         n = s["accepted"]
-        print(f"- 归集成本 {total:,.2f}（" + "，".join(f"{k} {v:,.2f}" for k, v in s["cost"].items()) + "）")
-        print(f"- 通过验收任务 {n}，未通过 {s['rejected']}；验收任务平均成本 = "
-              + (f"{total / n:,.2f}" if n else "—（暂无通过验收的任务）"))
+        avg_cost = f"{total / n:,.2f}" if n else "—（暂无通过验收的任务）"
+        key = [f"- 归集成本 {total:,.2f}（" + "，".join(f"{k} {v:,.2f}" for k, v in s["cost"].items()) + "）",
+               f"- 通过验收任务 {n}，未通过 {s['rejected']}；验收任务平均成本 = {avg_cost}"]
         if s["first_value_days"] is not None:
-            print(f"- 首次价值交付时间：{s['first_value_days']} 天（自范围确认至首个生产任务被采纳）")
+            key.append(f"- 首次价值交付时间：{s['first_value_days']} 天（自范围确认至首个生产任务被采纳）")
+        if lp_output.is_verbose():
+            for line in detail:
+                print(line)
+            for line in key:
+                print(line)
+        else:
+            print(f"场景 {name}：ΔV={dv_total:,.2f}，验收任务平均成本={avg_cost}")
+            for line in key:
+                print(line)
+            print("…完整台账已折叠（LIVEPOWERS_VERBOSE=1 显示全部）")
 
 
 # ---------------------------------------------------------------- assets
@@ -1052,13 +1124,24 @@ def asset_stats():
 
 def cmd_asset_list(a):
     db = jload(ASSETS, {"assets": []})
+    lines = []
     for x in db["assets"]:
         g = "".join("●" if x["gates"].get(k) else "○" for k in GATES)
-        print(f"{x['status']:10} {x['id']:30} {x['kind']:10} 归属={x['ownership']:8} 门={g} 复用={len(x['reused_in'])}")
+        lines.append(f"{x['status']:10} {x['id']:30} {x['kind']:10} 归属={x['ownership']:8} 门={g} 复用={len(x['reused_in'])}")
     n_field, n_ref, reuse = asset_stats()
+    if lp_output.is_verbose():
+        for line in lines:
+            print(line)
+        if n_field:
+            print(f"\n资产回流率 = 入库现场创新 / 现场创新总数 = {n_ref}/{n_field} = {n_ref / n_field:.0%}；"
+                  f"经重新验证的复用次数 {reuse}")
+        return
     if n_field:
-        print(f"\n资产回流率 = 入库现场创新 / 现场创新总数 = {n_ref}/{n_field} = {n_ref / n_field:.0%}；"
-              f"经重新验证的复用次数 {reuse}")
+        print(f"资产回流率 {n_ref / n_field:.0%}（{n_ref}/{n_field}）；经重新验证的复用次数 {reuse}")
+        gates = "，".join(f"{GATE_CN[k]} {sum(1 for x in db['assets'] if x['gates'].get(k))}" for k in GATES)
+        print(f"各门通过：{gates}")
+    for line in lp_output.fold(lines, 10, "行"):
+        print(line)
 
 
 # ---------------------------------------------------------------- job contract
@@ -1111,7 +1194,8 @@ def cmd_job_validate(a):
                     errs.append(f"读取规格文件失败：{e}")
         if errs:
             bad += 1
-            print(f"✗ {j.get('job_id', '?')}: " + "；".join(errs))
+            shown = errs if lp_output.is_verbose() else lp_output.fold(errs, 3, "项")
+            print(f"✗ {j.get('job_id', '?')}: " + "；".join(shown))
         else:
             print(f"✓ {j['job_id']}")
     graph = {j["job_id"]: j.get("dependency", []) for j in jobs if "job_id" in j}
@@ -1163,8 +1247,32 @@ def cmd_report(a):
                 pass
         return buf.getvalue().strip()
 
-    L += ["", "## 待人工验收的固化产物", ""]
+    # 子命令捕获一律用全量输出：文件既有章节逐字节稳定，不受简洁开关影响
+    with lp_output.verbose_mode(True):
+        cand_txt = capture(cmd_candidates, argparse.Namespace(min_count=a.min_count, json=False)) or "暂无"
+        canary_txt = capture(cmd_canary_compare,
+                             argparse.Namespace(name="", pass_threshold=0.1, token_threshold=0.3)) or "暂无"
+        review_txt = capture(cmd_registry_review,
+                             argparse.Namespace(idle_days=a.idle_days, verify_days=a.verify_days,
+                                                current_model=a.current_model)) or "暂无"
+        task_txt = capture(cmd_task_list, argparse.Namespace(all=False)) or "暂无"
+        outcome_txt = capture(cmd_outcome_report, argparse.Namespace()) or "暂无"
+
     pend = pending_list()
+    if not lp_output.is_verbose():
+        canary_state = "无记录"
+        if "⚠ 回归" in canary_txt:
+            canary_state = "有回归"
+        elif "无回归" in canary_txt:
+            canary_state = "无回归"
+        review_n = sum(1 for ln in review_txt.splitlines() if ln.startswith("- "))
+        L += ["", "## 结论摘要", "",
+              f"- 证据 {tot} 条，System 2 占比 {(s2n / tot if tot else 0):.0%}；"
+              f"待验收固化产物 {len(pend)} 个",
+              f"- 金丝雀：{canary_state}；能力复核：{review_n} 项待处理",
+              "- （LIVEPOWERS_VERBOSE=1 可恢复完整明细输出）"]
+
+    L += ["", "## 待人工验收的固化产物", ""]
     if pend:
         for m in pend:
             flag = "【写操作】" if m.get("writes_state") else ""
@@ -1183,14 +1291,13 @@ def cmd_report(a):
     else:
         L.append("无")
     L += ["", "## 固化候选（来自证据）", "",
-          capture(cmd_candidates, argparse.Namespace(min_count=a.min_count, json=False)) or "暂无",
+          cand_txt,
           "", "## 金丝雀", "",
-          capture(cmd_canary_compare, argparse.Namespace(name="", pass_threshold=0.1, token_threshold=0.3)) or "暂无",
+          canary_txt,
           "", "## 能力复核", "",
-          capture(cmd_registry_review, argparse.Namespace(idle_days=a.idle_days, verify_days=a.verify_days,
-                                                          current_model=a.current_model)) or "暂无",
-          "", "## 任务看板", "", capture(cmd_task_list, argparse.Namespace(all=False)) or "暂无",
-          "", "## 结果台账", "", capture(cmd_outcome_report, argparse.Namespace()) or "暂无",
+          review_txt,
+          "", "## 任务看板", "", task_txt,
+          "", "## 结果台账", "", outcome_txt,
           "", "## 最近注册的能力", ""]
     for c in sorted(active, key=lambda c: c["created"], reverse=True)[:10]:
         L.append(f"- `{c['id']}` v{c['version']}（{c['kind']}）— {', '.join(c['intents'])}")
@@ -1243,10 +1350,13 @@ def cmd_pending_list(a):
     if not pend:
         print("没有待验收的固化产物。")
         return
+    lines = []
     for m in pend:
         flag = "[写操作] " if m.get("writes_state") else ""
-        print(f"- {flag}{m['intent']}  评分={m.get('score')} n*={m.get('n_star')} 测试={m.get('result')}"
-              f" 位置={m.get('location')} 生成者={m.get('generated_by')}")
+        lines.append(f"- {flag}{m['intent']}  评分={m.get('score')} n*={m.get('n_star')} 测试={m.get('result')}"
+                     f" 位置={m.get('location')} 生成者={m.get('generated_by')}")
+    for line in lp_output.fold(lines, 20):
+        print(line)
 
 
 def cmd_pending_done(a):
@@ -1311,7 +1421,8 @@ def cmd_canary_compare(a):
                 issues.append(f"token 用量上升 {avg:.0f} → {cur['tokens']}（+{cur['tokens'] / avg - 1:.0%}）")
         if issues:
             regressed = True
-            print(head + " ⚠ 回归：" + "；".join(issues))
+            shown = issues if lp_output.is_verbose() else lp_output.fold(issues, 2, "项")
+            print(head + " ⚠ 回归：" + "；".join(shown))
         else:
             print(head + " 无回归")
     if regressed:
@@ -1493,8 +1604,8 @@ def cmd_surface_validate(a):
     errs = surface_problems(s, a.ontology)
     if errs:
         print(f"✗ {a.file}")
-        for e in errs:
-            print(f"  - {e}")
+        for line in lp_output.fold([f"  - {e}" for e in errs], 5):
+            print(line)
         sys.exit(1)
     print(f"✓ {a.file}（{s['tier']}，{len(s['data'])} 个数据源，{len(s['components'])} 个组件）")
 
@@ -1623,9 +1734,12 @@ def cmd_surface_reconcile(a):
             continue
         bad += 1
         print(f"✗ {name}: 行数 {b['rows']} → {n['rows']}，hash {b['hash']} → {n['hash']}")
+        details = []
         for col in sorted(set(b["sums"]) | set(n["sums"])):
             if b["sums"].get(col) != n["sums"].get(col):
-                print(f"    {col} 合计 {b['sums'].get(col)} → {n['sums'].get(col)}")
+                details.append(f"    {col} 合计 {b['sums'].get(col)} → {n['sums'].get(col)}")
+        for line in lp_output.fold(details, 5):
+            print(line)
     if bad:
         print("对账不一致：差异必须解释并修正后才能进入验收")
         sys.exit(1)

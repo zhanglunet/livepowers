@@ -60,7 +60,9 @@ class TestInstaller(unittest.TestCase):
         self.assertEqual(sorted(manifest["skills"]), SKILL_NAMES)
         pkg = json.loads(read(os.path.join(REPO, "package.json")))
         self.assertEqual(manifest["version"], pkg["version"])
-        self.assertIn("/plugin install", out)
+        self.assertIn("/plugin install livepowers-core@livepowers-marketplace", out)
+        # 市场里已没有名为 livepowers 的插件，提示不能再指向它
+        self.assertNotIn("/plugin install livepowers@", out)
         self.assertTrue(os.path.isfile(os.path.join(dest, "using-livepowers", "templates", "spec.md")))
 
     def test_existing_skill_skipped_unless_force(self):
