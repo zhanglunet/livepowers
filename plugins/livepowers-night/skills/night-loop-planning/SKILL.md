@@ -1,6 +1,7 @@
 ---
 name: night-loop-planning
 description: Use when a task must run for hours or overnight, should use idle off-peak compute, needs a strong model to plan and cheaper models to execute, or must be split into resumable concurrent jobs. 规划夜间 / 长程任务时使用。
+allowed-tools: Bash, Read, Write, Task
 ---
 
 # 夜间作业 Loop 规划

@@ -1,6 +1,7 @@
 ---
 name: takeover-handling
 description: Use when a task has been stopped by the loop or budget limit and moved to takeover, when an agent keeps failing on the same step, when a person is asked to take over from an agent, or when the morning report lists tasks in takeover. 任务被止损转入异常接管、Agent 反复失败、人要从 Agent 手里接手时使用。
+allowed-tools: Bash, Read
 ---
 
 # 异常接管

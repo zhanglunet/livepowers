@@ -1,6 +1,7 @@
 ---
 name: oltp-action-safety
 description: Use before exploring, crystallizing or executing any action that writes production state (create, update, transfer, approve, bill, push configuration), including on legacy systems without transactions. 任何写生产状态的动作之前使用。
+allowed-tools: Bash, Read
 ---
 
 # 写操作安全门禁

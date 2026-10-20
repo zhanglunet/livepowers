@@ -1,6 +1,7 @@
 ---
 name: ontology-grounded-spec
 description: Use before implementing any business feature, report, dashboard, query, transactional command or workflow, and whenever a request is ambiguous about scope, definitions or acceptance. 实现任何业务功能之前使用。
+allowed-tools: Bash, Read, Write
 ---
 
 # 本体接地的规格（规格编译）

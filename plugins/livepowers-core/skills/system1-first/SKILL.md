@@ -1,6 +1,7 @@
 ---
 name: system1-first
 description: Use when handling any business request (query, report, dashboard, business operation, routine task), before reasoning it out from scratch. 收到业务请求准备动手，或想先找注册表里的现成固化能力时使用。
+allowed-tools: Bash, Read
 ---
 
 # System 1 优先

@@ -1,6 +1,7 @@
 ---
 name: living-surface
 description: Use when a business application shows fixed pages and the user asks the embedded agent for an analysis or chart that no fixed page covers, when the user wants a one-off result kept as a permanent page, or when a new derived table, view or metric should become part of the fixed structure. 活软件里出次抛分析展示、或把次抛长成固化表结构与固定页时使用。
+allowed-tools: Bash, Read
 ---
 
 # 活软件的生长面
