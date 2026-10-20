@@ -2,7 +2,7 @@
 
 交付与安全：独立验收门、现场交付、结果账本、操作安全与可审计通信。Delivery & safety: acceptance gates, FDE delivery, outcome ledger, action safety.
 
-版本跟随 livepowers 主版本（当前 1.5.0）。
+版本跟随 livepowers 主版本（当前 1.6.0）。
 
 ## 包含的 skills
 

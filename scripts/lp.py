@@ -59,7 +59,7 @@ from datetime import datetime, timedelta, timezone
 
 import lp_output  # PRD-046/T3：简洁输出开关（LIVEPOWERS_VERBOSE / config.yaml）
 
-__version__ = "1.5.0"
+__version__ = "1.6.0"
 
 ROOT = os.environ.get("LIVEPOWERS_HOME", ".livepowers")
 EVID = os.path.join(ROOT, "evidence.jsonl")

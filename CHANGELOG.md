@@ -4,20 +4,37 @@
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-10-20
+
+这一版的主角是新技能 **`generalizing-skills`**：把只能在一个项目里用的 skill，改造成换个项目只写一份绑定就能复用的 skill。同时，19 个技能拆成 5 个可单独安装的主题插件，每个技能都有了独立验收测试，命令行输出默认改为简洁模式。
+
 ### 新增
 
-- 技能 `generalizing-skills`（20 个技能，归入 `livepowers-tooling` 插件）：把只能在单个项目用的 skill 拆成**业务本体 / 方法 / 环境实例**三层。
-  - skill 写本体契约，按 ID 引用规则，不复制规则正文；规则模式与规则取值分开放。
-  - 用"变化分层"判断每句话归哪层；先判断泛化产物是确定性能力还是操作手册。
-  - 新 workspace 首次使用时初始化：发现环境、生成环境指纹、确认实例参数与产物、试跑、写绑定（`.livepowers/bindings/<skill>.yaml`，含本体版本、指纹、确认人）。
-  - 复用前比对指纹；关键列出现新取值时停下问，不静默计算；运行时再做覆盖检查。
-  - 验收三条证据：原项目回归、第二个 workspace 只写绑定跑通、护栏用例；通过后进能力注册表并登记意图别名。
-- `docs/lightweight.md`：轻量接入——按目标挑最小技能组合、只装需要的主题插件、只用到的几条命令，以及什么时候再升级。
-- `using-livepowers` 路由表与项目目录约定新增对应条目。
+- **技能 `generalizing-skills`**（技能总数 19 → 20，归入 `livepowers-tooling` 插件）。解决的问题：同一种月报、稽核 skill 在每个项目各写一份，路径、列名、阈值、模板全写死，换个项目就得重写。
+  - **三层拆分**：业务本体（对象、关系、规则模式）/ 方法（步骤、校验、交互）/ 环境实例（数据源、列、规则取值、模板、渠道）。用"变化分层"判断每句话归哪层。
+  - **本体契约**：skill 只按 ID 引用规则，规则正文留在项目或企业本体里，不另造一份真值；规则模式进本体，规则取值进绑定。
+  - **先判断值不值得泛化**：同类 skill ≥ 2 份、周期性、结果可自动核对、规则模式稳定；不可验证的不泛化。
+  - **首次初始化**：在新 workspace 发现环境、生成环境指纹、确认实例参数与产物、试跑，写绑定 `.livepowers/bindings/<skill>.yaml`（含本体版本、指纹、确认人）。
+  - **复用前比对**：指纹一致才直接跑；关键列出现新取值（如多了一种订单状态）时停下来问，不静默计算；运行时再做一次覆盖检查。
+  - **验收**：原项目回归一致、第二个 workspace 只写绑定不改代码就跑通、护栏用例通过，生成者不验收自己；通过后进能力注册表并登记意图别名。
+  - 按 RED / GREEN / REFACTOR 写成，对照结论见 `docs/devlog.md`。
+- **`docs/lightweight.md` 轻量接入**：只想借概念、不搭全套时，按目标挑最小技能组合、只装需要的主题插件、只用几条命令，以及什么时候再升级。
+- **5 个主题插件**：`livepowers-core` / `livepowers-ontology` / `livepowers-delivery` / `livepowers-night` / `livepowers-tooling`，可以只装需要的部分（`/plugin install livepowers-<主题>@livepowers-marketplace`）；插件市场清单对齐官方格式。插件内的技能是仓库根 `skills/` 的逐字节拷贝，测试保证不漂移。
+- **每个技能的独立验收测试**：`tests/<skill>/test_examples.py`，分契约（L1）、示例（L2）、反例（L3）三层；规范见 `docs/SKILL-TEST-SPEC.md`。
+- **简洁输出（默认开启）**：命令行输出改为"结论 / 关键信息 / 详情折叠"三段式，`--json` 与退出码不变。5 个典型场景的输出 token 合计下降约 67%（`scripts/token_compare.py` 可复现）。需要全量输出时设 `LIVEPOWERS_VERBOSE=1`，或在 `.livepowers/config.yaml` 写 `verbose: true`。
+- **harness 生成器原型** `scripts/gen_harness.py`：读 `capability.yaml`，生成带 `--json` 与错误码的 `cli.py` 和对应 `SKILL.md`（设计见 `docs/HARNESS-DESIGN.md`）。
+- 上架 skills.sh：`npx skills add zhanglunet/livepowers`。
+
+### 改进
+
+- `using-livepowers` 路由表与项目目录约定新增 `generalizing-skills` 与 `.livepowers/bindings/`。
+- 几个技能之间补了调用关系说明（`digital-role-spec`、`fde-delivery`、`nightly-crystallization-review` 等）。
+- README 首屏与官网重写定位与愿景，加 GIF 演示；官网新增 `generalizing-skills` 卡片与"只借概念"FAQ。
 
 ### 已知问题
 
-- macOS 自带打印命令 `/usr/bin/lp`，各技能 `tests/<skill>/test_examples.py` 用 `shutil.which("lp")` 会找到它，导致 16 项 L2 用例在 macOS 本机失败（CI 的 Linux 环境不受影响）。
+- macOS 自带打印命令 `/usr/bin/lp`，各技能 `tests/<skill>/test_examples.py` 用 `shutil.which("lp")` 会找到它，导致 16 项 L2 用例在 macOS 本机失败（CI 的 Linux 环境不受影响）。修复进行中。
+- Claude Code 插件 `livepowers-core` 自带的 `scripts/lp.py` 比仓库根目录的旧，尚未包含简洁输出；通过 npm 或仓库直接使用 `lp` 不受影响。
 
 ## [1.5.0] - 2026-10-12
 

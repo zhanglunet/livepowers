@@ -2,7 +2,7 @@
 
 核心工作流：先查固化能力（System 1 first）、带证据探索、把验证过的路径固化成可测试能力。Core workflow: System 1 first, explore with evidence, crystallize proven paths into tested capabilities.
 
-版本跟随 livepowers 主版本（当前 1.5.0）。
+版本跟随 livepowers 主版本（当前 1.6.0）。
 
 ## 包含的 skills
 

@@ -2,7 +2,7 @@
 
 本体：环境扫描、知识演进、数字角色规约。Ontology: environment scan, knowledge evolution, digital role specs.
 
-版本跟随 livepowers 主版本（当前 1.5.0）。
+版本跟随 livepowers 主版本（当前 1.6.0）。
 
 ## 包含的 skills
 

@@ -2,7 +2,7 @@
 
 工具：agent harness 与 skill 编写指南。Tooling: agent harness for tools and the guide to writing livepowers skills.
 
-版本跟随 livepowers 主版本（当前 1.5.0）。
+版本跟随 livepowers 主版本（当前 1.6.0）。
 
 ## 包含的 skills
 
