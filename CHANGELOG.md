@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 
+### 新增
+
+- **链式 skill 使用指南**（`docs/chained-skills-guide.md`）：面向使用者写清如何运行一条链（校验/运行/人工门采纳续跑/状态/段独立调用/跳段与退出码全表）、如何编排新链（`chain.yaml` 字段逐项与校验规则）、元数据与兼容性口径、链上架 checklist。
+- **最小链示例** `skills/delivery-chain/examples/minimal-chain/`：示范链前两段（环境扫描 → 规格）组成的两段链，无人工门、一次跑通，附说明与试跑命令；`livepowers-delivery` 插件拷贝已同步。
+
 ## [1.6.0] - 2026-10-20
 
 这一版的主角是新技能 **`generalizing-skills`**：把只能在一个项目里用的 skill，改造成换个项目只写一份绑定就能复用的 skill。同时，19 个技能拆成 5 个可单独安装的主题插件，每个技能都有了独立验收测试，命令行输出默认改为简洁模式。
