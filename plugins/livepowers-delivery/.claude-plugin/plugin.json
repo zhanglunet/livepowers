@@ -1,6 +1,6 @@
 {
   "name": "livepowers-delivery",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "交付与安全：独立验收门、现场交付、结果账本、操作安全与可审计通信。Delivery & safety: acceptance gates, FDE delivery, outcome ledger, action safety.",
   "author": {
     "name": "Livepowers contributors"

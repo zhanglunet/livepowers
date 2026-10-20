@@ -10,7 +10,7 @@
     {
       "name": "livepowers-core",
       "description": "核心工作流：先查固化能力（System 1 first）、带证据探索、把验证过的路径固化成可测试能力。Core workflow: System 1 first, explore with evidence, crystallize proven paths into tested capabilities.",
-      "version": "1.5.0",
+      "version": "1.6.0",
       "source": "./plugins/livepowers-core",
       "author": {
         "name": "Livepowers contributors"
@@ -29,7 +29,7 @@
     {
       "name": "livepowers-ontology",
       "description": "本体：环境扫描、知识演进、数字角色规约。Ontology: environment scan, knowledge evolution, digital role specs.",
-      "version": "1.5.0",
+      "version": "1.6.0",
       "source": "./plugins/livepowers-ontology",
       "author": {
         "name": "Livepowers contributors"
@@ -47,7 +47,7 @@
     {
       "name": "livepowers-delivery",
       "description": "交付与安全：独立验收门、现场交付、结果账本、操作安全与可审计通信。Delivery & safety: acceptance gates, FDE delivery, outcome ledger, action safety.",
-      "version": "1.5.0",
+      "version": "1.6.0",
       "source": "./plugins/livepowers-delivery",
       "author": {
         "name": "Livepowers contributors"
@@ -66,7 +66,7 @@
     {
       "name": "livepowers-night",
       "description": "夜间循环：夜间计划与晨间固化评审。Night loops: nightly planning and morning crystallization review.",
-      "version": "1.5.0",
+      "version": "1.6.0",
       "source": "./plugins/livepowers-night",
       "author": {
         "name": "Livepowers contributors"
@@ -84,7 +84,7 @@
     {
       "name": "livepowers-tooling",
       "description": "工具：agent harness 与 skill 编写指南。Tooling: agent harness for tools and the guide to writing livepowers skills.",
-      "version": "1.5.0",
+      "version": "1.6.0",
       "source": "./plugins/livepowers-tooling",
       "author": {
         "name": "Livepowers contributors"

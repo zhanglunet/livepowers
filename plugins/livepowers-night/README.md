@@ -2,7 +2,7 @@
 
 夜间循环：夜间计划与晨间固化评审。Night loops: nightly planning and morning crystallization review.
 
-版本跟随 livepowers 主版本（当前 1.5.0）。
+版本跟随 livepowers 主版本（当前 1.6.0）。
 
 ## 包含的 skills
 
