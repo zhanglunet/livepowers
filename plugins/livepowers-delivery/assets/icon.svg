@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>livepowers-delivery plugin icon</title>
+  <polygon points="32,4 56,18 56,46 32,60 8,46 8,18" fill="none" stroke="#10B981" stroke-width="5"/>
+  <text x="32" y="40" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="20" font-weight="700" fill="#10B981" text-anchor="middle">LP</text>
+</svg>
