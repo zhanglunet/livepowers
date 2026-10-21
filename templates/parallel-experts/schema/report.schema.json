@@ -1,0 +1,49 @@
+{
+  "title": "并行专家合并报告",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["orchestra", "run_id", "target", "experts", "findings", "generated_by"],
+  "properties": {
+    "orchestra": {
+      "type": "string",
+      "description": "orchestra.yaml 的 name。"
+    },
+    "run_id": {
+      "type": "string",
+      "description": "本次运行 id，对应输出目录中的 {run-id}。"
+    },
+    "target": {
+      "type": "string",
+      "description": "本次判断对象，与 target.value 相同。"
+    },
+    "experts": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "本轮实际派发的只读专家 id，不含写入者。"
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "expert", "module", "severity", "summary", "evidence", "falsify"],
+        "properties": {
+          "id": { "type": "string" },
+          "expert": { "type": "string" },
+          "module": { "type": "string" },
+          "severity": {
+            "type": "string",
+            "enum": ["critical", "high", "medium", "low", "info"]
+          },
+          "summary": { "type": "string" },
+          "evidence": { "type": "string" },
+          "falsify": { "type": "string" }
+        }
+      }
+    },
+    "generated_by": {
+      "type": "string",
+      "description": "编排者标识。不得与 confirm-write.json 的 by 相同。"
+    }
+  }
+}
