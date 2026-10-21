@@ -1,0 +1,37 @@
+{
+  "title": "并行专家单条发现",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "expert", "module", "severity", "summary", "evidence", "falsify"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "description": "去重键。同一编排内稳定，不随措辞变化。"
+    },
+    "expert": {
+      "type": "string",
+      "description": "产出这条发现的只读专家 id，对应 orchestra.yaml 的 experts[].id。"
+    },
+    "module": {
+      "type": "string",
+      "description": "这条发现所属模块，必须出现在该专家的 modules 列表中。"
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["critical", "high", "medium", "low", "info"]
+    },
+    "summary": {
+      "type": "string",
+      "description": "一句话判断，不含主机名、地址、账号或密钥。"
+    },
+    "evidence": {
+      "type": "string",
+      "description": "证据位置，用运行目录内的相对路径或 {target} 上的锚点。"
+    },
+    "falsify": {
+      "type": "string",
+      "description": "怎样能证明这条判断是错的。"
+    }
+  }
+}

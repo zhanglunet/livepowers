@@ -1,0 +1,61 @@
+# 并行专家编排描述。复制本目录后替换全部 {占位符}。
+# 格式：2 空格缩进、字符串加引号；不用锚点、别名、流式集合、块标量。
+# 只读专家可在 dispatch 同一轮并行；writer 不在该轮出现。
+name: "{orchestra-name}"
+description: "{一句话说明这套编排判断什么、不改什么}"
+version: "0.1.0"
+target:
+  kind: "{url-or-path-or-record}"
+  value: "{target}"
+phases:
+  - id: detect
+    does: "识别对象类型与可用信号，写出 context 文件；此阶段不派发专家"
+  - id: dispatch
+    does: "同一轮派发所有 when 命中的只读专家，每人一份信封"
+  - id: synthesize
+    does: "按 id 去重、按严重度保留、汇总分数；不写业务对象"
+  - id: write
+    does: "仅当人工门 confirm-write 通过后，派发唯一写入者"
+experts:
+  - id: "{expert-a}"
+    role: readonly
+    when: always
+    modules:
+      - "{module-a1}"
+      - "{module-a2}"
+    prompt: "agents/specialist.md"
+  - id: "{expert-b}"
+    role: readonly
+    when: always
+    modules:
+      - "{module-b1}"
+    prompt: "agents/specialist.md"
+  - id: "{expert-when}"
+    role: readonly
+    when: "{condition}"
+    modules:
+      - "{module-c1}"
+    prompt: "agents/specialist.md"
+writer:
+  id: "{writer-id}"
+  role: writer
+  tools:
+    - Read
+    - Edit
+    - Write
+  gate: confirm-write
+  prompt: "agents/writer.md"
+merge:
+  dedupe_key: "id"
+  keep: "highest-severity"
+  rank:
+    - critical
+    - high
+    - medium
+    - low
+    - info
+output:
+  root: ".livepowers/orchestras/{orchestra-name}/runs/{run-id}"
+  context: "context.json"
+  findings: "findings.json"
+  report: "report.json"

@@ -6,6 +6,7 @@
 
 ### 新增
 
+- **并行专家编排模板**（PRD-112/T1，`templates/parallel-experts/`）：只读专家同一轮派发、合并后经人工门才派发唯一写入者。只有模板与契约测试，不含运行器与新技能。
 - **链式 skill 使用指南**（`docs/chained-skills-guide.md`）：面向使用者写清如何运行一条链（校验/运行/人工门采纳续跑/状态/段独立调用/跳段与退出码全表）、如何编排新链（`chain.yaml` 字段逐项与校验规则）、元数据与兼容性口径、链上架 checklist。
 - **最小链示例** `skills/delivery-chain/examples/minimal-chain/`：示范链前两段（环境扫描 → 规格）组成的两段链，无人工门、一次跑通，附说明与试跑命令；`livepowers-delivery` 插件拷贝已同步。
 
