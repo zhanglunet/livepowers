@@ -1,6 +1,7 @@
 ---
 name: explore-with-evidence
 description: Use when the capability registry misses, when a request is new, rare or the environment has changed, and the agent must reason it out with the LLM (write SQL, analyze, trial-and-error, orchestrate tools). 注册表未命中、需要 Agent 自主探索时使用。
+allowed-tools: Bash, Read
 ---
 
 # 探索并留证据

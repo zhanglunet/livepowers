@@ -1,6 +1,7 @@
 ---
 name: agent-harness-for-tools
 description: Use when CLIs / MCP tools / APIs already exist but business agents use them unreliably, when a weaker or different model must take over a workflow, or right after a model upgrade lands. 接口已有但 Agent 用不稳、或要换模型时使用。
+allowed-tools: Bash, Read
 ---
 
 # 用工具办事的 Harness（Agent Harness）

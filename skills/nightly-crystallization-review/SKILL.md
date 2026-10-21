@@ -1,6 +1,7 @@
 ---
 name: nightly-crystallization-review
 description: Use at end of day, when a nightly job starts, or when asked "what can be crystallized today" or "is the product getting more skilled". 收工 / 夜间回顾证据、挑固化候选、出晨报时使用。
+allowed-tools: Bash, Read
 ---
 
 # 夜间固化评审

@@ -1,6 +1,7 @@
 ---
 name: using-livepowers
 description: Use when starting any conversation that touches business software, data analysis, transactional systems, ontology, agent product delivery, long-running jobs or multi-agent work, before any response or action. 开始任何企业业务软件 / 数据分析 / 交易系统 / 本体 / 智能体交付 / 长程任务 / 多智能体工作前使用。
+allowed-tools: Bash, Read
 ---
 
 # Using Livepowers

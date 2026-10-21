@@ -1,6 +1,7 @@
 ---
 name: fde-delivery
 description: Use when delivering a domain Live Product at a customer site as a forward-deployed engineer, for a brownfield retrofit or a greenfield build, or when field innovations must flow back into the product. 把领域产品交付到客户现场时使用。
+allowed-tools: Bash, Read
 ---
 
 # FDE 交付
