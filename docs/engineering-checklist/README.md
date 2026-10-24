@@ -11,6 +11,7 @@
 | `../../scripts/eng_checklist.py` | 机检脚本（零依赖，Python 3.9+ 标准库，只报告不代改） |
 | `exemptions.md` | 过渡期豁免台账（字段与规则见文内；阻断级条目不可豁免） |
 | `samples/` | 金样例报告（T1 §6 走查计划的机检部分，修复缺口归 T4） |
+| `prd-094-mapping.md` | E 条目 ↔ PRD-094 C 条目字段映射（T3，双向全量表；一致性由 `tests/test_checklist_mapping.py` 机检） |
 
 ## 用法
 
@@ -41,4 +42,5 @@ python3 scripts/eng_checklist.py --plugin livepowers-night --format markdown --o
 ## 与 PRD-094 的关系
 
 C 条目是收录视角（外部考官，`docs/PRD-094-store-checklist.md`），E 条目是工程视角
-（自家门槛）；映射关系见 T1 草案第 4 节，字段映射文档齐全是 T3（#737）的验收物。
+（自家门槛）；映射关系落 **`prd-094-mapping.md`**（T3/#737 验收物：19 条 E 条目的
+正向表 + C-01–C-31 逐条反向覆盖表，被引用 10 条 / 收录侧自管 21 条）。
