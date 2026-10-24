@@ -33,13 +33,14 @@ allowed-tools: Bash, Read
    lp pending add --intent "<意图>" --score <评分> --n-star <n*> --tests "<测试命令>" --result pass|fail|partial \
      --location "<分支或目录>" --generated-by <夜间Agent> [--writes-state] --model <模型>
    ```
-   没有登记的产物不会出现在晨报里，早晨也不会被验收。
+   预期结果：登记成功输出产物 manifest 路径（exit 0）；同一意图已有待验收产物时非 0 退出，并提示先 `lp pending done`。没有登记的产物不会出现在晨报里，早晨也不会被验收。
    - 单次成功路径的固化质量门见 `crystallize-to-system1`（F-V-S-R）；本 skill 负责批量评审与退役。
 
 5. **复核已固化能力。**
    ```bash
    lp registry review --idle-days 60 --verify-days 30 --current-model <当前模型>
    ```
+   预期结果：逐条输出 `- <能力ID>: <原因>` 的复核发现清单；无待处理项时输出「复核：无待处理项」（均 exit 0）。
    - 连续失败（去固化信号）；
    - 受环境漂移或本体升级影响（来自 `env-scan-ontology` 的夜间扫描、`ontology-evolution` 的发布记录）；
    - 长期无人调用（考虑退役，避免能力库变成新的"死软件"）；

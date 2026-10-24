@@ -293,6 +293,24 @@ class TestCLIOnRealRepo(unittest.TestCase):
             capture_output=True, text=True, cwd=str(REAL_REPO))
         self.assertIn(proc.returncode, (0, 1))   # FAIL=1、其余 0，不崩
 
+    def test_night_plugin_all_green(self):
+        """PRD-147/T4 验收：livepowers-night 机检全绿（E-X01 缺口已修，回归即红）。
+
+        断言：退出码 0（过门）、汇总行 PARTIAL/FAIL 均为 0、判定行 PASS。
+        MANUAL 是设计内的人工面（E-T03/T05/S04），不算缺口。
+        """
+        proc = subprocess.run(
+            [sys.executable, str(SCRIPT), "--plugin", "livepowers-night"],
+            capture_output=True, text=True, cwd=str(REAL_REPO))
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        summary = [l for l in proc.stdout.splitlines() if l.startswith("汇总：")]
+        self.assertTrue(summary, proc.stdout)
+        self.assertIn("PARTIAL 0", summary[0])
+        self.assertIn("FAIL 0", summary[0])
+        verdict = [l for l in proc.stdout.splitlines() if l.startswith("判定：")]
+        self.assertTrue(verdict, proc.stdout)
+        self.assertIn("PASS", verdict[0])
+
     def test_unknown_skill_rejected(self):
         proc = subprocess.run(
             [sys.executable, str(SCRIPT), "--skill", "no-such-skill"],
