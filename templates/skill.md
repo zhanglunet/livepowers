@@ -46,5 +46,6 @@ description: Use when <触发条件：看到什么症状、在做什么事时用
 - [ ] `description` 只写触发条件与症状（≤1024 字符），不概括流程——否则 Agent 读完描述就以为自己会了
 - [ ] 引用其他 skill 只写名字，不复制其内容
 - [ ] 不写具体组织、人员、客户、项目名称；示例用通用业务对象（订单、商机、合同、工单）
+- [ ] 已过瘦身门并留决策记录（`docs/slim-gate/records/`，模板 `templates/slim-gate-record.md`，PRD-148）——无 approved 记录不可做三处登记
 - [ ] 已加进 `using-livepowers` 的路由表和 README 的技能表
 - [ ] `tests/triggers/<name>.jsonl` 有 ≥3 条正例、≥2 条反例；`python -m unittest discover -s tests` 通过
