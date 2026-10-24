@@ -4,9 +4,11 @@ import shutil
 import unittest
 from pathlib import Path
 
+from helpers import find_livepowers_lp
+
 SKILL = Path(__file__).resolve().parents[2] / "skills" / "auditable-agent-comms" / "SKILL.md"
 TEXT = SKILL.read_text(encoding="utf-8")
-LP = shutil.which("lp")
+LP = find_livepowers_lp()
 
 
 def _frontmatter(text):

@@ -1,13 +1,13 @@
 """env-scan-ontology 的独立验收测试。L1/L3 纯文本可跑；L2 需 lp 环境则跳过。"""
 import re
-import shutil
-import subprocess
 import unittest
 from pathlib import Path
 
+from helpers import find_livepowers_lp, run_lp
+
 SKILL = Path(__file__).resolve().parents[2] / "skills" / "env-scan-ontology" / "SKILL.md"
 TEXT = SKILL.read_text(encoding="utf-8")
-LP = shutil.which("lp")
+LP = find_livepowers_lp()
 
 
 def _frontmatter(text):
@@ -52,10 +52,8 @@ class Examples(unittest.TestCase):
 
     @unittest.skipIf(LP is None, "需 lp 真实环境")
     def test_lp_evidence_add_runs(self):
-        r = subprocess.run(
-            [LP, "evidence", "add", "--intent", "ci-smoke-scan",
-             "--system", "S2", "--outcome", "success", "--verifiable"],
-            capture_output=True, text=True)
+        r = run_lp(LP, "evidence", "add", "--intent", "ci-smoke-scan",
+                   "--system", "S2", "--outcome", "success", "--verifiable")
         self.assertEqual(r.returncode, 0)
 
 

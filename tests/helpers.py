@@ -1,5 +1,7 @@
 import json
 import os
+import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -40,3 +42,37 @@ class Workdir(unittest.TestCase):
     def read_json(self, rel):
         with open(os.path.join(self.dir, rel), encoding="utf-8") as f:
             return json.load(f)
+
+
+def _is_livepowers_lp(path):
+    """PATH 里的 lp 是否为 Livepowers：`lp --version` 须输出 "lp X.Y.Z"。
+
+    macOS 自带 CUPS 打印命令 /usr/bin/lp，不能只凭名字判断。
+    """
+    try:
+        p = subprocess.run([path, "--version"], capture_output=True, text=True,
+                           stdin=subprocess.DEVNULL, timeout=10)
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return p.returncode == 0 and re.match(r"lp \d+\.\d+\.\d+", p.stdout.strip()) is not None
+
+
+def find_livepowers_lp():
+    """返回调用 Livepowers lp 的命令列表；找不到返回 None（L2 用例据此跳过）。
+
+    优先用仓库内 scripts/lp.py；仓库脚本缺失时，才用 PATH 里经版本号校验的 lp。
+    """
+    script = os.path.join(SCRIPTS, "lp.py")
+    if os.path.isfile(script):
+        return [sys.executable, script]
+    path = shutil.which("lp")
+    if path and _is_livepowers_lp(path):
+        return [path]
+    return None
+
+
+def run_lp(cmd, *args):
+    """在临时目录里执行 lp，避免 L2 用例往仓库写 .livepowers/。"""
+    with tempfile.TemporaryDirectory() as d:
+        env = {**os.environ, "LIVEPOWERS_HOME": ".livepowers"}
+        return subprocess.run([*cmd, *args], cwd=d, env=env, capture_output=True, text=True)

@@ -1,13 +1,13 @@
 """system1-first 的独立验收测试。L1/L3 纯文本可跑；L2 需 lp 环境则跳过。"""
 import re
-import shutil
-import subprocess
 import unittest
 from pathlib import Path
 
+from helpers import find_livepowers_lp, run_lp
+
 SKILL = Path(__file__).resolve().parents[2] / "skills" / "system1-first" / "SKILL.md"
 TEXT = SKILL.read_text(encoding="utf-8")
-LP = shutil.which("lp")
+LP = find_livepowers_lp()
 
 
 class Contract(unittest.TestCase):
@@ -41,8 +41,7 @@ class Examples(unittest.TestCase):
 
     @unittest.skipIf(LP is None, "需 lp 环境")
     def test_registry_find_hit(self):
-        r = subprocess.run([LP, "registry", "find", "weekly revenue by region"],
-                           capture_output=True, text=True)
+        r = run_lp(LP, "registry", "find", "weekly revenue by region")
         self.assertIn(r.returncode, (0, 2, 3))  # 契约：退出码只能是这三个
 
 
