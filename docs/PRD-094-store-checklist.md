@@ -12,6 +12,21 @@
 - 本 checklist 只定条目和口径，不做工具；打分表模板（skill × 条目矩阵、汇总公式）是 T2 的事，本文只留汇总口径接口（见"汇总口径"节）。
 - 与 PRD-078 的呼应：PRD-078 是选题审计，看"该做什么"；PRD-003 已按官方市场格式把 5 个插件发了出去，解决"格式对不对"；本 checklist 呼应 PRD-078 的审计思路，把尺子换成官方收录标准，回答"质量分够不够"。
 
+## 相关门禁（选题 → 瘦身 → 工程门禁 → 收录）
+
+本 checklist（收录）是最后一道闸；收录之前还有三道（谁在哪个阶段拦什么）：
+
+| 阶段 | 门禁 | 拦什么 | 位置 |
+|---|---|---|---|
+| 选题 | PRD-078 选题审计（已收官，事后抽查） | 翻车点不成立、证据纯构造的选题（19 张审计卡 + 待办清单，成果在 trend 仓库） | [PRD-078 总报告](https://github.com/zhanglunet/trend/blob/main/adopted/PRD-078-final-report.md) |
+| 瘦身 | PRD-148 瘦身门 | 新提案 / 大改"这需要存在吗、能否并入已有 skill"——无决策记录不可标 published | [`docs/slim-gate/README.md`](slim-gate/README.md) |
+| 工程门禁 | PRD-147 工程标准 checklist | 测试 / 文档 / 示例 / 安全四类 19 条——阻断级不过不出发布 PR | [`docs/engineering-checklist/README.md`](engineering-checklist/README.md) |
+| 收录 | **PRD-094 收录 checklist（本门，C-01–C-31）** | 官方目录视角"收不收"：结构 / 元数据 / 质量分 | 本文 |
+
+收录打分以 published 为前提。工程门（PRD-147）与本文的字段映射见
+[`docs/engineering-checklist/prd-094-mapping.md`](engineering-checklist/prd-094-mapping.md)；
+结构 / 元数据类 C 条目不在工程门重复打分（见映射文档的反向覆盖表）。
+
 ## 来源清单（标准版本标）
 
 官方标准没有统一版本号，本 checklist 以"来源 + 抓取日期"作为版本标（对应 PRD 风险节"checklist 标注标准版本号，T5 复核"）。全部条目均出自下列原文，2026-10-20 抓取：
