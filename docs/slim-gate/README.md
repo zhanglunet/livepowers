@@ -33,6 +33,21 @@ CI（`.github/workflows/test.yml`）每次 push / PR 都跑硬检查。
 存量不要求补记录——PRD-078 已做一轮事后全量审计；存量的大改（改名、触发条件变更、
 正文 ≥1/3 重写）同样触发本门（`trigger: major-revision`）。
 
+## 相关门禁（选题 → 瘦身 → 工程门禁 → 收录）
+
+skill 从提案到进官方目录过四道闸，本门是第二道（谁在哪个阶段拦什么）：
+
+| 阶段 | 门禁 | 拦什么 | 位置 |
+|---|---|---|---|
+| 选题 | PRD-078 选题审计（已收官，事后抽查） | 翻车点不成立、证据纯构造的选题（19 张审计卡 + 待办清单，成果在 trend 仓库） | [PRD-078 总报告](https://github.com/zhanglunet/trend/blob/main/adopted/PRD-078-final-report.md) |
+| 瘦身 | **PRD-148 瘦身门（本门）** | 新提案 / 大改"这需要存在吗、能否并入已有 skill"——无决策记录不可标 published | 本目录（`docs/slim-gate/`） |
+| 工程门禁 | PRD-147 工程标准 checklist | 测试 / 文档 / 示例 / 安全四类 19 条——阻断级不过不出发布 PR | [`docs/engineering-checklist/README.md`](../engineering-checklist/README.md) |
+| 收录 | PRD-094 收录 checklist（C-01–C-31） | 官方目录视角"收不收"：结构 / 元数据 / 质量分 | [`docs/PRD-094-store-checklist.md`](../PRD-094-store-checklist.md) |
+
+串联顺序：提案 → 瘦身门（选题）→ 工程门（质量）→ 三处登记 → published；收录打分以
+published 为前提。两门记录以决策记录的 `cross_ref.engineering` 字段互查（模板：
+[`templates/slim-gate-record.md`](../../templates/slim-gate-record.md)）。
+
 ## 红线（不砍护栏）
 
 涉及安全、写操作审计、独立验收的 skill（`oltp-action-safety`、`acceptance-gates`、
