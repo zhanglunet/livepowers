@@ -26,6 +26,15 @@ python3 scripts/slim_gate.py --report-only
 
 CI（`.github/workflows/test.yml`）每次 push / PR 都跑硬检查。
 
+## T5 验收演示（虚构 skill 完整走门）
+
+[`demo-2026-10-23.md`](demo-2026-10-23.md)（trend #744）：虚构提案 `slim-gate-demo-skill`
+在测试夹具里完整走一遍——未登记不拦 → 三处登记无记录 **exit 1（CI 拒）** → 补决策记录
+**exit 0（过）**；拒绝→补记录→通过的案例留档在
+[`records/2026-10-23-slim-gate-demo-skill.md`](records/2026-10-23-slim-gate-demo-skill.md)
+（示范样例，虚构），另含相似检测提示→并入已有 skill 的 merged 变体填法与度量快照。
+机检复现：`python3 -m unittest tests.test_slim_gate_t5 -v`。
+
 ## 存量基线
 
 `baseline-2026-10-23.md` 记录启用日的 21 个存量 skill（与

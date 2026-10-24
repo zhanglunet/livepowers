@@ -6,6 +6,7 @@
 
 ### 新增
 
+- **瘦身门 T5 验收演示与案例留档**（PRD-148/T5，trend #744）：`docs/slim-gate/demo-2026-10-23.md`（虚构新 skill 在测试夹具完整走门：未登记不拦 → 三处登记无记录 CI 拒 exit 1 → 补决策记录过 exit 0，含 merged 变体与度量快照）+ `docs/slim-gate/records/2026-10-23-slim-gate-demo-skill.md`（「拒绝 → 补记录 → 通过」示范决策记录，虚构 skill、构造证据、provisional）；`tests/test_slim_gate_t5.py` 机检复现三阶段并断言留档记录被采信且不破坏真实门禁。
 - **工程标准 checklist 本体入库**（PRD-147/T5，trend #739）：`docs/engineering-checklist/checklist.md`（v0.1，四类 19 条 + 公共约定 + 豁免规则），条目与 `scripts/eng_checklist.py` 的登记表逐条一致（`tests/test_eng_checklist_t5.py` 断言）；根 README 新增「发布门禁」节（发布前过工程门禁的口径与命令），另附 T5 验收记录与密钥扫描断言（金样例报告与门禁文档 0 命中，带阳性对照）。
 - **并行专家骨架一键生成**（PRD-112/T2）：`python3 scripts/gen_harness.py --parallel-experts -o . examples/parallel-experts/page-review.yaml` 按 `templates/parallel-experts/` 的目录与专家/汇总契约，把编排规格铺成 `harness/<name>/`。不扩展 `capability.yaml`，也不新增运行器或技能。
 - **并行专家编排模板**（PRD-112/T1，`templates/parallel-experts/`）：只读专家同一轮派发、合并后经人工门才派发唯一写入者。只有模板与契约测试，不含运行器与新技能。
