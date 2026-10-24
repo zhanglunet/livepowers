@@ -1,8 +1,8 @@
 # 瘦身门（PRD-148/T2）：发布前强制项
 
 > 问题清单与决策记录模板见 PRD-148/T1（trend issue #740；草案见 PR #87 的
-> `docs/plans/2026-10-23-skill-slim-gate.md`）。本目录是 T2 落地物：发布门检查、
-> 基线清单、决策记录目录与模板。
+> `docs/plans/2026-10-23-skill-slim-gate.md`）。本目录是 T2/T3 落地物：发布门检查、
+> 基线清单、决策记录目录与模板、相似检测首跑基线。
 
 ## 规则
 
@@ -39,3 +39,17 @@ CI（`.github/workflows/test.yml`）每次 push / PR 都跑硬检查。
 `auditable-agent-comms`、`takeover-handling`）不因瘦身门被合并或拒绝：跳 Q3 并在
 记录里标 `safety_exempt: true`。本门不自动删除、不自动修改任何已发布 skill
 （相似检测只提示不判定，是 T3 的事）。
+
+## 相似 skill 检测（T3，供 Q2/Q3 参考）
+
+```bash
+python3 scripts/skill_similarity.py              # 全库 Top 20（阈值 0.60 提示 / 0.80 强提示）
+python3 scripts/skill_similarity.py --top 0 --format markdown
+```
+
+- 词法相似度（`difflib`，name/英文触发段/中文一句话/正文标题四字段取最大值），
+  **只提示、不判定、不自动删**；与 `slim_gate.py` 不强耦合、可独立运行、退出码恒 0
+  （不做 CI 门禁）。
+- 首跑基线：`similarity-baseline-2026-10-23.md`（21 skills，重复度指标 = ≥0.60 的
+  2 对；T1 §6 的"重复度"指标以此为首跑存档，发版前重跑对比）。
+- 提示 ≠ 判定：Q2（能否并入）/Q3（触发边界）的处置仍走决策记录人工终审。
