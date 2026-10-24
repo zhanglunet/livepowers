@@ -4,6 +4,16 @@
 
 这套模板只规定文件与字段。它没有运行器，也不注册为技能。
 
+## 一键生成
+
+不手抄目录时，用 harness 生成器按本模板铺一份骨架：
+
+```bash
+python3 scripts/gen_harness.py --parallel-experts -o . examples/parallel-experts/page-review.yaml
+```
+
+生成物在 harness/<name>/，文件与下表一一对应，并附带输入存档 harness/<name>/spec.yaml。字段说明见 docs/HARNESS-DESIGN.md 第 6 节。
+
 ## 文件
 
 | 文件 | 作用 |

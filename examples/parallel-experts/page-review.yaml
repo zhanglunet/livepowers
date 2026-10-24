@@ -1,0 +1,24 @@
+# 并行专家骨架规格。交给 gen_harness.py --parallel-experts。
+# 2 空格缩进、字符串加引号。不要写真实主机、地址、账号或密钥。
+name: "page-review"
+description: "判断一份页面草稿能否发布，不直接改文件"
+version: "0.1.0"
+target:
+  kind: "path"
+  value: "{target}"
+experts:
+  - id: "content"
+    when: "always"
+    modules:
+      - "headings"
+      - "links"
+  - id: "meta"
+    when: "always"
+    modules:
+      - "title"
+  - id: "media"
+    when: "{condition}"
+    modules:
+      - "images"
+writer:
+  id: "apply"
