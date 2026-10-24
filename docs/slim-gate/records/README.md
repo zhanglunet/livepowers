@@ -8,4 +8,7 @@
 - 记录有效性：必填 `record` / `skill` / `decision`；decision 五值枚举；
   `proposer` 不得与 `reviewer` 相同；同一 skill 取 date 最大的一条。
 - `rejected` / `merged` / `downgraded` 为终态不可逆，翻案须新开记录并引用旧记录 ID。
-- 本目录当前为空（启用日无增量记录）；首个真实记录由下一个新 skill 提案产生。
+- 当前有 1 条**示范样例**：[`2026-10-23-slim-gate-demo-skill.md`](2026-10-23-slim-gate-demo-skill.md)
+  （虚构 skill、构造证据、provisional，PRD-148/T5 验收演示；对应 skill 不在 `skills/`，
+  对发布检查零影响）。案例全过程见 [`../demo-2026-10-23.md`](../demo-2026-10-23.md)；
+  首个真实记录仍由下一个新 skill 提案产生。
