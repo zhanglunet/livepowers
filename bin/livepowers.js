@@ -176,7 +176,13 @@ function install(opts) {
   }
 
   if (opts.target === "claude") {
-    console.log("提示：想在会话启动时自动注入入口技能，推荐用插件方式安装：\n  /plugin marketplace add zhanglunet/livepowers\n  /plugin install livepowers@livepowers-marketplace");
+    console.log("提示：想在会话启动时自动注入入口技能，推荐用插件方式安装（先装 livepowers-core，其余主题插件按需安装，一次装全 5 个最省心）：\n" +
+      "  /plugin marketplace add zhanglunet/livepowers\n" +
+      "  /plugin install livepowers-core@livepowers-marketplace\n" +
+      "  /plugin install livepowers-ontology@livepowers-marketplace\n" +
+      "  /plugin install livepowers-delivery@livepowers-marketplace\n" +
+      "  /plugin install livepowers-night@livepowers-marketplace\n" +
+      "  /plugin install livepowers-tooling@livepowers-marketplace");
   }
   console.log("技能中的 lp 命令：npm i -g livepowers（需要 Python 3.9+）");
 }

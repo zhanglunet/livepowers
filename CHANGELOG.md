@@ -14,6 +14,14 @@
 ### 修复
 
 - 各技能 `tests/<skill>/test_examples.py` 的 L2 用例不再用 `shutil.which("lp")` 找命令：macOS 自带 CUPS 打印命令 `/usr/bin/lp`，会被误当成 Livepowers 的 `lp`，导致 16 项用例在本机失败并真的调用打印命令。改用 `tests/helpers.py` 的 `find_livepowers_lp()`：优先用仓库内 `scripts/lp.py`，仓库脚本缺失时才用 PATH 里 `lp --version` 输出 `lp X.Y.Z` 的命令；`run_lp()` 在临时目录执行，不往仓库写 `.livepowers/`。
+- **安装提示指向不存在的插件**：`npx livepowers install`（`--target claude`）结束时的提示和官网安装区 Claude Code 页签仍写 `/plugin install livepowers@livepowers-marketplace`，但插件市场自 v1.6.0 起只有 5 个主题插件，照做会失败。现改为先装 `livepowers-core`、其余主题插件按需安装，并列出全部 5 条命令，与 README 一致。
+- **`livepowers-core` 插件内的 `lp.py` 落后于仓库根**：缺 PRD-046/T3 简洁输出等改动。现与根 `scripts/lp.py` 同步，并补上它依赖的 `lp_output.py`（之前只同步 `lp.py` 会在启动时 `ModuleNotFoundError`）。
+
+### 测试
+
+- `tests/test_plugin_sync.py`：插件内的 `scripts/*.py` 必须与根 `scripts/` 同名文件逐字节一致。
+- `tests/test_marketplace_install.py`：插件 `scripts/` 里 import 的兄弟模块必须随插件一起提供；README、安装器、官网与插件 README 中的 `/plugin install <名>@livepowers-marketplace` 只能指向 marketplace.json 中存在的插件。
+- `tests/test_npm.py`：断言安装提示含 `livepowers-core@livepowers-marketplace`，且不再出现 `livepowers@`。
 
 ## [1.6.0] - 2026-10-20
 
