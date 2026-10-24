@@ -187,3 +187,27 @@ ping-ledger recent --limit 5
 
 - `storage: sqlite` 要不要在第一期支持（默认 jsonl 够不够用）；
 - 生成器要不要顺手生成 `tests/` 空壳（与 PRD-012 握手）。
+
+## 6. 并行专家骨架（PRD-112/T2）
+
+同一生成器可以按 `templates/parallel-experts/` 的目录和专家/汇总契约铺一份骨架。
+不扩展 `capability.yaml`：那份 schema 拒绝未知字段，编排规格是另一份文档。
+
+一键生成：
+
+```bash
+python3 scripts/gen_harness.py --parallel-experts -o . examples/parallel-experts/page-review.yaml
+```
+
+输出在 `harness/page-review/`。文件与模板一一对应：`orchestra.yaml`、`envelope.md`、`orchestrator.md`、`agents/specialist.md`、`agents/writer.md`、`schema/finding.schema.json`、`schema/report.schema.json`、`README.md`、`NOTICE`。另附输入存档 `spec.yaml`。
+
+规格约束：
+
+- `name` 匹配 `^[a-z0-9-]+$`，同时是输出目录名；
+- `experts` 恰好 3 个：前两个 `when` 为 `always`，第三个 `when` 为花括号占位符（条件槽）；
+- 每个专家 1 到 8 个模块名，模块名在整份规格里不重复；
+- `target.value` 必须是花括号占位符，生成期不写入具体对象；
+- 只读专家与编排者的工具保持 Read、Grep、Glob；写入者保持 Read、Edit、Write，门禁 `confirm-write`；
+- 发现 schema 与报告 schema 从模板原样复制；`NOTICE` 原样复制。
+
+示例规格见 `examples/parallel-experts/page-review.yaml`。生成物是草稿，替换剩余占位符之前不要对真实对象运行。
