@@ -1,13 +1,16 @@
 # 工程标准 checklist（PRD-147）机检工具与台账
 
 > 条目与口径以 **PRD-147/T1 checklist v0.1** 为准（trend issue #735；草案见 PR #86 的
-> `docs/plans/2026-10-23-compound-eng-checklist.md`）。本目录只放 T2 落地物：机检脚本、
-> 豁免台账、金样例报告。checklist 本体入库与发布文档引用门禁是 T5 的事。
+> `docs/plans/2026-10-23-compound-eng-checklist.md`）。本目录组成：**checklist 本体（T5 入库）**、
+> 机检脚本、豁免台账、金样例报告、映射表与 T5 验收记录；发布文档（根 README
+> 「发布门禁」节）已引用本门（T5，trend #739）。
 
 ## 组成
 
 | 文件 | 作用 |
 |---|---|
+| `checklist.md` | **checklist 本体 v0.1**（T5 入库：四类 19 条 + 公共约定 + 豁免规则；与机检脚本 ITEMS 的一致性由 `tests/test_eng_checklist_t5.py` 断言） |
+| `acceptance-t5-2026-10-23.md` | T5 验收记录（trend #739 三条验收标准逐条结论与证据） |
 | `../../scripts/eng_checklist.py` | 机检脚本（零依赖，Python 3.9+ 标准库，只报告不代改） |
 | `exemptions.md` | 过渡期豁免台账（字段与规则见文内；阻断级条目不可豁免） |
 | `samples/` | 金样例报告（T1 §6 走查计划；livepowers-night 为 T4 修复 E-X01 后的全绿版，trend #738；全绿由 `tests/test_eng_checklist.py::TestCLIOnRealRepo::test_night_plugin_all_green` 断言） |
