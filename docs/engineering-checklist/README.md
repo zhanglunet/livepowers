@@ -10,7 +10,7 @@
 |---|---|
 | `../../scripts/eng_checklist.py` | 机检脚本（零依赖，Python 3.9+ 标准库，只报告不代改） |
 | `exemptions.md` | 过渡期豁免台账（字段与规则见文内；阻断级条目不可豁免） |
-| `samples/` | 金样例报告（T1 §6 走查计划的机检部分，修复缺口归 T4） |
+| `samples/` | 金样例报告（T1 §6 走查计划；livepowers-night 为 T4 修复 E-X01 后的全绿版，trend #738；全绿由 `tests/test_eng_checklist.py::TestCLIOnRealRepo::test_night_plugin_all_green` 断言） |
 | `prd-094-mapping.md` | E 条目 ↔ PRD-094 C 条目字段映射（T3，双向全量表；一致性由 `tests/test_checklist_mapping.py` 机检） |
 
 ## 用法
