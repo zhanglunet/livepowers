@@ -43,5 +43,22 @@ class PluginSync(unittest.TestCase):
                          "这些 skill 未被任何插件收录：%s" % (root_skills - covered))
 
 
+    def test_plugin_script_copies_in_sync(self):
+        """plugins/*/scripts/*.py 与仓库根 scripts/ 同名文件逐字节一致（v1.6.0 曾漏同步 lp.py）。"""
+        plugins_root = REPO / "plugins"
+        copies = sorted(plugins_root.glob("*/scripts/*.py")) if plugins_root.is_dir() else []
+        if not copies:
+            self.skipTest("plugins/*/scripts/ 不存在，跳过")
+        mismatched, missing = [], []
+        for pf in copies:
+            root_f = REPO / "scripts" / pf.name
+            if not root_f.is_file():
+                missing.append(str(pf))
+            elif pf.read_bytes() != root_f.read_bytes():
+                mismatched.append(str(pf))
+        self.assertEqual(missing, [], "插件脚本在根 scripts/ 里找不到同名文件：%s" % missing)
+        self.assertEqual(mismatched, [], "插件脚本与根 scripts/ 内容不一致（漂移）：%s" % mismatched)
+
+
 if __name__ == "__main__":
     unittest.main()

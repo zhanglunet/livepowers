@@ -10,7 +10,11 @@
    `templates/<文件>` 引用，在插件目录内真实存在（装完不会 404）；
 3. 有 hooks/ 的插件：hooks.json 合法，引用的 .sh 存在且可执行；
 4. 有 commands/ 的插件：每个 .md 有 frontmatter 且 description 非空；
-5. 5 个插件的 skill 集合恰好覆盖根 skills/ 的 20 个（不多、不少、不重复）。
+5. 5 个插件的 skill 集合恰好覆盖根 skills/ 的 21 个（不多、不少、不重复）；
+6. 插件 scripts/*.py 对仓库内兄弟模块的 import（如 lp.py → lp_output）在插件
+   scripts/ 内能找到，装完运行不会 ModuleNotFoundError；
+7. 仓库文档与安装器里的 `/plugin install <名>@livepowers-marketplace` 只指向
+   marketplace.json 中真实存在的插件。
 
 CI 每次 push/PR 自动跑（`python -m unittest discover -s tests`）。
 Python 3.9 兼容。
@@ -187,6 +191,43 @@ class TestSkillCoverage(unittest.TestCase):
         self.assertEqual(sorted(seen), root,
                          f"插件 skill 集合与根 skills/ 不一致："
                          f"缺 {sorted(set(root) - set(seen))}，多 {sorted(set(seen) - set(root))}")
+
+
+SIBLING_IMPORT = re.compile(r"^\s*(?:import|from)\s+([A-Za-z_][A-Za-z0-9_]*)", re.MULTILINE)
+INSTALL_REF = re.compile(r"/plugin install ([A-Za-z0-9_.-]+)@livepowers-marketplace")
+INSTALL_DOCS = ["README.md", "README.en.md", "bin/livepowers.js", "docs/index.html",
+                "docs/lightweight.md"]
+
+
+class TestPluginScripts(unittest.TestCase):
+    def test_sibling_imports_shipped(self):
+        root_modules = {p.stem for p in (REPO / "scripts").glob("*.py")}
+        for name in plugin_names():
+            sdir = PLUGINS_DIR / name / "scripts"
+            if not sdir.is_dir():
+                continue
+            with self.subTest(plugin=name):
+                shipped = {p.stem for p in sdir.glob("*.py")}
+                missing = []
+                for py in sorted(sdir.glob("*.py")):
+                    mods = set(SIBLING_IMPORT.findall(py.read_text(encoding="utf-8")))
+                    for mod in sorted((mods & root_modules) - shipped):
+                        missing.append(f"{py.name} → {mod}.py")
+                self.assertEqual(missing, [], f"插件 scripts/ 缺少被 import 的兄弟模块：{missing}")
+
+
+class TestInstallInstructions(unittest.TestCase):
+    def test_install_refs_point_to_real_plugins(self):
+        names = set(plugin_names())
+        bad = []
+        for rel in INSTALL_DOCS + [str(p.relative_to(REPO)) for p in sorted(PLUGINS_DIR.glob("*/README.md"))]:
+            f = REPO / rel
+            if not f.is_file():
+                continue
+            for ref in INSTALL_REF.findall(f.read_text(encoding="utf-8")):
+                if ref not in names:
+                    bad.append(f"{rel}: {ref}")
+        self.assertEqual(bad, [], f"安装命令指向不存在的插件：{bad}")
 
 
 if __name__ == "__main__":
