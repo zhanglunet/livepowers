@@ -1,13 +1,13 @@
 """agent-harness-for-tools 的独立验收测试。L1/L3 纯文本可跑；L2 需 lp 环境则跳过。"""
 import re
-import shutil
-import subprocess
 import unittest
 from pathlib import Path
 
+from helpers import find_livepowers_lp, run_lp
+
 SKILL = Path(__file__).resolve().parents[2] / "skills" / "agent-harness-for-tools" / "SKILL.md"
 TEXT = SKILL.read_text(encoding="utf-8")
-LP = shutil.which("lp")
+LP = find_livepowers_lp()
 
 
 def _frontmatter(text):
@@ -52,10 +52,8 @@ class Examples(unittest.TestCase):
 
     @unittest.skipIf(LP is None, "需 lp 真实环境")
     def test_lp_canary_record_runs(self):
-        r = subprocess.run(
-            [LP, "canary", "record", "--name", "ci-smoke",
-             "--model", "ci", "--pass", "1", "--total", "1", "--tokens", "1"],
-            capture_output=True, text=True)
+        r = run_lp(LP, "canary", "record", "--name", "ci-smoke",
+                   "--model", "ci", "--pass", "1", "--total", "1", "--tokens", "1")
         self.assertEqual(r.returncode, 0)
 
 
