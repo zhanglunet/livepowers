@@ -200,6 +200,20 @@ K 是固化成本，M 是维护成本，c1 和 c2 是单次执行成本，p 是 
 2. **再契约**：把关键口径写进本体与规格，开启 `acceptance-gates` 与 `nightly-crystallization-review`，每天早晨人工验收，观察 System 2 占比曲线。
 3. **后证据闭环**：扩到写操作场景（`oltp-action-safety`、`agent-harness-for-tools`），长程任务接入 `night-loop-planning`，多 Agent 协作接入 `auditable-agent-comms`；交付统一走 `fde-delivery`，把资产回流率纳入评价。
 
+## 发布门禁（发版前必过）
+
+发布（发版、新 skill 三处登记）前必须过工程门禁，报告存档、只报告不代改：
+
+```bash
+python3 scripts/eng_checklist.py              # 全仓（21 skills + 6 插件 + 仓库级条目）
+python3 scripts/eng_checklist.py --plugin livepowers-night   # 单插件走查
+```
+
+- 过门口径：**阻断级条目全部 2 分，且常规级达标率 ≥90%**；未过门不出发布 PR。条目本体（四类 19 条）、豁免规则与金样例报告见 [docs/engineering-checklist/](docs/engineering-checklist/)。
+- 常规级缺口可走过渡期豁免台账（限期、须标注）；阻断级不可豁免。
+- 新 skill / 大改另先过瘦身门（PRD-148，`python3 scripts/slim_gate.py`，无决策记录 CI 打回），两门串联顺序见 [工程门禁文档](docs/engineering-checklist/README.md)的「相关门禁」。
+- 报告与文档不得出现真实主机名、IP、账号、密钥（阻断级 E-S01/E-S05；金样例与门禁文档由 `tests/test_eng_checklist_t5.py` 密钥扫描断言）。
+
 ## 文档
 
 - [官网 livepowers.pages.dev](https://livepowers.pages.dev)：图文说明页（含场景、demo、对比、FAQ、开发日志）
