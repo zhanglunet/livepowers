@@ -21,5 +21,7 @@ jobs:
           LP_DENYLIST: ${{ vars.LP_DENYLIST }}
         run: python -m unittest tests.test_repo.TestNoIdentifyingInfo -v
       - run: python -m unittest discover -s tests -v
+      - name: engineering checklist (PRD-147/T2, report-only)
+        run: python scripts/eng_checklist.py --plugin livepowers-night --report-only
       - name: slim gate (PRD-148/T2, hard fail)
         run: python scripts/slim_gate.py
