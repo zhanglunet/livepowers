@@ -98,6 +98,63 @@
       ],
       "category": "development",
       "homepage": "https://github.com/zhanglunet/livepowers/tree/main/plugins/livepowers-tooling"
+    },
+    {
+      "name": "livepowers-role-sales",
+      "description": "角色包：销售/交付。Role pack for sales/delivery: system1-first lookup, evidence-based exploration, delivery chain, takeover handling and write-safety.",
+      "version": "0.1.0",
+      "source": "./role-packs/livepowers-role-sales",
+      "author": {
+        "name": "Livepowers contributors"
+      },
+      "license": "MIT",
+      "keywords": [
+        "role-pack",
+        "sales",
+        "delivery",
+        "fde",
+        "live-product"
+      ],
+      "category": "productivity",
+      "homepage": "https://github.com/zhanglunet/livepowers/tree/main/role-packs/livepowers-role-sales"
+    },
+    {
+      "name": "livepowers-role-finance",
+      "description": "角色包：财务/口径。Role pack for finance: environment scan, ontology evolution, night loops and write-safety.",
+      "version": "0.1.0",
+      "source": "./role-packs/livepowers-role-finance",
+      "author": {
+        "name": "Livepowers contributors"
+      },
+      "license": "MIT",
+      "keywords": [
+        "role-pack",
+        "finance",
+        "ontology",
+        "night-loop",
+        "live-product"
+      ],
+      "category": "productivity",
+      "homepage": "https://github.com/zhanglunet/livepowers/tree/main/role-packs/livepowers-role-finance"
+    },
+    {
+      "name": "livepowers-role-hr",
+      "description": "角色包：人力/合规。Role pack for HR: digital role specs, auditable agent collaboration and the common method baseline.",
+      "version": "0.1.0",
+      "source": "./role-packs/livepowers-role-hr",
+      "author": {
+        "name": "Livepowers contributors"
+      },
+      "license": "MIT",
+      "keywords": [
+        "role-pack",
+        "hr",
+        "compliance",
+        "audit",
+        "live-product"
+      ],
+      "category": "productivity",
+      "homepage": "https://github.com/zhanglunet/livepowers/tree/main/role-packs/livepowers-role-hr"
     }
   ]
 }

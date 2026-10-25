@@ -1,0 +1,18 @@
+{
+  "name": "livepowers-role-finance",
+  "version": "0.1.0",
+  "description": "财务/口径角色包：数据环境盘点、口径变更流程、月结夜间批量与写操作护栏。Finance role pack: environment scan, ontology evolution, night loops and write-safety.",
+  "author": {
+    "name": "Livepowers contributors"
+  },
+  "homepage": "https://github.com/zhanglunet/livepowers/tree/main/role-packs/livepowers-role-finance",
+  "repository": "https://github.com/zhanglunet/livepowers",
+  "license": "MIT",
+  "keywords": [
+    "role-pack",
+    "finance",
+    "ontology",
+    "night-loop",
+    "live-product"
+  ]
+}

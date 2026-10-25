@@ -1,0 +1,18 @@
+{
+  "name": "livepowers-role-hr",
+  "version": "0.1.0",
+  "description": "人力/合规角色包：数字岗位规格、可审计协作与通用方法底座。HR role pack: digital role specs, auditable agent collaboration and the common method baseline.",
+  "author": {
+    "name": "Livepowers contributors"
+  },
+  "homepage": "https://github.com/zhanglunet/livepowers/tree/main/role-packs/livepowers-role-hr",
+  "repository": "https://github.com/zhanglunet/livepowers",
+  "license": "MIT",
+  "keywords": [
+    "role-pack",
+    "hr",
+    "compliance",
+    "audit",
+    "live-product"
+  ]
+}
