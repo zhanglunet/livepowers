@@ -25,3 +25,5 @@ jobs:
         run: python scripts/eng_checklist.py --plugin livepowers-night --report-only
       - name: slim gate (PRD-148/T2, hard fail)
         run: python scripts/slim_gate.py
+      - name: adversarial gate (PRD-171/T3, hard fail)
+        run: python scripts/adversarial_gate.py
