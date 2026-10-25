@@ -18,7 +18,8 @@
    用例全部 confirmed、未 confirmed 项须有有效豁免（exempt_ref 指向工程门
    豁免台账 docs/engineering-checklist/exemptions.md 里登记的 EX- ID，且其
    对象为该 skill）。**safety 用例一律不可豁免**；rejected 无豁免通道。
-   CI / published 的强制接线是 T3（#857）范围，本命令只输出判定。
+   发布面 / CI 的强制接线见 scripts/adversarial_gate.py（PRD-171/T3，
+   #857），本命令只输出判定输入。
 4. `template`：打印 findings.json 起始骨架（--example 附一条构造样例记录，
    仅供对照字段，不得原样入库）。
 
@@ -508,7 +509,7 @@ def main(argv=None):
     p = sub.add_parser("check", help="校验 findings.json 三态记录与独立性")
     p.add_argument("skill", nargs="?", default=None)
     p.add_argument("--all", action="store_true")
-    p = sub.add_parser("gate", help="published 前置条件判定输入（T3 接线 CI）")
+    p = sub.add_parser("gate", help="published 前置条件判定输入（发布面接线见 adversarial_gate.py）")
     p.add_argument("skill", nargs="?", default=None)
     p.add_argument("--all", action="store_true")
     p.add_argument("--json", action="store_true")
