@@ -44,4 +44,4 @@
 - **pending** = 对抗验收（PRD-171：作者≠验收者、三态记录）尚未跑完；本包状态为 `draft`，转 `published` 须门禁全过（发行清单 `../manifest.json` 为单一真值源）；
 - **补偿规则**：`using-livepowers` 路由表中未随包安装的技能视为未启用，命中即按 MISS 走 `explore-with-evidence`，不改入口正文。
 
-许可：MIT（见仓库根 LICENSE）。
+许可：MIT（见本包 `LICENSE`，与仓库根 LICENSE 一致）。
