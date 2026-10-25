@@ -14,7 +14,10 @@
 6. 插件 scripts/*.py 对仓库内兄弟模块的 import（如 lp.py → lp_output）在插件
    scripts/ 内能找到，装完运行不会 ModuleNotFoundError；
 7. 仓库文档与安装器里的 `/plugin install <名>@livepowers-marketplace` 只指向
-   marketplace.json 中真实存在的插件。
+   marketplace.json 中真实存在的插件；
+8. marketplace.json 除 5 个主题插件外还登记角色包（source ./role-packs/<pack>，
+   PRD-172）；skill 覆盖统计只统计 ./plugins/ 条目，角色包机检在
+   tests/test_role_packs.py。
 
 CI 每次 push/PR 自动跑（`python -m unittest discover -s tests`）。
 Python 3.9 兼容。
@@ -42,8 +45,17 @@ def load_marketplace():
         return json.load(f)
 
 
+SOURCE_PREFIXES = ("./plugins/", "./role-packs/")
+
+
+def marketplace_entries():
+    return load_marketplace()["plugins"]
+
+
 def plugin_names():
-    return [p["name"] for p in load_marketplace()["plugins"]]
+    """主题插件（./plugins/ 条目）；角色包条目由 tests/test_role_packs.py 管辖。"""
+    return [p["name"] for p in marketplace_entries()
+            if p.get("source", "").startswith("./plugins/")]
 
 
 def md_files(plugin_dir):
@@ -89,13 +101,14 @@ class TestMarketplaceManifest(unittest.TestCase):
         self.assertGreater(len(m["plugins"]), 0)
 
     def test_each_entry_resolves(self):
-        for entry in load_marketplace()["plugins"]:
+        for entry in marketplace_entries():
             name = entry["name"]
             with self.subTest(plugin=name):
                 self.assertIn("source", entry)
                 src = entry["source"]
-                self.assertTrue(src.startswith("./plugins/"),
-                                f"source 应为 ./plugins/<name> 形式，实际 {src!r}")
+                self.assertTrue(src.startswith(SOURCE_PREFIXES),
+                                f"source 应为 {SOURCE_PREFIXES} 之一，实际 {src!r}")
+                self.assertNotIn("..", src, f"source 不得含 ..：{src}")
                 pdir = REPO / src[2:]
                 self.assertTrue(pdir.is_dir(), f"source 目录不存在：{src}")
                 pj = pdir / ".claude-plugin" / "plugin.json"

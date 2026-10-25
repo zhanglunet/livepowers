@@ -1,0 +1,18 @@
+{
+  "name": "livepowers-role-sales",
+  "version": "0.1.0",
+  "description": "销售/交付角色包：先查固化能力、带证据探索、五段交付链、跟单接手与写操作护栏。Sales/delivery role pack: system1-first lookup, evidence-based exploration, delivery chain, takeover handling and write-safety.",
+  "author": {
+    "name": "Livepowers contributors"
+  },
+  "homepage": "https://github.com/zhanglunet/livepowers/tree/main/role-packs/livepowers-role-sales",
+  "repository": "https://github.com/zhanglunet/livepowers",
+  "license": "MIT",
+  "keywords": [
+    "role-pack",
+    "sales",
+    "delivery",
+    "fde",
+    "live-product"
+  ]
+}
