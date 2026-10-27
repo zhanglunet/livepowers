@@ -74,3 +74,10 @@ role-packs/
 两条路径（整仓 fork/vendored + 私有市场、单包技能分发）的分步手册与验证清单：
 **docs/role-packs-private-marketplace.md**。文档示例一律占位符，不出现真实
 主机名 / IP / 账号 / 密钥。
+
+## 验收
+
+- 对抗验收（PRD-171）按上文推进流程走；发行面验收走查记录：
+  **docs/plans/2026-10-27-role-skill-pack-t5-acceptance.md**（PRD-172/T5，
+  trend issue #864：三包安装演示 / 清单与验收状态一致 / 无密钥与术语统一），
+  机检复现 `python3 -m unittest tests.test_role_packs_t5 -v`。

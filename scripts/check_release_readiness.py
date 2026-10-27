@@ -2,8 +2,9 @@
 """PRD-172/T4：发行前强制走 PRD-171 对抗验收（trend #863）。
 
 判定：role-packs/manifest.json 中状态为 published 的角色包，其成员 skill 的
-acceptance.state 必须为 confirmed（safety 条目一律不可豁免；豁免仅限
-needs_validation 且 exempt_ref 指向工程门豁免台账 EX- ID）。未通过即退出码 1
+acceptance.state 必须为 confirmed，或为 exempt 且 exempt_ref 指向工程门豁免
+台账 EX- ID（清单 schema 口径：pending/confirmed/exempt/blocked，T1 §4.2；
+safety 条目在 PRD-171 层不可豁免，此处不需要另设开关）。未通过即退出码 1
 ——「未通过不可进发行清单」的机器化。
 
 零依赖（Python 3.9+ 标准库）；判定输入只读 manifest.json 与
@@ -38,7 +39,7 @@ def check_pack(pack: dict, exempt_refs: set | None = None) -> list:
     """返回违规清单（空 = 该包发行就绪）。"""
     exempt_refs = exempt_refs if exempt_refs is not None else load_exempt_refs()
     violations = []
-    pack_name = pack.get("name", "?")
+    pack_name = pack.get("pack_id") or pack.get("name", "?")
     status = pack.get("status")
     if status != "published":
         return violations  # draft/审阅中的包不强制
@@ -48,11 +49,12 @@ def check_pack(pack: dict, exempt_refs: set | None = None) -> list:
         state = acc.get("state")
         if state == "confirmed":
             continue
-        if state == "needs_validation":
+        if state in ("exempt", "needs_validation"):
+            # exempt 是清单 schema 口径（T1 §4.2）；needs_validation 兼容旧写法。
             ref = acc.get("exempt_ref")
             if not ref:
                 violations.append(
-                    f"{pack_name}/{name}: needs_validation 无 exempt_ref（须指向工程门豁免台账 EX- ID）")
+                    f"{pack_name}/{name}: {state} 无 exempt_ref（须指向工程门豁免台账 EX- ID）")
             elif ref not in exempt_refs:
                 violations.append(
                     f"{pack_name}/{name}: exempt_ref {ref} 未在豁免台账登记")
@@ -81,7 +83,8 @@ def main(argv=None) -> int:
         print("❌", v)
     if violations:
         print(f"\n发行就绪检查：{len(violations)} 项未过——published 包成员必须"
-              "confirmed（safety 不可豁免；needs_validation 须有效 exempt_ref）")
+              "confirmed 或带有效 exempt_ref 的 exempt（PRD-171：非 confirmed 且无"
+              "有效豁免不可 published）")
         return 1
     print("✅ 发行就绪检查：全部 published 包成员 acceptance 状态合规")
     return 0
