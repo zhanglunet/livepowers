@@ -44,3 +44,10 @@ published 的前置条件 = 过对抗验收门，全部满足才可三处登记�
 
 CI：.github/workflows/test.yml 在 slim gate 之后硬失败运行本门（`python
 scripts/adversarial_gate.py`），基线外 published skill 未过门即打回。
+
+## 全流程走查留档
+
+- [demo-2026-10-27.md](demo-2026-10-27.md)（PRD-171/T5，trend issue #859）：虚构
+  skill 夹具完整走 cases → check → gate 三阶段，含误报驳回（rejected 留痕 → 修复
+  重验过门 core 3/3）与五类故意失败反向对照；机检复现 `python3 -m unittest
+  tests.test_adversarial_t5 -v`。
