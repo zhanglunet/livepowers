@@ -9,6 +9,8 @@ PRD-256/T2 交付（trend #1281）：给主会话 agent 的**结构化指令与�
 | 单会话内一次任务需要分工（探索→实现→验证） | 本模板 |
 | 跨会话持久协作、多专家并行、需要基础设施 | PRD-112 并行专家编排 |
 
+与 PRD-112 的完整边界表、选用指引与常见误用纠正见 `boundary-vs-112.md`（T4）。
+
 ## 用法
 
 1. 主会话按 `roles/explore.md` 的职责边界派发探索子代理，附 `handoff.schema.json` 合同（input 必带 constraints 红线）；
@@ -21,6 +23,7 @@ PRD-256/T2 交付（trend #1281）：给主会话 agent 的**结构化指令与�
 - `roles/` 三角色页（职责/输入/产出/禁止事项）
 - `handoff.schema.json` 交接合同 JSON Schema（T2 附机器校验入口 `scripts/validate_handoff.py`）
 - `example-walkthrough.md` 虚构任务三角色完整走查（T3 示范蓝本）
+- `boundary-vs-112.md` 与 PRD-112 并行专家编排的边界与选用指引（T4）
 
 ## 红线
 
