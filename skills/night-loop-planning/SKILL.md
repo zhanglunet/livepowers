@@ -2,6 +2,11 @@
 name: night-loop-planning
 description: Use when a task must run for hours or overnight, should use idle off-peak compute, needs a strong model to plan and cheaper models to execute, or must be split into resumable concurrent jobs. 规划夜间 / 长程任务时使用。
 allowed-tools: Bash, Read, Write, Task
+license: MIT
+metadata:
+  when_not_to_use: 短平快任务不适用
+  output: 夜间/长程任务计划
+  compatibility: 需 Bash、Write 与 Task 工具
 ---
 
 # 夜间作业 Loop 规划

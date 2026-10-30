@@ -2,6 +2,11 @@
 name: generalizing-skills
 description: Use when a skill only works in the project it was written for (hard-coded files, columns, thresholds, templates or channels), when the same kind of skill is rewritten for each new project, or when a generalized skill is first used in a new workspace or its environment may have changed. 把只能在单个项目用的 skill 改成跨项目复用、或在新 workspace 首次使用时使用。
 allowed-tools: Bash, Read
+license: MIT
+metadata:
+  when_not_to_use: 只为单一项目硬编码的一次性任务不适用
+  output: 跨项目通用化改造说明
+  compatibility: 需 Bash 与 Read 工具
 ---
 
 # 泛化技能：本体契约 + 方法 + 环境绑定
