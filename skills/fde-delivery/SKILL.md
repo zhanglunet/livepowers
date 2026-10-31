@@ -2,6 +2,11 @@
 name: fde-delivery
 description: Use when delivering a domain Live Product at a customer site as a forward-deployed engineer, for a brownfield retrofit or a greenfield build, or when field innovations must flow back into the product. 把领域产品交付到客户现场时使用。
 allowed-tools: Bash, Read
+license: MIT
+metadata:
+  when_not_to_use: 非客户现场交付类任务不适用
+  output: 现场交付（FDE）执行记录
+  compatibility: 需 Bash 与 Read 工具
 ---
 
 # FDE 交付

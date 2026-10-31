@@ -1,6 +1,12 @@
 ---
 name: delivery-chain
 description: Use when a business request must be delivered end-to-end as one pipeline (scan the environment and ontology, ground a spec, explore with evidence, pass the acceptance gates, then record the outcome in the ledger), or when such a delivery stopped at the human acceptance gate and must be resumed. 一条业务请求需要端到端交付（扫描→规格→探索→验收→台账）、或交付停在人工验收门需要续跑时使用。
+allowed-tools: Bash, Read
+license: MIT
+metadata:
+  when_not_to_use: 非交付链路的分析任务不适用
+  output: 交付链路核对记录
+  compatibility: 需 Bash 与 Read 工具
 ---
 
 # 业务交付链

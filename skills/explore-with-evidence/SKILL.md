@@ -2,6 +2,11 @@
 name: explore-with-evidence
 description: Use when the capability registry misses, when a request is new, rare or the environment has changed, and the agent must reason it out with the LLM (write SQL, analyze, trial-and-error, orchestrate tools). 注册表未命中、需要 Agent 自主探索时使用。
 allowed-tools: Bash, Read
+license: MIT
+metadata:
+  when_not_to_use: 已有充分证据的结论复核不适用
+  output: 带证据引用的探索记录
+  compatibility: 需 Bash 与 Read 工具
 ---
 
 # 探索并留证据

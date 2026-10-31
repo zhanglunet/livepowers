@@ -2,6 +2,11 @@
 name: digital-role-spec
 description: Use when a job role or recurring function is to be carried by humans plus an agent team (a "digital role"), or when someone asks which parts of a position can be automated and what it would cost. 把一个岗位的工作交给"人 + 智能体团队"时使用。
 allowed-tools: Read, Write
+license: MIT
+metadata:
+  when_not_to_use: 非角色定义类任务不适用
+  output: 数字角色规格文档
+  compatibility: 需 Read 工具
 ---
 
 # 数字岗位规格

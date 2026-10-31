@@ -1,7 +1,12 @@
 ---
-name: writing-livepowers-skills
-description: Use when creating a new Livepowers skill, editing an existing one, or turning a team's recurring practice into a skill. 新建或修改 Livepowers 技能时使用。
+name: <与目录名一致>
+description: Use when <触发条件>... <中文一句话>
 allowed-tools: Bash, Read, Write, Edit
+license: MIT
+metadata:
+  when_not_to_use: 非 skill 编写任务不适用
+  output: skill 编写规范与骨架
+  compatibility: 需 Read 工具
 ---
 
 # 编写 Livepowers 技能
