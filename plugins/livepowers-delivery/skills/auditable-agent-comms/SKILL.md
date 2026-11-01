@@ -2,6 +2,11 @@
 name: auditable-agent-comms
 description: Use whenever two or more agents (dispatcher / executor / reviewer, or agents across teams or organizations) exchange messages and the exchange must be logged, auditable, replayable or metered. 多个 Agent 互相通信时使用。
 allowed-tools: Bash, Read
+license: MIT
+metadata:
+  when_not_to_use: 无外部 agent 通信的场景不适用
+  output: 可审计通信记录格式
+  compatibility: 需 Bash 与 Read 工具
 ---
 
 # 可审计的智能体协作

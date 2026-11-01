@@ -2,6 +2,11 @@
 name: ontology-evolution
 description: Use when a task needs an object, relation, state, metric definition or rule the ontology does not have, when two definitions conflict, or when a business rule changes (new policy, new threshold, new effective date). 需要新增或修改本体定义、规则变更时使用。
 allowed-tools: Bash, Read, Write
+license: MIT
+metadata:
+  when_not_to_use: 本体定义已满足需求的任务不适用
+  output: 本体演进条目
+  compatibility: 需 Bash、Read 与 Write 工具
 ---
 
 # 本体演进

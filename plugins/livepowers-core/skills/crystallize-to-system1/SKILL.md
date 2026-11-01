@@ -2,6 +2,11 @@
 name: crystallize-to-system1
 description: Use when an intent has been explored successfully several times, when the user says "do it this way from now on", or when the nightly review has selected a crystallization candidate. 把探索成功的路径固化为 System 1 能力包时使用。
 allowed-tools: Bash, Read
+license: MIT
+metadata:
+  when_not_to_use: 首次探索（尚未成功重复）的意图不适用
+  output: System 1 能力包草稿
+  compatibility: 需 Bash 与 Read 工具
 ---
 
 # 固化到 System 1

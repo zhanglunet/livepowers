@@ -2,6 +2,11 @@
 name: outcome-ledger
 description: Use when committing to a business outcome, choosing pilot scenarios, reporting value, comparing delivery approaches, or preparing outcome- or workflow-based pricing. 衡量业务结果、核算单位成本、论证价值时使用。
 allowed-tools: Bash, Read
+license: MIT
+metadata:
+  when_not_to_use: 非业务结果衡量场景不适用
+  output: 业务结果台账与价值论证
+  compatibility: 需 Bash 与 Read 工具
 ---
 
 # 结果台账

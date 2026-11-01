@@ -2,6 +2,11 @@
 name: ontology-grounded-spec
 description: Use before implementing any business feature, report, dashboard, query, transactional command or workflow, and whenever a request is ambiguous about scope, definitions or acceptance. 实现任何业务功能之前使用。
 allowed-tools: Bash, Read, Write
+license: MIT
+metadata:
+  when_not_to_use: 非本体对齐的规格任务不适用
+  output: 本体对齐规格（含输出物章节）
+  compatibility: 需 Bash 与 Read 工具
 ---
 
 # 本体接地的规格（规格编译）

@@ -2,6 +2,11 @@
 name: nightly-crystallization-review
 description: Use at end of day, when a nightly job starts, or when asked "what can be crystallized today" or "is the product getting more skilled". 收工 / 夜间回顾证据、挑固化候选、出晨报时使用。
 allowed-tools: Bash, Read
+license: MIT
+metadata:
+  when_not_to_use: 非收工/夜间回顾场景不适用
+  output: 固化候选与晨报
+  compatibility: 需 Bash 与 Read 工具
 ---
 
 # 夜间固化评审
