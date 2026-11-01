@@ -2,6 +2,11 @@
 name: using-livepowers
 description: Use when starting any conversation that touches business software, data analysis, transactional systems, ontology, agent product delivery, long-running jobs or multi-agent work, before any response or action. 开始任何企业业务软件 / 数据分析 / 交易系统 / 本体 / 智能体交付 / 长程任务 / 多智能体工作前使用。
 allowed-tools: Bash, Read
+license: MIT
+metadata:
+  when_not_to_use: 纯前端静态页面、与业务软件无关的创作类任务不适用
+  output: 路由决策：指向最适合当前任务的能力包
+  compatibility: 需 Bash 与 Read 工具
 ---
 
 # Using Livepowers

@@ -2,6 +2,11 @@
 name: env-scan-ontology
 description: Use when onboarding a new database, business system, API set or customer site, when starting a brownfield or greenfield delivery, or whenever schema / interface drift is suspected. 接入新环境、扫描库表生成本体、检测环境漂移时使用。
 allowed-tools: Bash, Read
+license: MIT
+metadata:
+  when_not_to_use: 非环境扫描类任务不适用
+  output: 环境扫描本体对照表
+  compatibility: 需 Bash 与 Read 工具
 ---
 
 # 环境感知与本体沉淀
