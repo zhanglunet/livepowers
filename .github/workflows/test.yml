@@ -4,7 +4,8 @@ on:
   pull_request:
 jobs:
   test:
-    runs-on: ubuntu-latest
+    # ubuntu-latest 现为 26.04，actions/setup-python 没有 3.9；矩阵仍须覆盖 3.9/3.11/3.13。
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         python: ["3.9", "3.11", "3.13"]
