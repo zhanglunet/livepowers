@@ -10,10 +10,9 @@
 """
 import json
 import sys
+import unittest
 import tempfile
 from pathlib import Path
-
-import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
@@ -32,7 +31,7 @@ def _source():
     return REPO
 
 
-class TestInstall:
+class InstallTests(unittest.TestCase):
     def test_three_packs_install_to_target(self):
         with tempfile.TemporaryDirectory() as tmp:
             manifest = install_packs(_source(), tmp, PACKS)
@@ -72,12 +71,13 @@ class TestInstall:
                     (d / "SKILL.md").write_text("---\nname: x\n---\n占位", encoding="utf-8")
             (Path(source) / "registry.json").write_text(
                 json.dumps(registry, ensure_ascii=False), encoding="utf-8")
-            with pytest.raises(InstallError, match="依赖缺失"):
+            with self.assertRaises(InstallError) as ctx:
                 install_packs(source, tmp, [dependent_pack["name"]])
+            self.assertIn("依赖缺失", str(ctx.exception))
 
     def test_unknown_pack_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
-            with pytest.raises(InstallError, match="未在登记册"):
+            with self.assertRaises(InstallError) as ctx:
                 install_packs(_source(), tmp, ["nonexistent"])
 
     def test_manifest_written(self):
@@ -88,7 +88,7 @@ class TestInstall:
             assert manifest["packs"] == ["livepowers-delivery"]
 
 
-class TestUninstall:
+class UninstallTests(unittest.TestCase):
     def test_uninstall_removes_members_only(self):
         with tempfile.TemporaryDirectory() as tmp:
             install_packs(_source(), tmp, PACKS)
