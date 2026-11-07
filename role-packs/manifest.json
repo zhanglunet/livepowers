@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated": "2026-10-25",
+  "updated": "2026-11-08",
   "skill_source": "../skills/",
   "acceptance_gate": "docs/plans/2026-10-25-adversarial-acceptance.md",
   "packs": [
@@ -11,28 +11,118 @@
       "status": "draft",
       "entry_skill": "using-livepowers",
       "skills": [
-        {"name": "using-livepowers", "bucket": "entry", "inclusion": "required",
-         "acceptance": {"state": "pending", "evidence": "tests/adversarial/using-livepowers/findings.json", "exempt_ref": null}},
-        {"name": "system1-first", "bucket": "G", "inclusion": "required",
-         "acceptance": {"state": "pending", "evidence": "tests/adversarial/system1-first/findings.json", "exempt_ref": null}},
-        {"name": "explore-with-evidence", "bucket": "G", "inclusion": "required",
-         "acceptance": {"state": "pending", "evidence": "tests/adversarial/explore-with-evidence/findings.json", "exempt_ref": null}},
-        {"name": "ontology-grounded-spec", "bucket": "G", "inclusion": "required",
-         "acceptance": {"state": "pending", "evidence": "tests/adversarial/ontology-grounded-spec/findings.json", "exempt_ref": null}},
-        {"name": "acceptance-gates", "bucket": "G", "inclusion": "required",
-         "acceptance": {"state": "pending", "evidence": "tests/adversarial/acceptance-gates/findings.json", "exempt_ref": null}},
-        {"name": "outcome-ledger", "bucket": "G", "inclusion": "required",
-         "acceptance": {"state": "pending", "evidence": "tests/adversarial/outcome-ledger/findings.json", "exempt_ref": null}},
-        {"name": "oltp-action-safety", "bucket": "G", "inclusion": "required",
-         "acceptance": {"state": "pending", "evidence": "tests/adversarial/oltp-action-safety/findings.json", "exempt_ref": null}},
-        {"name": "fde-delivery", "bucket": "S", "inclusion": "required",
-         "acceptance": {"state": "pending", "evidence": "tests/adversarial/fde-delivery/findings.json", "exempt_ref": null}},
-        {"name": "delivery-chain", "bucket": "S", "inclusion": "required",
-         "acceptance": {"state": "pending", "evidence": "tests/adversarial/delivery-chain/findings.json", "exempt_ref": null}},
-        {"name": "takeover-handling", "bucket": "S", "inclusion": "required",
-         "acceptance": {"state": "pending", "evidence": "tests/adversarial/takeover-handling/findings.json", "exempt_ref": null}}
+        {
+          "name": "using-livepowers",
+          "bucket": "entry",
+          "inclusion": "required",
+          "acceptance": {
+            "state": "pending",
+            "evidence": "tests/adversarial/using-livepowers/findings.json",
+            "exempt_ref": null
+          }
+        },
+        {
+          "name": "system1-first",
+          "bucket": "G",
+          "inclusion": "required",
+          "acceptance": {
+            "state": "pending",
+            "evidence": "tests/adversarial/system1-first/findings.json",
+            "exempt_ref": null
+          }
+        },
+        {
+          "name": "explore-with-evidence",
+          "bucket": "G",
+          "inclusion": "required",
+          "acceptance": {
+            "state": "pending",
+            "evidence": "tests/adversarial/explore-with-evidence/findings.json",
+            "exempt_ref": null
+          }
+        },
+        {
+          "name": "ontology-grounded-spec",
+          "bucket": "G",
+          "inclusion": "required",
+          "acceptance": {
+            "state": "pending",
+            "evidence": "tests/adversarial/ontology-grounded-spec/findings.json",
+            "exempt_ref": null
+          }
+        },
+        {
+          "name": "acceptance-gates",
+          "bucket": "G",
+          "inclusion": "required",
+          "acceptance": {
+            "state": "pending",
+            "evidence": "tests/adversarial/acceptance-gates/findings.json",
+            "exempt_ref": null
+          }
+        },
+        {
+          "name": "outcome-ledger",
+          "bucket": "G",
+          "inclusion": "required",
+          "acceptance": {
+            "state": "pending",
+            "evidence": "tests/adversarial/outcome-ledger/findings.json",
+            "exempt_ref": null
+          }
+        },
+        {
+          "name": "oltp-action-safety",
+          "bucket": "G",
+          "inclusion": "required",
+          "acceptance": {
+            "state": "pending",
+            "evidence": "tests/adversarial/oltp-action-safety/findings.json",
+            "exempt_ref": null
+          }
+        },
+        {
+          "name": "fde-delivery",
+          "bucket": "S",
+          "inclusion": "required",
+          "acceptance": {
+            "state": "pending",
+            "evidence": "tests/adversarial/fde-delivery/findings.json",
+            "exempt_ref": null
+          }
+        },
+        {
+          "name": "delivery-chain",
+          "bucket": "S",
+          "inclusion": "required",
+          "acceptance": {
+            "state": "pending",
+            "evidence": "tests/adversarial/delivery-chain/findings.json",
+            "exempt_ref": null
+          }
+        },
+        {
+          "name": "takeover-handling",
+          "bucket": "S",
+          "inclusion": "required",
+          "acceptance": {
+            "state": "pending",
+            "evidence": "tests/adversarial/takeover-handling/findings.json",
+            "exempt_ref": null
+          }
+        }
       ],
-      "marketplace_entry": true
+      "marketplace_entry": true,
+      "persona": {
+        "persona_name": "投放交付顾问",
+        "tagline": "从需求到上线的端到端交付",
+        "tone": "专业、直接、结果导向",
+        "constraints": [
+          "不自动发布",
+          "不跳过验收门"
+        ],
+        "greeting": "你好，我是投放交付顾问。告诉我你的业务需求，我来编排交付链路。"
+      }
     },
     {
       "pack_id": "livepowers-role-finance",
@@ -41,28 +131,118 @@
       "status": "draft",
       "entry_skill": "using-livepowers",
       "skills": [
-        {"name": "using-livepowers", "bucket": "entry", "inclusion": "required",
-         "acceptance": {"state": "pending", "evidence": "tests/adversarial/using-livepowers/findings.json", "exempt_ref": null}},
-        {"name": "system1-first", "bucket": "G", "inclusion": "required",
-         "acceptance": {"state": "pending", "evidence": "tests/adversarial/system1-first/findings.json", "exempt_ref": null}},
-        {"name": "explore-with-evidence", "bucket": "G", "inclusion": "required",
-         "acceptance": {"state": "pending", "evidence": "tests/adversarial/explore-with-evidence/findings.json", "exempt_ref": null}},
-        {"name": "ontology-grounded-spec", "bucket": "G", "inclusion": "required",
-         "acceptance": {"state": "pending", "evidence": "tests/adversarial/ontology-grounded-spec/findings.json", "exempt_ref": null}},
-        {"name": "acceptance-gates", "bucket": "G", "inclusion": "required",
-         "acceptance": {"state": "pending", "evidence": "tests/adversarial/acceptance-gates/findings.json", "exempt_ref": null}},
-        {"name": "outcome-ledger", "bucket": "G", "inclusion": "required",
-         "acceptance": {"state": "pending", "evidence": "tests/adversarial/outcome-ledger/findings.json", "exempt_ref": null}},
-        {"name": "oltp-action-safety", "bucket": "G", "inclusion": "required",
-         "acceptance": {"state": "pending", "evidence": "tests/adversarial/oltp-action-safety/findings.json", "exempt_ref": null}},
-        {"name": "env-scan-ontology", "bucket": "F", "inclusion": "required",
-         "acceptance": {"state": "pending", "evidence": "tests/adversarial/env-scan-ontology/findings.json", "exempt_ref": null}},
-        {"name": "ontology-evolution", "bucket": "F", "inclusion": "required",
-         "acceptance": {"state": "pending", "evidence": "tests/adversarial/ontology-evolution/findings.json", "exempt_ref": null}},
-        {"name": "night-loop-planning", "bucket": "G", "inclusion": "optional",
-         "acceptance": {"state": "pending", "evidence": "tests/adversarial/night-loop-planning/findings.json", "exempt_ref": null}}
+        {
+          "name": "using-livepowers",
+          "bucket": "entry",
+          "inclusion": "required",
+          "acceptance": {
+            "state": "pending",
+            "evidence": "tests/adversarial/using-livepowers/findings.json",
+            "exempt_ref": null
+          }
+        },
+        {
+          "name": "system1-first",
+          "bucket": "G",
+          "inclusion": "required",
+          "acceptance": {
+            "state": "pending",
+            "evidence": "tests/adversarial/system1-first/findings.json",
+            "exempt_ref": null
+          }
+        },
+        {
+          "name": "explore-with-evidence",
+          "bucket": "G",
+          "inclusion": "required",
+          "acceptance": {
+            "state": "pending",
+            "evidence": "tests/adversarial/explore-with-evidence/findings.json",
+            "exempt_ref": null
+          }
+        },
+        {
+          "name": "ontology-grounded-spec",
+          "bucket": "G",
+          "inclusion": "required",
+          "acceptance": {
+            "state": "pending",
+            "evidence": "tests/adversarial/ontology-grounded-spec/findings.json",
+            "exempt_ref": null
+          }
+        },
+        {
+          "name": "acceptance-gates",
+          "bucket": "G",
+          "inclusion": "required",
+          "acceptance": {
+            "state": "pending",
+            "evidence": "tests/adversarial/acceptance-gates/findings.json",
+            "exempt_ref": null
+          }
+        },
+        {
+          "name": "outcome-ledger",
+          "bucket": "G",
+          "inclusion": "required",
+          "acceptance": {
+            "state": "pending",
+            "evidence": "tests/adversarial/outcome-ledger/findings.json",
+            "exempt_ref": null
+          }
+        },
+        {
+          "name": "oltp-action-safety",
+          "bucket": "G",
+          "inclusion": "required",
+          "acceptance": {
+            "state": "pending",
+            "evidence": "tests/adversarial/oltp-action-safety/findings.json",
+            "exempt_ref": null
+          }
+        },
+        {
+          "name": "env-scan-ontology",
+          "bucket": "F",
+          "inclusion": "required",
+          "acceptance": {
+            "state": "pending",
+            "evidence": "tests/adversarial/env-scan-ontology/findings.json",
+            "exempt_ref": null
+          }
+        },
+        {
+          "name": "ontology-evolution",
+          "bucket": "F",
+          "inclusion": "required",
+          "acceptance": {
+            "state": "pending",
+            "evidence": "tests/adversarial/ontology-evolution/findings.json",
+            "exempt_ref": null
+          }
+        },
+        {
+          "name": "night-loop-planning",
+          "bucket": "G",
+          "inclusion": "optional",
+          "acceptance": {
+            "state": "pending",
+            "evidence": "tests/adversarial/night-loop-planning/findings.json",
+            "exempt_ref": null
+          }
+        }
       ],
-      "marketplace_entry": true
+      "marketplace_entry": true,
+      "persona": {
+        "persona_name": "财务与账单顾问",
+        "tagline": "让每一笔预算都有迹可循",
+        "tone": "严谨、量化、零模糊",
+        "constraints": [
+          "不自动扣款",
+          "不替代审计"
+        ],
+        "greeting": "你好，我是财务与账单顾问。预算管控、成本归因、账单口径，交给我。"
+      }
     },
     {
       "pack_id": "livepowers-role-hr",
@@ -71,25 +251,263 @@
       "status": "draft",
       "entry_skill": "using-livepowers",
       "skills": [
-        {"name": "using-livepowers", "bucket": "entry", "inclusion": "required",
-         "acceptance": {"state": "pending", "evidence": "tests/adversarial/using-livepowers/findings.json", "exempt_ref": null}},
-        {"name": "system1-first", "bucket": "G", "inclusion": "required",
-         "acceptance": {"state": "pending", "evidence": "tests/adversarial/system1-first/findings.json", "exempt_ref": null}},
-        {"name": "explore-with-evidence", "bucket": "G", "inclusion": "required",
-         "acceptance": {"state": "pending", "evidence": "tests/adversarial/explore-with-evidence/findings.json", "exempt_ref": null}},
-        {"name": "ontology-grounded-spec", "bucket": "G", "inclusion": "required",
-         "acceptance": {"state": "pending", "evidence": "tests/adversarial/ontology-grounded-spec/findings.json", "exempt_ref": null}},
-        {"name": "acceptance-gates", "bucket": "G", "inclusion": "required",
-         "acceptance": {"state": "pending", "evidence": "tests/adversarial/acceptance-gates/findings.json", "exempt_ref": null}},
-        {"name": "outcome-ledger", "bucket": "G", "inclusion": "required",
-         "acceptance": {"state": "pending", "evidence": "tests/adversarial/outcome-ledger/findings.json", "exempt_ref": null}},
-        {"name": "digital-role-spec", "bucket": "H", "inclusion": "required",
-         "acceptance": {"state": "pending", "evidence": "tests/adversarial/digital-role-spec/findings.json", "exempt_ref": null}},
-        {"name": "auditable-agent-comms", "bucket": "H", "inclusion": "required",
-         "acceptance": {"state": "pending", "evidence": "tests/adversarial/auditable-agent-comms/findings.json", "exempt_ref": null}}
+        {
+          "name": "using-livepowers",
+          "bucket": "entry",
+          "inclusion": "required",
+          "acceptance": {
+            "state": "pending",
+            "evidence": "tests/adversarial/using-livepowers/findings.json",
+            "exempt_ref": null
+          }
+        },
+        {
+          "name": "system1-first",
+          "bucket": "G",
+          "inclusion": "required",
+          "acceptance": {
+            "state": "pending",
+            "evidence": "tests/adversarial/system1-first/findings.json",
+            "exempt_ref": null
+          }
+        },
+        {
+          "name": "explore-with-evidence",
+          "bucket": "G",
+          "inclusion": "required",
+          "acceptance": {
+            "state": "pending",
+            "evidence": "tests/adversarial/explore-with-evidence/findings.json",
+            "exempt_ref": null
+          }
+        },
+        {
+          "name": "ontology-grounded-spec",
+          "bucket": "G",
+          "inclusion": "required",
+          "acceptance": {
+            "state": "pending",
+            "evidence": "tests/adversarial/ontology-grounded-spec/findings.json",
+            "exempt_ref": null
+          }
+        },
+        {
+          "name": "acceptance-gates",
+          "bucket": "G",
+          "inclusion": "required",
+          "acceptance": {
+            "state": "pending",
+            "evidence": "tests/adversarial/acceptance-gates/findings.json",
+            "exempt_ref": null
+          }
+        },
+        {
+          "name": "outcome-ledger",
+          "bucket": "G",
+          "inclusion": "required",
+          "acceptance": {
+            "state": "pending",
+            "evidence": "tests/adversarial/outcome-ledger/findings.json",
+            "exempt_ref": null
+          }
+        },
+        {
+          "name": "digital-role-spec",
+          "bucket": "H",
+          "inclusion": "required",
+          "acceptance": {
+            "state": "pending",
+            "evidence": "tests/adversarial/digital-role-spec/findings.json",
+            "exempt_ref": null
+          }
+        },
+        {
+          "name": "auditable-agent-comms",
+          "bucket": "H",
+          "inclusion": "required",
+          "acceptance": {
+            "state": "pending",
+            "evidence": "tests/adversarial/auditable-agent-comms/findings.json",
+            "exempt_ref": null
+          }
+        }
       ],
-      "marketplace_entry": true
+      "marketplace_entry": true,
+      "persona": {
+        "persona_name": "招聘与人力运营",
+        "tagline": "让岗位管理从手忙脚乱变成有条不紊",
+        "tone": "亲和、条理、注重细节",
+        "constraints": [
+          "不代替面试决策",
+          "不处理薪酬谈判"
+        ],
+        "greeting": "你好，我是招聘与人力运营助手。岗位定义、人才发现、流程管理，交给我。"
+      }
+    },
+    {
+      "pack_id": "livepowers-role-content-marketer",
+      "title": "内容营销策划",
+      "version": "0.1.0",
+      "status": "draft",
+      "entry_skill": "using-livepowers",
+      "persona": {
+        "role_id": "content-marketer",
+        "persona_name": "内容营销策划",
+        "tagline": "让好素材追着热点跑",
+        "tone": "专业、协作、结果导向",
+        "constraints": [
+          "不越权操作",
+          "不跳过验收门"
+        ],
+        "greeting": "你好，我是内容营销策划。",
+        "entry_skill": "using-livepowers",
+        "skills": [
+          {
+            "name": "video_llm",
+            "bucket": "core",
+            "inclusion": "required"
+          },
+          {
+            "name": "video_copy",
+            "bucket": "core",
+            "inclusion": "required"
+          },
+          {
+            "name": "slop_gate",
+            "bucket": "core",
+            "inclusion": "required"
+          }
+        ]
+      },
+      "skills": [
+        {
+          "name": "video_llm",
+          "bucket": "core",
+          "inclusion": "required"
+        },
+        {
+          "name": "video_copy",
+          "bucket": "core",
+          "inclusion": "required"
+        },
+        {
+          "name": "slop_gate",
+          "bucket": "core",
+          "inclusion": "required"
+        }
+      ]
+    },
+    {
+      "pack_id": "livepowers-role-ops-analyst",
+      "title": "运营数据分析师",
+      "version": "0.1.0",
+      "status": "draft",
+      "entry_skill": "using-livepowers",
+      "persona": {
+        "role_id": "ops-analyst",
+        "persona_name": "运营数据分析师",
+        "tagline": "让数据讲故事",
+        "tone": "专业、协作、结果导向",
+        "constraints": [
+          "不越权操作",
+          "不跳过验收门"
+        ],
+        "greeting": "你好，我是运营数据分析师。",
+        "entry_skill": "using-livepowers",
+        "skills": [
+          {
+            "name": "daily_report",
+            "bucket": "core",
+            "inclusion": "required"
+          },
+          {
+            "name": "signals",
+            "bucket": "core",
+            "inclusion": "required"
+          },
+          {
+            "name": "cost_learning",
+            "bucket": "core",
+            "inclusion": "required"
+          }
+        ]
+      },
+      "skills": [
+        {
+          "name": "daily_report",
+          "bucket": "core",
+          "inclusion": "required"
+        },
+        {
+          "name": "signals",
+          "bucket": "core",
+          "inclusion": "required"
+        },
+        {
+          "name": "cost_learning",
+          "bucket": "core",
+          "inclusion": "required"
+        }
+      ]
+    },
+    {
+      "pack_id": "livepowers-role-compliance-auditor",
+      "title": "合规审计师",
+      "version": "0.1.0",
+      "status": "draft",
+      "entry_skill": "using-livepowers",
+      "persona": {
+        "role_id": "compliance-auditor",
+        "persona_name": "合规审计师",
+        "tagline": "让每一次操作都经得起审计",
+        "tone": "专业、协作、结果导向",
+        "constraints": [
+          "不越权操作",
+          "不跳过验收门"
+        ],
+        "greeting": "你好，我是合规审计师。",
+        "entry_skill": "using-livepowers",
+        "skills": [
+          {
+            "name": "oltp-action-safety",
+            "bucket": "core",
+            "inclusion": "required"
+          },
+          {
+            "name": "acceptance-gates",
+            "bucket": "core",
+            "inclusion": "required"
+          },
+          {
+            "name": "audit_chain",
+            "bucket": "core",
+            "inclusion": "required"
+          }
+        ]
+      },
+      "skills": [
+        {
+          "name": "oltp-action-safety",
+          "bucket": "core",
+          "inclusion": "required"
+        },
+        {
+          "name": "acceptance-gates",
+          "bucket": "core",
+          "inclusion": "required"
+        },
+        {
+          "name": "audit_chain",
+          "bucket": "core",
+          "inclusion": "required"
+        }
+      ]
     }
   ],
-  "ungrouped": ["crystallize-to-system1", "agent-harness-for-tools", "generalizing-skills", "living-surface"]
+  "ungrouped": [
+    "crystallize-to-system1",
+    "agent-harness-for-tools",
+    "generalizing-skills",
+    "living-surface"
+  ]
 }
