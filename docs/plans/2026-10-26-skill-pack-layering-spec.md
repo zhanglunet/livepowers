@@ -1,8 +1,9 @@
-# PRD-227/T1：技能包分层规范 v1.0.0（草案）
+# PRD-227/T1：技能包分层规范 v1.0.0（外发版）
 
-> 规范名：`skill-pack-layering-spec` ｜ 版本：**v1.0.0（草案，评审通过后定版）**
-> 状态：草案，待评审；评审通过即为分层五件套（PRD-220/227/233/239/243）的共同口径
+> 规范名：`skill-pack-layering-spec` ｜ 版本：**v1.0.0（外发，见 §8 变更记录与 §9 外发适配）**
+> 状态：**已发布（PRD-227/T5 规范外发）**——本仓试运行通过后外发；最终采纳以合并评审为准
 > 引用方式：`skill-pack-layering-spec@1.0.0`（引用与对齐声明见 §6.4）
+> 适配仓：PRD-220（excel）/ PRD-233（mba）/ PRD-239（owzh）/ PRD-243（awards）——适配要点见 §9
 > 借鉴：AgriciDaniel/claude-seo（MIT，分层形态借鉴，出处与义务见附录 B）
 
 ## 1. 总则
@@ -229,6 +230,23 @@ registry:
 | 版本 | 日期 | 说明 |
 |---|---|---|
 | v1.0.0（草案） | 2026-10-26 | PRD-227/T1 首版草案：分层维度、划分原则、登记册 7 个必填字段、命名与版本规则。待评审定版 |
+| v1.0.0（外发） | 2026-11-03 | PRD-227/T5 规范外发：本仓按包安装/检索/登记册校验试运行通过（tests/test_prd227_t5_replay.py），规范随 T5 对外发布并附 §9 外发适配；条文与草案 v1.0.0 一致，无实质变更 |
+
+## 9. 外发适配（供四仓按版本号引用）
+
+适配仓以 `skill-pack-layering-spec@1.0.0` 为共同口径（§6.4 引用与对齐声明），
+各仓只做适配，不改规范条文；适配差异在其登记册或适配文档中注明：
+
+| 适配仓 | PRD | 适配要点 |
+|---|---|---|
+| excel-ai-analyst | PRD-220 | 总登记册 packs 层级 + validate_packs/check_layout（目录不物理搬迁，x-path 指针锚点） |
+| mba | PRD-233 | 评委总登记册按本规范分包（43 位映射 + 消费者横切组单列） |
+| openworker-zh-localized | PRD-239 | 中文技能登记册按包加载（目录形态加载不断链） |
+| ai-awards-dashboard | PRD-243 | 评审技能总登记册（盘点表声明式数据 + 隔离双校验随行） |
+
+源头实现（本仓试运行基线）：`registry.json`（4 包 21 技能，全部条目
+`spec_version: 1.0.0`）+ `scripts/skill_registry.py`（validate_registry/
+search）+ `scripts/pack_installer.py`（按包安装/卸载）。
 
 ## 附录 A：livepowers 映射示例（示例，非规范条文）
 
