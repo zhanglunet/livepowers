@@ -57,6 +57,9 @@
 
 ## 技能
 
+技能包按「库 → 包 → 技能」三层组织（PRD-227，规范对齐 [skill-pack-layering-spec@1.0.0](docs/plans/2026-10-26-skill-pack-layering-spec.md)）：总登记册见 [`registry.json`](registry.json)（机读权威源，4 包 / 21 技能）与 [`REGISTRY.md`](REGISTRY.md)（人读总表，由权威源生成）；检索：`python3 scripts/skill_registry.py <触发词…>`（如 `交付`、`验收`、`本体`）。
+
+| 分组 | 技能 | 作用 |
 | 分组 | 技能 | 作用 |
 |---|---|---|
 | 入口 | `using-livepowers` | 七条铁律、路由表、工作循环（会话启动时自动注入） |
