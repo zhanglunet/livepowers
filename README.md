@@ -252,3 +252,18 @@ python -m unittest discover -s tests -v
 ## 许可
 
 [MIT](LICENSE)
+
+
+## 角色包（Role Packs）
+
+| 角色 | ID | 状态 | 入口技能 |
+|---|---|---|---|
+| 投放交付顾问 | sales | draft | using-livepowers |
+| 招聘与人力运营 | hr | draft | using-livepowers |
+| 财务与账单顾问 | finance | draft | using-livepowers |
+| 内容营销策划 | content-marketer | draft | using-livepowers |
+| 运营数据分析师 | ops-analyst | draft | using-livepowers |
+| 合规审计师 | compliance-auditor | draft | using-livepowers |
+
+每个角色包含 persona.json（人格卡）+ ROLE-CARD.md（人读版）+ skills/（技能集）。
+详见 `role-packs/manifest.json`。
