@@ -2,7 +2,9 @@
 """PRD-172/T5 验收（trend #864）：三包安装演示 / 清单与验收状态一致 / 无密钥与术语统一。
 
 被测对象：role-packs/ 发行面（销售/财务/人力三包 + manifest.json +
-docs/role-packs-private-marketplace.md）。三条验收标准的机检：
+docs/role-packs-private-marketplace.md）。manifest 另有 PRD-114/T2 三骨架包
+（技能待建、不上架），见 SKELETON_PACK_IDS：安装演示 / 市场形态检查只覆盖
+已发行三包，骨架包仅核对清单条目与包内 plugin.json / README。三条验收标准的机检：
 
 1. **三包安装演示（栏目可浏览）**：市场形态（marketplace.json 条目 source 可解析、
    plugin.json 自包含、README/LICENSE 齐全）、仅技能形态（每包 skills/ 全带
@@ -41,6 +43,11 @@ GUIDE = REPO / "docs" / "role-packs-private-marketplace.md"
 READINESS = REPO / "scripts" / "check_release_readiness.py"
 
 PACK_IDS = ["livepowers-role-sales", "livepowers-role-finance", "livepowers-role-hr"]
+# PRD-114/T2 骨架包：技能待建（构成见 tests/test_role_packs.py 的
+# SKELETON_PACKS），不上架市场清单；安装演示 / 市场形态检查不覆盖。
+SKELETON_PACK_IDS = ["livepowers-role-content-marketer",
+                     "livepowers-role-ops-analyst",
+                     "livepowers-role-compliance-auditor"]
 ENTRY = "using-livepowers"
 
 # 术语表（对照 PRD-102 双语验收口径的统一约定）：发行单元叫「角色包」，
@@ -110,6 +117,10 @@ class TestInstallDemo(unittest.TestCase):
         for pack in self.manifest["packs"]:
             pid = pack["pack_id"]
             with self.subTest(pack=pid):
+                if pid in SKELETON_PACK_IDS:
+                    self.assertFalse(pack.get("marketplace_entry"), "骨架包暂不上架")
+                    self.assertNotIn(pid, self.entries, "骨架包不应出现在市场清单")
+                    continue
                 self.assertTrue(pack.get("marketplace_entry"))
                 entry = self.entries[pid]
                 source = entry["source"]
@@ -128,6 +139,8 @@ class TestInstallDemo(unittest.TestCase):
     def test_skills_only_form_installable(self):
         """仅技能形态：每包 skills/ 全带 SKILL.md，frontmatter name 与目录一致。"""
         for pack in self.manifest["packs"]:
+            if pack["pack_id"] in SKELETON_PACK_IDS:
+                continue  # 骨架包无 skills/ 拷贝目录，技能待建
             pdir = ROLE_PACKS / pack["pack_id"]
             for sdir in sorted((pdir / "skills").iterdir()):
                 if not sdir.is_dir():
@@ -233,7 +246,7 @@ class TestManifestAcceptanceConsistency(unittest.TestCase):
                                             for r in data["records"]))
 
     def test_release_readiness_green_on_real_repo(self):
-        """T4 硬门禁真实仓库冒烟：三包均 draft、状态 pending → exit 0。"""
+        """T4 硬门禁真实仓库冒烟：六包均 draft、状态 pending → exit 0。"""
         p = subprocess.run([sys.executable, str(READINESS)],
                            capture_output=True, text=True, cwd=str(REPO))
         self.assertEqual(p.returncode, 0, p.stdout + p.stderr)
@@ -309,6 +322,8 @@ class TestBilingualAndTerms(unittest.TestCase):
                 self.assertTrue(CJK_RE.search(desc) and "角色包" in desc,
                                 "中文描述缺角色包称谓：%s" % desc)
                 self.assertTrue(ROLE_PACK_EN_RE.search(desc), "缺英文技术描述：%s" % desc)
+                if pid in SKELETON_PACK_IDS:
+                    continue  # 骨架包不上架，无市场条目可对
                 entry = self.entries[pid]["description"]
                 self.assertTrue(CJK_RE.search(entry) and "角色包" in entry)
                 self.assertTrue(ROLE_PACK_EN_RE.search(entry))

@@ -100,15 +100,18 @@ class TestFailureDrills(unittest.TestCase):
 class TestChainRerun(unittest.TestCase):
     def test_t2_t3_t4_rerun_green(self):
         """链复跑：T2/T3/T4 测试子进程复跑 exit 0（链上仍绿实测）。"""
-        for test_file in ("test_prd363_t2_listing_inbox.py",
-                          "test_prd363_t3_listing_inbox_gates.py",
-                          "test_prd363_t4_listing_inbox_boundary.py"):
+        # 用标准库 unittest 复跑（原 pytest -q：CI 的 setup-python 环境未装
+        # pytest，3.9/3.11/3.13 均报 No module named pytest；被测文件本身
+        # 是 unittest 用例，复跑意图不变）。
+        repo = str(Path(__file__).resolve().parents[1])
+        for module in ("tests.test_prd363_t2_listing_inbox",
+                       "tests.test_prd363_t3_listing_inbox_gates",
+                       "tests.test_prd363_t4_listing_inbox_boundary"):
             proc = subprocess.run(
-                [sys.executable, "-m", "pytest", "-q",
-                 str(Path(__file__).resolve().parent / test_file)],
-                capture_output=True, timeout=300)
+                [sys.executable, "-m", "unittest", module],
+                capture_output=True, timeout=300, cwd=repo)
             self.assertEqual(proc.returncode, 0,
-                             f"{test_file} 复跑失败：{proc.stdout[-400:]}")
+                             "%s 复跑失败：%s" % (module, proc.stderr[-400:]))
 
 
 class TestDocNoSecrets(unittest.TestCase):

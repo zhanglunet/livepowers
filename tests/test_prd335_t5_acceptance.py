@@ -8,12 +8,12 @@
   渲染（预览即最终同一函数）；回放可复现逐字节一致；
 ② 非法属性演练——白名单外属性丢弃 dropped[] 显形 / 类型词表外整节点剔除
   占位显形 / 枚举越界回退默认 / 深度越限整树拒绝零渲染——四路演练全显形；
-③ 文档无密钥——T1 设计文档（T1 分支）零密钥/零 IP/外链仅 github 与
+③ 文档无密钥——T1 设计文档（已合入 main，读本地文件；原跨分支 git show
+  在 CI 单分支 checkout 下 exit 128）零密钥/零 IP/外链仅 github 与
   example 域。
 零网络；全合成占位。
 """
 import re
-import subprocess
 import sys
 import unittest
 from pathlib import Path
@@ -93,12 +93,10 @@ class TestIllegalPropDrill(unittest.TestCase):
 
 class TestDocNoSecrets(unittest.TestCase):
     def test_design_doc_no_secrets(self):
-        """③ 文档无密钥：T1 设计文档（T1 分支）零密钥/零 IP/外链仅
-        github 与 example 域。"""
-        doc = subprocess.run(
-            ["git", "show", "trend/prd-335-t1-genui-design:docs/plans/"
-             "2026-11-09-prd-335-genui-design.md"],
-            capture_output=True, text=True, check=True).stdout
+        """③ 文档无密钥：T1 设计文档（已合入 main，读本地文件）零密钥/零 IP/
+        外链仅 github 与 example 域。"""
+        doc = (REPO / "docs" / "plans" /
+               "2026-11-09-prd-335-genui-design.md").read_text(encoding="utf-8")
         for token in ("password", "secret", "api_key", "AKIA", "Bearer ",
                       "BEGIN RSA"):
             self.assertNotIn(token.lower(), doc.lower(), token)
