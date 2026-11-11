@@ -1,0 +1,18 @@
+{
+  "name": "livepowers-role-compliance-auditor",
+  "version": "0.1.0",
+  "description": "合规审计师角色包：规则审计、安全门与操作审计链。Role pack for compliance auditing: rule audits, safety gates and audit chains.",
+  "author": {
+    "name": "Livepowers contributors"
+  },
+  "homepage": "https://github.com/zhanglunet/livepowers/tree/main/role-packs/livepowers-role-compliance-auditor",
+  "repository": "https://github.com/zhanglunet/livepowers",
+  "license": "MIT",
+  "keywords": [
+    "role-pack",
+    "compliance-auditor",
+    "audit",
+    "safety",
+    "live-product"
+  ]
+}

@@ -5,6 +5,10 @@ JSON、无构建依赖；企业可建立私有市场。分组方案与发行清�
 docs/plans/2026-10-25-role-skill-pack.md（PRD-172/T1，trend issue #860）；
 私有市场照做手册见 [docs/role-packs-private-marketplace.md](../docs/role-packs-private-marketplace.md)。
 
+清单另有 PRD-114/T2 三骨架包（内容营销策划 / 运营数据分析师 / 合规审计师）：
+技能待建，只核对清单条目、人格卡、plugin.json 与 README，不上架市场清单，
+包内暂无 skills/ 拷贝；技能落地后移出骨架表，改按已发行包核对。
+
 ## 目录约定
 
 ```

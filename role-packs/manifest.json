@@ -383,19 +383,35 @@
         {
           "name": "video_llm",
           "bucket": "core",
-          "inclusion": "required"
+          "inclusion": "required",
+          "acceptance": {
+            "state": "pending",
+            "evidence": "tests/adversarial/video_llm/findings.json",
+            "exempt_ref": null
+          }
         },
         {
           "name": "video_copy",
           "bucket": "core",
-          "inclusion": "required"
+          "inclusion": "required",
+          "acceptance": {
+            "state": "pending",
+            "evidence": "tests/adversarial/video_copy/findings.json",
+            "exempt_ref": null
+          }
         },
         {
           "name": "slop_gate",
           "bucket": "core",
-          "inclusion": "required"
+          "inclusion": "required",
+          "acceptance": {
+            "state": "pending",
+            "evidence": "tests/adversarial/slop_gate/findings.json",
+            "exempt_ref": null
+          }
         }
-      ]
+      ],
+      "marketplace_entry": false
     },
     {
       "pack_id": "livepowers-role-ops-analyst",
@@ -436,19 +452,35 @@
         {
           "name": "daily_report",
           "bucket": "core",
-          "inclusion": "required"
+          "inclusion": "required",
+          "acceptance": {
+            "state": "pending",
+            "evidence": "tests/adversarial/daily_report/findings.json",
+            "exempt_ref": null
+          }
         },
         {
           "name": "signals",
           "bucket": "core",
-          "inclusion": "required"
+          "inclusion": "required",
+          "acceptance": {
+            "state": "pending",
+            "evidence": "tests/adversarial/signals/findings.json",
+            "exempt_ref": null
+          }
         },
         {
           "name": "cost_learning",
           "bucket": "core",
-          "inclusion": "required"
+          "inclusion": "required",
+          "acceptance": {
+            "state": "pending",
+            "evidence": "tests/adversarial/cost_learning/findings.json",
+            "exempt_ref": null
+          }
         }
-      ]
+      ],
+      "marketplace_entry": false
     },
     {
       "pack_id": "livepowers-role-compliance-auditor",
@@ -489,19 +521,35 @@
         {
           "name": "oltp-action-safety",
           "bucket": "core",
-          "inclusion": "required"
+          "inclusion": "required",
+          "acceptance": {
+            "state": "pending",
+            "evidence": "tests/adversarial/oltp-action-safety/findings.json",
+            "exempt_ref": null
+          }
         },
         {
           "name": "acceptance-gates",
           "bucket": "core",
-          "inclusion": "required"
+          "inclusion": "required",
+          "acceptance": {
+            "state": "pending",
+            "evidence": "tests/adversarial/acceptance-gates/findings.json",
+            "exempt_ref": null
+          }
         },
         {
           "name": "audit_chain",
           "bucket": "core",
-          "inclusion": "required"
+          "inclusion": "required",
+          "acceptance": {
+            "state": "pending",
+            "evidence": "tests/adversarial/audit_chain/findings.json",
+            "exempt_ref": null
+          }
         }
-      ]
+      ],
+      "marketplace_entry": false
     }
   ],
   "ungrouped": [

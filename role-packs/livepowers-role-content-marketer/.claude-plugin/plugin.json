@@ -1,0 +1,18 @@
+{
+  "name": "livepowers-role-content-marketer",
+  "version": "0.1.0",
+  "description": "内容营销策划角色包：素材生成、文案与反 AI 味把关。Role pack for content marketing: video material generation, copywriting and slop-gating.",
+  "author": {
+    "name": "Livepowers contributors"
+  },
+  "homepage": "https://github.com/zhanglunet/livepowers/tree/main/role-packs/livepowers-role-content-marketer",
+  "repository": "https://github.com/zhanglunet/livepowers",
+  "license": "MIT",
+  "keywords": [
+    "role-pack",
+    "content-marketer",
+    "video",
+    "copy",
+    "live-product"
+  ]
+}
