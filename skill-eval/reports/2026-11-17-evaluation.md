@@ -1,0 +1,956 @@
+# 技能评估报告（首份，2026-11-17）
+
+- PRD：PRD-482（livepowers）
+- 设计依据：docs/plans/2026-11-17-prd-482-livepowers-skill-evaluation-design.md
+- 评估清单版本：v1，技能 42 个
+- 阈值：`{"min_sample_tasks": 20, "min_relative_error_drop": 0.2, "max_new_error_types": 0, "overlap_similarity": 0.8}`（设计稿草稿阈值，待评审定稿、实测后复核）
+
+## 一、质量门
+
+| 技能 | 结论 | 原因 |
+|---|---|---|
+| crystallize-to-system1 | 证据不足 | 样本量 0 < 20，不判通过 |
+| explore-with-evidence | 证据不足 | 样本量 0 < 20，不判通过 |
+| ontology-grounded-spec | 证据不足 | 样本量 0 < 20，不判通过 |
+| system1-first | 证据不足 | 样本量 0 < 20，不判通过 |
+| using-livepowers | 证据不足 | 样本量 0 < 20，不判通过 |
+| acceptance-gates | 证据不足 | 样本量 0 < 20，不判通过 |
+| auditable-agent-comms | 证据不足 | 样本量 0 < 20，不判通过 |
+| delivery-chain | 证据不足 | 样本量 0 < 20，不判通过 |
+| fde-delivery | 证据不足 | 样本量 0 < 20，不判通过 |
+| oltp-action-safety | 证据不足 | 样本量 0 < 20，不判通过 |
+| outcome-ledger | 证据不足 | 样本量 0 < 20，不判通过 |
+| takeover-handling | 证据不足 | 样本量 0 < 20，不判通过 |
+| night-loop-planning | 证据不足 | 样本量 0 < 20，不判通过 |
+| nightly-crystallization-review | 证据不足 | 样本量 0 < 20，不判通过 |
+| digital-role-spec | 证据不足 | 样本量 0 < 20，不判通过 |
+| env-scan-ontology | 证据不足 | 样本量 0 < 20，不判通过 |
+| living-surface | 证据不足 | 样本量 0 < 20，不判通过 |
+| ontology-evolution | 证据不足 | 样本量 0 < 20，不判通过 |
+| agent-harness-for-tools | 证据不足 | 样本量 0 < 20，不判通过 |
+| generalizing-skills | 证据不足 | 样本量 0 < 20，不判通过 |
+| writing-livepowers-skills | 证据不足 | 样本量 0 < 20，不判通过 |
+| acceptance-gates@livepowers | 证据不足 | 样本量 0 < 20，不判通过 |
+| agent-harness-for-tools@livepowers | 证据不足 | 样本量 0 < 20，不判通过 |
+| auditable-agent-comms@livepowers | 证据不足 | 样本量 0 < 20，不判通过 |
+| crystallize-to-system1@livepowers | 证据不足 | 样本量 0 < 20，不判通过 |
+| delivery-chain@livepowers | 证据不足 | 样本量 0 < 20，不判通过 |
+| digital-role-spec@livepowers | 证据不足 | 样本量 0 < 20，不判通过 |
+| env-scan-ontology@livepowers | 证据不足 | 样本量 0 < 20，不判通过 |
+| explore-with-evidence@livepowers | 证据不足 | 样本量 0 < 20，不判通过 |
+| fde-delivery@livepowers | 证据不足 | 样本量 0 < 20，不判通过 |
+| generalizing-skills@livepowers | 证据不足 | 样本量 0 < 20，不判通过 |
+| living-surface@livepowers | 证据不足 | 样本量 0 < 20，不判通过 |
+| night-loop-planning@livepowers | 证据不足 | 样本量 0 < 20，不判通过 |
+| nightly-crystallization-review@livepowers | 证据不足 | 样本量 0 < 20，不判通过 |
+| oltp-action-safety@livepowers | 证据不足 | 样本量 0 < 20，不判通过 |
+| ontology-evolution@livepowers | 证据不足 | 样本量 0 < 20，不判通过 |
+| ontology-grounded-spec@livepowers | 证据不足 | 样本量 0 < 20，不判通过 |
+| outcome-ledger@livepowers | 证据不足 | 样本量 0 < 20，不判通过 |
+| system1-first@livepowers | 证据不足 | 样本量 0 < 20，不判通过 |
+| takeover-handling@livepowers | 证据不足 | 样本量 0 < 20，不判通过 |
+| using-livepowers@livepowers | 证据不足 | 样本量 0 < 20，不判通过 |
+| writing-livepowers-skills@livepowers | 证据不足 | 样本量 0 < 20，不判通过 |
+
+## 二、重叠检测
+
+全量两两比对 861 对；疑似重叠（相似度 ≥ 阈值）21 对。
+相似度为词元集合 Jaccard（设计稿嵌入余弦的最小可用代理，T2 不引入外部 embedding 服务）。
+
+| 技能 A | 技能 B | 相似度 | 疑似重叠 |
+|---|---|---|---|
+| acceptance-gates | acceptance-gates@livepowers | 1.000 | 是 |
+| agent-harness-for-tools | agent-harness-for-tools@livepowers | 1.000 | 是 |
+| auditable-agent-comms | auditable-agent-comms@livepowers | 1.000 | 是 |
+| crystallize-to-system1 | crystallize-to-system1@livepowers | 1.000 | 是 |
+| delivery-chain | delivery-chain@livepowers | 1.000 | 是 |
+| digital-role-spec | digital-role-spec@livepowers | 1.000 | 是 |
+| env-scan-ontology | env-scan-ontology@livepowers | 1.000 | 是 |
+| explore-with-evidence | explore-with-evidence@livepowers | 1.000 | 是 |
+| fde-delivery | fde-delivery@livepowers | 1.000 | 是 |
+| generalizing-skills | generalizing-skills@livepowers | 1.000 | 是 |
+| living-surface | living-surface@livepowers | 1.000 | 是 |
+| night-loop-planning | night-loop-planning@livepowers | 1.000 | 是 |
+| nightly-crystallization-review | nightly-crystallization-review@livepowers | 1.000 | 是 |
+| oltp-action-safety | oltp-action-safety@livepowers | 1.000 | 是 |
+| ontology-evolution | ontology-evolution@livepowers | 1.000 | 是 |
+| ontology-grounded-spec | ontology-grounded-spec@livepowers | 1.000 | 是 |
+| outcome-ledger | outcome-ledger@livepowers | 1.000 | 是 |
+| system1-first | system1-first@livepowers | 1.000 | 是 |
+| takeover-handling | takeover-handling@livepowers | 1.000 | 是 |
+| using-livepowers | using-livepowers@livepowers | 1.000 | 是 |
+| writing-livepowers-skills | writing-livepowers-skills@livepowers | 1.000 | 是 |
+| explore-with-evidence | system1-first | 0.175 | 否 |
+| explore-with-evidence | system1-first@livepowers | 0.175 | 否 |
+| explore-with-evidence@livepowers | system1-first@livepowers | 0.175 | 否 |
+| system1-first | explore-with-evidence@livepowers | 0.175 | 否 |
+| explore-with-evidence | takeover-handling | 0.174 | 否 |
+| explore-with-evidence | takeover-handling@livepowers | 0.174 | 否 |
+| explore-with-evidence@livepowers | takeover-handling@livepowers | 0.174 | 否 |
+| takeover-handling | explore-with-evidence@livepowers | 0.174 | 否 |
+| env-scan-ontology | fde-delivery@livepowers | 0.169 | 否 |
+| env-scan-ontology@livepowers | fde-delivery@livepowers | 0.169 | 否 |
+| fde-delivery | env-scan-ontology | 0.169 | 否 |
+| fde-delivery | env-scan-ontology@livepowers | 0.169 | 否 |
+| crystallize-to-system1 | nightly-crystallization-review | 0.160 | 否 |
+| crystallize-to-system1 | nightly-crystallization-review@livepowers | 0.160 | 否 |
+| crystallize-to-system1 | ontology-grounded-spec | 0.160 | 否 |
+| crystallize-to-system1 | ontology-grounded-spec@livepowers | 0.160 | 否 |
+| crystallize-to-system1@livepowers | nightly-crystallization-review@livepowers | 0.160 | 否 |
+| crystallize-to-system1@livepowers | ontology-grounded-spec@livepowers | 0.160 | 否 |
+| nightly-crystallization-review | crystallize-to-system1@livepowers | 0.160 | 否 |
+| ontology-grounded-spec | crystallize-to-system1@livepowers | 0.160 | 否 |
+| env-scan-ontology | ontology-evolution | 0.159 | 否 |
+| env-scan-ontology | ontology-evolution@livepowers | 0.159 | 否 |
+| env-scan-ontology@livepowers | ontology-evolution@livepowers | 0.159 | 否 |
+| nightly-crystallization-review | system1-first@livepowers | 0.159 | 否 |
+| nightly-crystallization-review@livepowers | system1-first@livepowers | 0.159 | 否 |
+| ontology-evolution | env-scan-ontology@livepowers | 0.159 | 否 |
+| system1-first | nightly-crystallization-review | 0.159 | 否 |
+| system1-first | nightly-crystallization-review@livepowers | 0.159 | 否 |
+| fde-delivery | outcome-ledger | 0.157 | 否 |
+| fde-delivery | outcome-ledger@livepowers | 0.157 | 否 |
+| fde-delivery@livepowers | outcome-ledger@livepowers | 0.157 | 否 |
+| outcome-ledger | fde-delivery@livepowers | 0.157 | 否 |
+| acceptance-gates | crystallize-to-system1@livepowers | 0.154 | 否 |
+| acceptance-gates@livepowers | crystallize-to-system1@livepowers | 0.154 | 否 |
+| crystallize-to-system1 | acceptance-gates | 0.154 | 否 |
+| crystallize-to-system1 | acceptance-gates@livepowers | 0.154 | 否 |
+| explore-with-evidence | ontology-grounded-spec | 0.154 | 否 |
+| explore-with-evidence | ontology-grounded-spec@livepowers | 0.154 | 否 |
+| explore-with-evidence@livepowers | ontology-grounded-spec@livepowers | 0.154 | 否 |
+| ontology-grounded-spec | explore-with-evidence@livepowers | 0.154 | 否 |
+| system1-first | takeover-handling | 0.154 | 否 |
+| system1-first | takeover-handling@livepowers | 0.154 | 否 |
+| system1-first@livepowers | takeover-handling@livepowers | 0.154 | 否 |
+| takeover-handling | system1-first@livepowers | 0.154 | 否 |
+| acceptance-gates | ontology-grounded-spec@livepowers | 0.153 | 否 |
+| acceptance-gates@livepowers | ontology-grounded-spec@livepowers | 0.153 | 否 |
+| ontology-grounded-spec | acceptance-gates | 0.153 | 否 |
+| ontology-grounded-spec | acceptance-gates@livepowers | 0.153 | 否 |
+| living-surface | using-livepowers@livepowers | 0.152 | 否 |
+| living-surface@livepowers | using-livepowers@livepowers | 0.152 | 否 |
+| using-livepowers | living-surface | 0.152 | 否 |
+| using-livepowers | living-surface@livepowers | 0.152 | 否 |
+| crystallize-to-system1 | oltp-action-safety | 0.151 | 否 |
+| crystallize-to-system1 | oltp-action-safety@livepowers | 0.151 | 否 |
+| crystallize-to-system1@livepowers | oltp-action-safety@livepowers | 0.151 | 否 |
+| living-surface | system1-first@livepowers | 0.151 | 否 |
+| living-surface@livepowers | system1-first@livepowers | 0.151 | 否 |
+| oltp-action-safety | crystallize-to-system1@livepowers | 0.151 | 否 |
+| ontology-evolution | ontology-grounded-spec@livepowers | 0.151 | 否 |
+| ontology-evolution@livepowers | ontology-grounded-spec@livepowers | 0.151 | 否 |
+| ontology-grounded-spec | ontology-evolution | 0.151 | 否 |
+| ontology-grounded-spec | ontology-evolution@livepowers | 0.151 | 否 |
+| system1-first | living-surface | 0.151 | 否 |
+| system1-first | living-surface@livepowers | 0.151 | 否 |
+| system1-first | using-livepowers | 0.150 | 否 |
+| system1-first | using-livepowers@livepowers | 0.150 | 否 |
+| system1-first@livepowers | using-livepowers@livepowers | 0.150 | 否 |
+| using-livepowers | system1-first@livepowers | 0.150 | 否 |
+| crystallize-to-system1 | system1-first | 0.149 | 否 |
+| crystallize-to-system1 | system1-first@livepowers | 0.149 | 否 |
+| crystallize-to-system1@livepowers | system1-first@livepowers | 0.149 | 否 |
+| system1-first | crystallize-to-system1@livepowers | 0.149 | 否 |
+| crystallize-to-system1 | using-livepowers | 0.148 | 否 |
+| crystallize-to-system1 | using-livepowers@livepowers | 0.148 | 否 |
+| crystallize-to-system1@livepowers | using-livepowers@livepowers | 0.148 | 否 |
+| using-livepowers | crystallize-to-system1@livepowers | 0.148 | 否 |
+| crystallize-to-system1 | living-surface | 0.147 | 否 |
+| crystallize-to-system1 | living-surface@livepowers | 0.147 | 否 |
+| crystallize-to-system1@livepowers | living-surface@livepowers | 0.147 | 否 |
+| env-scan-ontology | ontology-grounded-spec@livepowers | 0.147 | 否 |
+| env-scan-ontology@livepowers | ontology-grounded-spec@livepowers | 0.147 | 否 |
+| living-surface | crystallize-to-system1@livepowers | 0.147 | 否 |
+| ontology-grounded-spec | env-scan-ontology | 0.147 | 否 |
+| ontology-grounded-spec | env-scan-ontology@livepowers | 0.147 | 否 |
+| digital-role-spec | outcome-ledger@livepowers | 0.146 | 否 |
+| digital-role-spec@livepowers | outcome-ledger@livepowers | 0.146 | 否 |
+| outcome-ledger | digital-role-spec | 0.146 | 否 |
+| outcome-ledger | digital-role-spec@livepowers | 0.146 | 否 |
+| agent-harness-for-tools | system1-first@livepowers | 0.145 | 否 |
+| agent-harness-for-tools@livepowers | system1-first@livepowers | 0.145 | 否 |
+| digital-role-spec | takeover-handling@livepowers | 0.145 | 否 |
+| digital-role-spec@livepowers | takeover-handling@livepowers | 0.145 | 否 |
+| oltp-action-safety | ontology-grounded-spec@livepowers | 0.145 | 否 |
+| oltp-action-safety@livepowers | ontology-grounded-spec@livepowers | 0.145 | 否 |
+| ontology-grounded-spec | oltp-action-safety | 0.145 | 否 |
+| ontology-grounded-spec | oltp-action-safety@livepowers | 0.145 | 否 |
+| system1-first | agent-harness-for-tools | 0.145 | 否 |
+| system1-first | agent-harness-for-tools@livepowers | 0.145 | 否 |
+| takeover-handling | digital-role-spec | 0.145 | 否 |
+| takeover-handling | digital-role-spec@livepowers | 0.145 | 否 |
+| acceptance-gates | digital-role-spec | 0.144 | 否 |
+| acceptance-gates | digital-role-spec@livepowers | 0.144 | 否 |
+| acceptance-gates | oltp-action-safety | 0.144 | 否 |
+| acceptance-gates | oltp-action-safety@livepowers | 0.144 | 否 |
+| acceptance-gates@livepowers | digital-role-spec@livepowers | 0.144 | 否 |
+| acceptance-gates@livepowers | oltp-action-safety@livepowers | 0.144 | 否 |
+| digital-role-spec | acceptance-gates@livepowers | 0.144 | 否 |
+| digital-role-spec | ontology-grounded-spec@livepowers | 0.144 | 否 |
+| digital-role-spec | writing-livepowers-skills | 0.144 | 否 |
+| digital-role-spec | writing-livepowers-skills@livepowers | 0.144 | 否 |
+| digital-role-spec@livepowers | ontology-grounded-spec@livepowers | 0.144 | 否 |
+| digital-role-spec@livepowers | writing-livepowers-skills@livepowers | 0.144 | 否 |
+| explore-with-evidence | nightly-crystallization-review | 0.144 | 否 |
+| explore-with-evidence | nightly-crystallization-review@livepowers | 0.144 | 否 |
+| explore-with-evidence@livepowers | nightly-crystallization-review@livepowers | 0.144 | 否 |
+| nightly-crystallization-review | explore-with-evidence@livepowers | 0.144 | 否 |
+| oltp-action-safety | acceptance-gates@livepowers | 0.144 | 否 |
+| ontology-grounded-spec | digital-role-spec | 0.144 | 否 |
+| ontology-grounded-spec | digital-role-spec@livepowers | 0.144 | 否 |
+| writing-livepowers-skills | digital-role-spec@livepowers | 0.144 | 否 |
+| ontology-grounded-spec | system1-first | 0.143 | 否 |
+| ontology-grounded-spec | system1-first@livepowers | 0.143 | 否 |
+| ontology-grounded-spec@livepowers | system1-first@livepowers | 0.143 | 否 |
+| system1-first | ontology-grounded-spec@livepowers | 0.143 | 否 |
+| nightly-crystallization-review | using-livepowers@livepowers | 0.142 | 否 |
+| nightly-crystallization-review@livepowers | using-livepowers@livepowers | 0.142 | 否 |
+| using-livepowers | nightly-crystallization-review | 0.142 | 否 |
+| using-livepowers | nightly-crystallization-review@livepowers | 0.142 | 否 |
+| generalizing-skills | using-livepowers@livepowers | 0.141 | 否 |
+| generalizing-skills@livepowers | using-livepowers@livepowers | 0.141 | 否 |
+| ontology-grounded-spec | takeover-handling | 0.141 | 否 |
+| ontology-grounded-spec | takeover-handling@livepowers | 0.141 | 否 |
+| ontology-grounded-spec@livepowers | takeover-handling@livepowers | 0.141 | 否 |
+| takeover-handling | ontology-grounded-spec@livepowers | 0.141 | 否 |
+| using-livepowers | generalizing-skills | 0.141 | 否 |
+| using-livepowers | generalizing-skills@livepowers | 0.141 | 否 |
+| env-scan-ontology | system1-first@livepowers | 0.140 | 否 |
+| env-scan-ontology@livepowers | system1-first@livepowers | 0.140 | 否 |
+| system1-first | env-scan-ontology | 0.140 | 否 |
+| system1-first | env-scan-ontology@livepowers | 0.140 | 否 |
+| acceptance-gates | outcome-ledger | 0.139 | 否 |
+| acceptance-gates | outcome-ledger@livepowers | 0.139 | 否 |
+| acceptance-gates@livepowers | outcome-ledger@livepowers | 0.139 | 否 |
+| agent-harness-for-tools | crystallize-to-system1@livepowers | 0.139 | 否 |
+| agent-harness-for-tools | nightly-crystallization-review@livepowers | 0.139 | 否 |
+| agent-harness-for-tools@livepowers | crystallize-to-system1@livepowers | 0.139 | 否 |
+| agent-harness-for-tools@livepowers | nightly-crystallization-review@livepowers | 0.139 | 否 |
+| crystallize-to-system1 | agent-harness-for-tools | 0.139 | 否 |
+| crystallize-to-system1 | agent-harness-for-tools@livepowers | 0.139 | 否 |
+| fde-delivery | ontology-evolution | 0.139 | 否 |
+| fde-delivery | ontology-evolution@livepowers | 0.139 | 否 |
+| fde-delivery@livepowers | ontology-evolution@livepowers | 0.139 | 否 |
+| nightly-crystallization-review | agent-harness-for-tools | 0.139 | 否 |
+| nightly-crystallization-review | agent-harness-for-tools@livepowers | 0.139 | 否 |
+| ontology-evolution | fde-delivery@livepowers | 0.139 | 否 |
+| outcome-ledger | acceptance-gates@livepowers | 0.139 | 否 |
+| outcome-ledger | takeover-handling | 0.139 | 否 |
+| outcome-ledger | takeover-handling@livepowers | 0.139 | 否 |
+| outcome-ledger@livepowers | takeover-handling@livepowers | 0.139 | 否 |
+| takeover-handling | outcome-ledger@livepowers | 0.139 | 否 |
+| crystallize-to-system1 | fde-delivery | 0.138 | 否 |
+| crystallize-to-system1 | fde-delivery@livepowers | 0.138 | 否 |
+| crystallize-to-system1@livepowers | fde-delivery@livepowers | 0.138 | 否 |
+| fde-delivery | crystallize-to-system1@livepowers | 0.138 | 否 |
+| oltp-action-safety | system1-first@livepowers | 0.138 | 否 |
+| oltp-action-safety@livepowers | system1-first@livepowers | 0.138 | 否 |
+| system1-first | oltp-action-safety | 0.138 | 否 |
+| system1-first | oltp-action-safety@livepowers | 0.138 | 否 |
+| agent-harness-for-tools | ontology-grounded-spec@livepowers | 0.137 | 否 |
+| agent-harness-for-tools@livepowers | ontology-grounded-spec@livepowers | 0.137 | 否 |
+| crystallize-to-system1 | ontology-evolution | 0.137 | 否 |
+| crystallize-to-system1 | ontology-evolution@livepowers | 0.137 | 否 |
+| crystallize-to-system1@livepowers | ontology-evolution@livepowers | 0.137 | 否 |
+| nightly-crystallization-review | takeover-handling@livepowers | 0.137 | 否 |
+| nightly-crystallization-review@livepowers | takeover-handling@livepowers | 0.137 | 否 |
+| ontology-evolution | crystallize-to-system1@livepowers | 0.137 | 否 |
+| ontology-grounded-spec | agent-harness-for-tools | 0.137 | 否 |
+| ontology-grounded-spec | agent-harness-for-tools@livepowers | 0.137 | 否 |
+| takeover-handling | nightly-crystallization-review | 0.137 | 否 |
+| takeover-handling | nightly-crystallization-review@livepowers | 0.137 | 否 |
+| fde-delivery | ontology-grounded-spec@livepowers | 0.136 | 否 |
+| fde-delivery@livepowers | ontology-grounded-spec@livepowers | 0.136 | 否 |
+| ontology-grounded-spec | fde-delivery | 0.136 | 否 |
+| ontology-grounded-spec | fde-delivery@livepowers | 0.136 | 否 |
+| acceptance-gates | fde-delivery | 0.135 | 否 |
+| acceptance-gates | fde-delivery@livepowers | 0.135 | 否 |
+| acceptance-gates | using-livepowers@livepowers | 0.135 | 否 |
+| acceptance-gates@livepowers | fde-delivery@livepowers | 0.135 | 否 |
+| acceptance-gates@livepowers | using-livepowers@livepowers | 0.135 | 否 |
+| digital-role-spec | ontology-evolution | 0.135 | 否 |
+| digital-role-spec | ontology-evolution@livepowers | 0.135 | 否 |
+| digital-role-spec@livepowers | ontology-evolution@livepowers | 0.135 | 否 |
+| explore-with-evidence | oltp-action-safety | 0.135 | 否 |
+| explore-with-evidence | oltp-action-safety@livepowers | 0.135 | 否 |
+| explore-with-evidence@livepowers | oltp-action-safety@livepowers | 0.135 | 否 |
+| fde-delivery | acceptance-gates@livepowers | 0.135 | 否 |
+| living-surface | nightly-crystallization-review@livepowers | 0.135 | 否 |
+| living-surface@livepowers | nightly-crystallization-review@livepowers | 0.135 | 否 |
+| nightly-crystallization-review | living-surface | 0.135 | 否 |
+| nightly-crystallization-review | living-surface@livepowers | 0.135 | 否 |
+| oltp-action-safety | explore-with-evidence@livepowers | 0.135 | 否 |
+| ontology-evolution | digital-role-spec@livepowers | 0.135 | 否 |
+| using-livepowers | acceptance-gates | 0.135 | 否 |
+| using-livepowers | acceptance-gates@livepowers | 0.135 | 否 |
+| explore-with-evidence | using-livepowers | 0.134 | 否 |
+| explore-with-evidence | using-livepowers@livepowers | 0.134 | 否 |
+| explore-with-evidence@livepowers | using-livepowers@livepowers | 0.134 | 否 |
+| ontology-grounded-spec | using-livepowers | 0.134 | 否 |
+| ontology-grounded-spec | using-livepowers@livepowers | 0.134 | 否 |
+| ontology-grounded-spec@livepowers | using-livepowers@livepowers | 0.134 | 否 |
+| takeover-handling | using-livepowers@livepowers | 0.134 | 否 |
+| takeover-handling@livepowers | using-livepowers@livepowers | 0.134 | 否 |
+| using-livepowers | explore-with-evidence@livepowers | 0.134 | 否 |
+| using-livepowers | ontology-grounded-spec@livepowers | 0.134 | 否 |
+| using-livepowers | takeover-handling | 0.134 | 否 |
+| using-livepowers | takeover-handling@livepowers | 0.134 | 否 |
+| crystallize-to-system1 | explore-with-evidence | 0.133 | 否 |
+| crystallize-to-system1 | explore-with-evidence@livepowers | 0.133 | 否 |
+| crystallize-to-system1@livepowers | explore-with-evidence@livepowers | 0.133 | 否 |
+| explore-with-evidence | crystallize-to-system1@livepowers | 0.133 | 否 |
+| agent-harness-for-tools | writing-livepowers-skills | 0.132 | 否 |
+| agent-harness-for-tools | writing-livepowers-skills@livepowers | 0.132 | 否 |
+| agent-harness-for-tools@livepowers | writing-livepowers-skills@livepowers | 0.132 | 否 |
+| crystallize-to-system1 | takeover-handling | 0.132 | 否 |
+| crystallize-to-system1 | takeover-handling@livepowers | 0.132 | 否 |
+| crystallize-to-system1@livepowers | takeover-handling@livepowers | 0.132 | 否 |
+| takeover-handling | crystallize-to-system1@livepowers | 0.132 | 否 |
+| writing-livepowers-skills | agent-harness-for-tools@livepowers | 0.132 | 否 |
+| acceptance-gates | night-loop-planning | 0.131 | 否 |
+| acceptance-gates | night-loop-planning@livepowers | 0.131 | 否 |
+| acceptance-gates@livepowers | night-loop-planning@livepowers | 0.131 | 否 |
+| crystallize-to-system1 | env-scan-ontology | 0.131 | 否 |
+| crystallize-to-system1 | env-scan-ontology@livepowers | 0.131 | 否 |
+| crystallize-to-system1@livepowers | env-scan-ontology@livepowers | 0.131 | 否 |
+| env-scan-ontology | crystallize-to-system1@livepowers | 0.131 | 否 |
+| night-loop-planning | acceptance-gates@livepowers | 0.131 | 否 |
+| acceptance-gates | explore-with-evidence@livepowers | 0.130 | 否 |
+| acceptance-gates | ontology-evolution | 0.130 | 否 |
+| acceptance-gates | ontology-evolution@livepowers | 0.130 | 否 |
+| acceptance-gates@livepowers | explore-with-evidence@livepowers | 0.130 | 否 |
+| acceptance-gates@livepowers | ontology-evolution@livepowers | 0.130 | 否 |
+| agent-harness-for-tools | night-loop-planning@livepowers | 0.130 | 否 |
+| agent-harness-for-tools@livepowers | night-loop-planning@livepowers | 0.130 | 否 |
+| explore-with-evidence | acceptance-gates | 0.130 | 否 |
+| explore-with-evidence | acceptance-gates@livepowers | 0.130 | 否 |
+| explore-with-evidence | living-surface | 0.130 | 否 |
+| explore-with-evidence | living-surface@livepowers | 0.130 | 否 |
+| explore-with-evidence@livepowers | living-surface@livepowers | 0.130 | 否 |
+| living-surface | explore-with-evidence@livepowers | 0.130 | 否 |
+| night-loop-planning | agent-harness-for-tools | 0.130 | 否 |
+| night-loop-planning | agent-harness-for-tools@livepowers | 0.130 | 否 |
+| ontology-evolution | acceptance-gates@livepowers | 0.130 | 否 |
+| env-scan-ontology | nightly-crystallization-review@livepowers | 0.129 | 否 |
+| env-scan-ontology@livepowers | nightly-crystallization-review@livepowers | 0.129 | 否 |
+| explore-with-evidence | ontology-evolution | 0.129 | 否 |
+| explore-with-evidence | ontology-evolution@livepowers | 0.129 | 否 |
+| explore-with-evidence@livepowers | ontology-evolution@livepowers | 0.129 | 否 |
+| fde-delivery | using-livepowers@livepowers | 0.129 | 否 |
+| fde-delivery@livepowers | using-livepowers@livepowers | 0.129 | 否 |
+| nightly-crystallization-review | env-scan-ontology | 0.129 | 否 |
+| nightly-crystallization-review | env-scan-ontology@livepowers | 0.129 | 否 |
+| ontology-evolution | explore-with-evidence@livepowers | 0.129 | 否 |
+| using-livepowers | fde-delivery | 0.129 | 否 |
+| using-livepowers | fde-delivery@livepowers | 0.129 | 否 |
+| acceptance-gates | takeover-handling | 0.128 | 否 |
+| acceptance-gates | takeover-handling@livepowers | 0.128 | 否 |
+| acceptance-gates@livepowers | takeover-handling@livepowers | 0.128 | 否 |
+| digital-role-spec | env-scan-ontology | 0.128 | 否 |
+| digital-role-spec | env-scan-ontology@livepowers | 0.128 | 否 |
+| digital-role-spec@livepowers | env-scan-ontology@livepowers | 0.128 | 否 |
+| env-scan-ontology | digital-role-spec@livepowers | 0.128 | 否 |
+| takeover-handling | acceptance-gates@livepowers | 0.128 | 否 |
+| agent-harness-for-tools | env-scan-ontology@livepowers | 0.127 | 否 |
+| agent-harness-for-tools@livepowers | env-scan-ontology@livepowers | 0.127 | 否 |
+| crystallize-to-system1 | generalizing-skills | 0.127 | 否 |
+| crystallize-to-system1 | generalizing-skills@livepowers | 0.127 | 否 |
+| crystallize-to-system1@livepowers | generalizing-skills@livepowers | 0.127 | 否 |
+| env-scan-ontology | agent-harness-for-tools | 0.127 | 否 |
+| env-scan-ontology | agent-harness-for-tools@livepowers | 0.127 | 否 |
+| env-scan-ontology | using-livepowers@livepowers | 0.127 | 否 |
+| env-scan-ontology@livepowers | using-livepowers@livepowers | 0.127 | 否 |
+| generalizing-skills | crystallize-to-system1@livepowers | 0.127 | 否 |
+| oltp-action-safety | ontology-evolution | 0.127 | 否 |
+| oltp-action-safety | ontology-evolution@livepowers | 0.127 | 否 |
+| oltp-action-safety@livepowers | ontology-evolution@livepowers | 0.127 | 否 |
+| ontology-evolution | oltp-action-safety@livepowers | 0.127 | 否 |
+| using-livepowers | env-scan-ontology | 0.127 | 否 |
+| using-livepowers | env-scan-ontology@livepowers | 0.127 | 否 |
+| digital-role-spec | explore-with-evidence@livepowers | 0.126 | 否 |
+| digital-role-spec@livepowers | explore-with-evidence@livepowers | 0.126 | 否 |
+| env-scan-ontology | living-surface | 0.126 | 否 |
+| env-scan-ontology | living-surface@livepowers | 0.126 | 否 |
+| env-scan-ontology@livepowers | living-surface@livepowers | 0.126 | 否 |
+| explore-with-evidence | digital-role-spec | 0.126 | 否 |
+| explore-with-evidence | digital-role-spec@livepowers | 0.126 | 否 |
+| generalizing-skills | living-surface@livepowers | 0.126 | 否 |
+| generalizing-skills@livepowers | living-surface@livepowers | 0.126 | 否 |
+| living-surface | env-scan-ontology@livepowers | 0.126 | 否 |
+| living-surface | generalizing-skills | 0.126 | 否 |
+| living-surface | generalizing-skills@livepowers | 0.126 | 否 |
+| living-surface | ontology-grounded-spec@livepowers | 0.126 | 否 |
+| living-surface@livepowers | ontology-grounded-spec@livepowers | 0.126 | 否 |
+| ontology-grounded-spec | living-surface | 0.126 | 否 |
+| ontology-grounded-spec | living-surface@livepowers | 0.126 | 否 |
+| acceptance-gates | auditable-agent-comms | 0.125 | 否 |
+| acceptance-gates | auditable-agent-comms@livepowers | 0.125 | 否 |
+| acceptance-gates@livepowers | auditable-agent-comms@livepowers | 0.125 | 否 |
+| auditable-agent-comms | acceptance-gates@livepowers | 0.125 | 否 |
+| auditable-agent-comms | writing-livepowers-skills | 0.125 | 否 |
+| auditable-agent-comms | writing-livepowers-skills@livepowers | 0.125 | 否 |
+| auditable-agent-comms@livepowers | writing-livepowers-skills@livepowers | 0.125 | 否 |
+| digital-role-spec | fde-delivery@livepowers | 0.125 | 否 |
+| digital-role-spec@livepowers | fde-delivery@livepowers | 0.125 | 否 |
+| env-scan-ontology | generalizing-skills | 0.125 | 否 |
+| env-scan-ontology | generalizing-skills@livepowers | 0.125 | 否 |
+| env-scan-ontology@livepowers | generalizing-skills@livepowers | 0.125 | 否 |
+| fde-delivery | digital-role-spec | 0.125 | 否 |
+| fde-delivery | digital-role-spec@livepowers | 0.125 | 否 |
+| generalizing-skills | env-scan-ontology@livepowers | 0.125 | 否 |
+| generalizing-skills | ontology-grounded-spec@livepowers | 0.125 | 否 |
+| generalizing-skills@livepowers | ontology-grounded-spec@livepowers | 0.125 | 否 |
+| living-surface | writing-livepowers-skills | 0.125 | 否 |
+| living-surface | writing-livepowers-skills@livepowers | 0.125 | 否 |
+| living-surface@livepowers | writing-livepowers-skills@livepowers | 0.125 | 否 |
+| ontology-grounded-spec | generalizing-skills | 0.125 | 否 |
+| ontology-grounded-spec | generalizing-skills@livepowers | 0.125 | 否 |
+| ontology-grounded-spec | writing-livepowers-skills | 0.125 | 否 |
+| ontology-grounded-spec | writing-livepowers-skills@livepowers | 0.125 | 否 |
+| ontology-grounded-spec@livepowers | writing-livepowers-skills@livepowers | 0.125 | 否 |
+| writing-livepowers-skills | auditable-agent-comms@livepowers | 0.125 | 否 |
+| writing-livepowers-skills | living-surface@livepowers | 0.125 | 否 |
+| writing-livepowers-skills | ontology-grounded-spec@livepowers | 0.125 | 否 |
+| auditable-agent-comms | night-loop-planning | 0.124 | 否 |
+| auditable-agent-comms | night-loop-planning@livepowers | 0.124 | 否 |
+| auditable-agent-comms@livepowers | night-loop-planning@livepowers | 0.124 | 否 |
+| digital-role-spec | nightly-crystallization-review@livepowers | 0.124 | 否 |
+| digital-role-spec | system1-first@livepowers | 0.124 | 否 |
+| digital-role-spec@livepowers | nightly-crystallization-review@livepowers | 0.124 | 否 |
+| digital-role-spec@livepowers | system1-first@livepowers | 0.124 | 否 |
+| night-loop-planning | auditable-agent-comms@livepowers | 0.124 | 否 |
+| night-loop-planning | nightly-crystallization-review | 0.124 | 否 |
+| night-loop-planning | nightly-crystallization-review@livepowers | 0.124 | 否 |
+| night-loop-planning@livepowers | nightly-crystallization-review@livepowers | 0.124 | 否 |
+| nightly-crystallization-review | digital-role-spec | 0.124 | 否 |
+| nightly-crystallization-review | digital-role-spec@livepowers | 0.124 | 否 |
+| nightly-crystallization-review | night-loop-planning@livepowers | 0.124 | 否 |
+| ontology-evolution | system1-first@livepowers | 0.124 | 否 |
+| ontology-evolution | writing-livepowers-skills | 0.124 | 否 |
+| ontology-evolution | writing-livepowers-skills@livepowers | 0.124 | 否 |
+| ontology-evolution@livepowers | system1-first@livepowers | 0.124 | 否 |
+| ontology-evolution@livepowers | writing-livepowers-skills@livepowers | 0.124 | 否 |
+| ontology-grounded-spec | outcome-ledger | 0.124 | 否 |
+| ontology-grounded-spec | outcome-ledger@livepowers | 0.124 | 否 |
+| ontology-grounded-spec@livepowers | outcome-ledger@livepowers | 0.124 | 否 |
+| outcome-ledger | ontology-grounded-spec@livepowers | 0.124 | 否 |
+| outcome-ledger | using-livepowers@livepowers | 0.124 | 否 |
+| outcome-ledger@livepowers | using-livepowers@livepowers | 0.124 | 否 |
+| system1-first | digital-role-spec | 0.124 | 否 |
+| system1-first | digital-role-spec@livepowers | 0.124 | 否 |
+| system1-first | ontology-evolution | 0.124 | 否 |
+| system1-first | ontology-evolution@livepowers | 0.124 | 否 |
+| using-livepowers | outcome-ledger | 0.124 | 否 |
+| using-livepowers | outcome-ledger@livepowers | 0.124 | 否 |
+| writing-livepowers-skills | ontology-evolution@livepowers | 0.124 | 否 |
+| acceptance-gates | env-scan-ontology | 0.123 | 否 |
+| acceptance-gates | env-scan-ontology@livepowers | 0.123 | 否 |
+| acceptance-gates | system1-first@livepowers | 0.123 | 否 |
+| acceptance-gates@livepowers | env-scan-ontology@livepowers | 0.123 | 否 |
+| acceptance-gates@livepowers | system1-first@livepowers | 0.123 | 否 |
+| agent-harness-for-tools | oltp-action-safety@livepowers | 0.123 | 否 |
+| agent-harness-for-tools | ontology-evolution@livepowers | 0.123 | 否 |
+| agent-harness-for-tools | using-livepowers@livepowers | 0.123 | 否 |
+| agent-harness-for-tools@livepowers | oltp-action-safety@livepowers | 0.123 | 否 |
+| agent-harness-for-tools@livepowers | ontology-evolution@livepowers | 0.123 | 否 |
+| agent-harness-for-tools@livepowers | using-livepowers@livepowers | 0.123 | 否 |
+| env-scan-ontology | acceptance-gates@livepowers | 0.123 | 否 |
+| explore-with-evidence | fde-delivery | 0.123 | 否 |
+| explore-with-evidence | fde-delivery@livepowers | 0.123 | 否 |
+| explore-with-evidence@livepowers | fde-delivery@livepowers | 0.123 | 否 |
+| fde-delivery | explore-with-evidence@livepowers | 0.123 | 否 |
+| oltp-action-safety | agent-harness-for-tools | 0.123 | 否 |
+| oltp-action-safety | agent-harness-for-tools@livepowers | 0.123 | 否 |
+| ontology-evolution | agent-harness-for-tools | 0.123 | 否 |
+| ontology-evolution | agent-harness-for-tools@livepowers | 0.123 | 否 |
+| system1-first | acceptance-gates | 0.123 | 否 |
+| system1-first | acceptance-gates@livepowers | 0.123 | 否 |
+| using-livepowers | agent-harness-for-tools | 0.123 | 否 |
+| using-livepowers | agent-harness-for-tools@livepowers | 0.123 | 否 |
+| auditable-agent-comms | digital-role-spec | 0.122 | 否 |
+| auditable-agent-comms | digital-role-spec@livepowers | 0.122 | 否 |
+| auditable-agent-comms@livepowers | digital-role-spec@livepowers | 0.122 | 否 |
+| digital-role-spec | auditable-agent-comms@livepowers | 0.122 | 否 |
+| digital-role-spec | oltp-action-safety@livepowers | 0.122 | 否 |
+| digital-role-spec@livepowers | oltp-action-safety@livepowers | 0.122 | 否 |
+| fde-delivery | system1-first@livepowers | 0.122 | 否 |
+| fde-delivery@livepowers | system1-first@livepowers | 0.122 | 否 |
+| oltp-action-safety | digital-role-spec | 0.122 | 否 |
+| oltp-action-safety | digital-role-spec@livepowers | 0.122 | 否 |
+| system1-first | fde-delivery | 0.122 | 否 |
+| system1-first | fde-delivery@livepowers | 0.122 | 否 |
+| acceptance-gates | agent-harness-for-tools | 0.121 | 否 |
+| acceptance-gates | agent-harness-for-tools@livepowers | 0.121 | 否 |
+| acceptance-gates | nightly-crystallization-review | 0.121 | 否 |
+| acceptance-gates | nightly-crystallization-review@livepowers | 0.121 | 否 |
+| acceptance-gates@livepowers | agent-harness-for-tools@livepowers | 0.121 | 否 |
+| acceptance-gates@livepowers | nightly-crystallization-review@livepowers | 0.121 | 否 |
+| agent-harness-for-tools | acceptance-gates@livepowers | 0.121 | 否 |
+| agent-harness-for-tools | explore-with-evidence@livepowers | 0.121 | 否 |
+| agent-harness-for-tools@livepowers | explore-with-evidence@livepowers | 0.121 | 否 |
+| crystallize-to-system1 | writing-livepowers-skills | 0.121 | 否 |
+| crystallize-to-system1 | writing-livepowers-skills@livepowers | 0.121 | 否 |
+| crystallize-to-system1@livepowers | writing-livepowers-skills@livepowers | 0.121 | 否 |
+| explore-with-evidence | agent-harness-for-tools | 0.121 | 否 |
+| explore-with-evidence | agent-harness-for-tools@livepowers | 0.121 | 否 |
+| nightly-crystallization-review | acceptance-gates@livepowers | 0.121 | 否 |
+| writing-livepowers-skills | crystallize-to-system1@livepowers | 0.121 | 否 |
+| crystallize-to-system1 | digital-role-spec | 0.120 | 否 |
+| crystallize-to-system1 | digital-role-spec@livepowers | 0.120 | 否 |
+| crystallize-to-system1@livepowers | digital-role-spec@livepowers | 0.120 | 否 |
+| delivery-chain | ontology-grounded-spec@livepowers | 0.120 | 否 |
+| delivery-chain@livepowers | ontology-grounded-spec@livepowers | 0.120 | 否 |
+| digital-role-spec | crystallize-to-system1@livepowers | 0.120 | 否 |
+| digital-role-spec | night-loop-planning@livepowers | 0.120 | 否 |
+| digital-role-spec@livepowers | night-loop-planning@livepowers | 0.120 | 否 |
+| env-scan-ontology | explore-with-evidence@livepowers | 0.120 | 否 |
+| env-scan-ontology | oltp-action-safety@livepowers | 0.120 | 否 |
+| env-scan-ontology | writing-livepowers-skills | 0.120 | 否 |
+| env-scan-ontology | writing-livepowers-skills@livepowers | 0.120 | 否 |
+| env-scan-ontology@livepowers | explore-with-evidence@livepowers | 0.120 | 否 |
+| env-scan-ontology@livepowers | oltp-action-safety@livepowers | 0.120 | 否 |
+| env-scan-ontology@livepowers | writing-livepowers-skills@livepowers | 0.120 | 否 |
+| explore-with-evidence | env-scan-ontology | 0.120 | 否 |
+| explore-with-evidence | env-scan-ontology@livepowers | 0.120 | 否 |
+| fde-delivery | writing-livepowers-skills | 0.120 | 否 |
+| fde-delivery | writing-livepowers-skills@livepowers | 0.120 | 否 |
+| fde-delivery@livepowers | writing-livepowers-skills@livepowers | 0.120 | 否 |
+| living-surface | ontology-evolution | 0.120 | 否 |
+| living-surface | ontology-evolution@livepowers | 0.120 | 否 |
+| living-surface | takeover-handling@livepowers | 0.120 | 否 |
+| living-surface@livepowers | ontology-evolution@livepowers | 0.120 | 否 |
+| living-surface@livepowers | takeover-handling@livepowers | 0.120 | 否 |
+| night-loop-planning | digital-role-spec | 0.120 | 否 |
+| night-loop-planning | digital-role-spec@livepowers | 0.120 | 否 |
+| oltp-action-safety | env-scan-ontology | 0.120 | 否 |
+| oltp-action-safety | env-scan-ontology@livepowers | 0.120 | 否 |
+| ontology-evolution | living-surface@livepowers | 0.120 | 否 |
+| ontology-grounded-spec | delivery-chain | 0.120 | 否 |
+| ontology-grounded-spec | delivery-chain@livepowers | 0.120 | 否 |
+| system1-first | writing-livepowers-skills | 0.120 | 否 |
+| system1-first | writing-livepowers-skills@livepowers | 0.120 | 否 |
+| system1-first@livepowers | writing-livepowers-skills@livepowers | 0.120 | 否 |
+| takeover-handling | living-surface | 0.120 | 否 |
+| takeover-handling | living-surface@livepowers | 0.120 | 否 |
+| writing-livepowers-skills | env-scan-ontology@livepowers | 0.120 | 否 |
+| writing-livepowers-skills | fde-delivery@livepowers | 0.120 | 否 |
+| writing-livepowers-skills | system1-first@livepowers | 0.120 | 否 |
+| agent-harness-for-tools | digital-role-spec@livepowers | 0.119 | 否 |
+| agent-harness-for-tools | living-surface@livepowers | 0.119 | 否 |
+| agent-harness-for-tools@livepowers | digital-role-spec@livepowers | 0.119 | 否 |
+| agent-harness-for-tools@livepowers | living-surface@livepowers | 0.119 | 否 |
+| digital-role-spec | agent-harness-for-tools | 0.119 | 否 |
+| digital-role-spec | agent-harness-for-tools@livepowers | 0.119 | 否 |
+| living-surface | agent-harness-for-tools | 0.119 | 否 |
+| living-surface | agent-harness-for-tools@livepowers | 0.119 | 否 |
+| agent-harness-for-tools | takeover-handling@livepowers | 0.118 | 否 |
+| agent-harness-for-tools@livepowers | takeover-handling@livepowers | 0.118 | 否 |
+| env-scan-ontology | takeover-handling@livepowers | 0.118 | 否 |
+| env-scan-ontology@livepowers | takeover-handling@livepowers | 0.118 | 否 |
+| living-surface | oltp-action-safety@livepowers | 0.118 | 否 |
+| living-surface@livepowers | oltp-action-safety@livepowers | 0.118 | 否 |
+| night-loop-planning | using-livepowers@livepowers | 0.118 | 否 |
+| night-loop-planning@livepowers | using-livepowers@livepowers | 0.118 | 否 |
+| oltp-action-safety | living-surface | 0.118 | 否 |
+| oltp-action-safety | living-surface@livepowers | 0.118 | 否 |
+| ontology-evolution | takeover-handling@livepowers | 0.118 | 否 |
+| ontology-evolution@livepowers | takeover-handling@livepowers | 0.118 | 否 |
+| takeover-handling | agent-harness-for-tools | 0.118 | 否 |
+| takeover-handling | agent-harness-for-tools@livepowers | 0.118 | 否 |
+| takeover-handling | env-scan-ontology | 0.118 | 否 |
+| takeover-handling | env-scan-ontology@livepowers | 0.118 | 否 |
+| takeover-handling | ontology-evolution | 0.118 | 否 |
+| takeover-handling | ontology-evolution@livepowers | 0.118 | 否 |
+| using-livepowers | night-loop-planning | 0.118 | 否 |
+| using-livepowers | night-loop-planning@livepowers | 0.118 | 否 |
+| fde-delivery | nightly-crystallization-review | 0.117 | 否 |
+| fde-delivery | nightly-crystallization-review@livepowers | 0.117 | 否 |
+| fde-delivery@livepowers | nightly-crystallization-review@livepowers | 0.117 | 否 |
+| night-loop-planning | ontology-grounded-spec@livepowers | 0.117 | 否 |
+| night-loop-planning@livepowers | ontology-grounded-spec@livepowers | 0.117 | 否 |
+| nightly-crystallization-review | fde-delivery@livepowers | 0.117 | 否 |
+| nightly-crystallization-review | ontology-evolution | 0.117 | 否 |
+| nightly-crystallization-review | ontology-evolution@livepowers | 0.117 | 否 |
+| nightly-crystallization-review | ontology-grounded-spec@livepowers | 0.117 | 否 |
+| nightly-crystallization-review@livepowers | ontology-evolution@livepowers | 0.117 | 否 |
+| nightly-crystallization-review@livepowers | ontology-grounded-spec@livepowers | 0.117 | 否 |
+| ontology-evolution | nightly-crystallization-review@livepowers | 0.117 | 否 |
+| ontology-grounded-spec | night-loop-planning | 0.117 | 否 |
+| ontology-grounded-spec | night-loop-planning@livepowers | 0.117 | 否 |
+| ontology-grounded-spec | nightly-crystallization-review | 0.117 | 否 |
+| ontology-grounded-spec | nightly-crystallization-review@livepowers | 0.117 | 否 |
+| acceptance-gates | delivery-chain | 0.116 | 否 |
+| acceptance-gates | delivery-chain@livepowers | 0.116 | 否 |
+| acceptance-gates@livepowers | delivery-chain@livepowers | 0.116 | 否 |
+| delivery-chain | acceptance-gates@livepowers | 0.116 | 否 |
+| delivery-chain | using-livepowers@livepowers | 0.116 | 否 |
+| delivery-chain@livepowers | using-livepowers@livepowers | 0.116 | 否 |
+| outcome-ledger | system1-first@livepowers | 0.116 | 否 |
+| outcome-ledger@livepowers | system1-first@livepowers | 0.116 | 否 |
+| system1-first | outcome-ledger | 0.116 | 否 |
+| system1-first | outcome-ledger@livepowers | 0.116 | 否 |
+| using-livepowers | delivery-chain | 0.116 | 否 |
+| using-livepowers | delivery-chain@livepowers | 0.116 | 否 |
+| crystallize-to-system1 | outcome-ledger | 0.115 | 否 |
+| crystallize-to-system1 | outcome-ledger@livepowers | 0.115 | 否 |
+| crystallize-to-system1@livepowers | outcome-ledger@livepowers | 0.115 | 否 |
+| delivery-chain | system1-first@livepowers | 0.115 | 否 |
+| delivery-chain@livepowers | system1-first@livepowers | 0.115 | 否 |
+| fde-delivery | oltp-action-safety | 0.115 | 否 |
+| fde-delivery | oltp-action-safety@livepowers | 0.115 | 否 |
+| fde-delivery | takeover-handling | 0.115 | 否 |
+| fde-delivery | takeover-handling@livepowers | 0.115 | 否 |
+| fde-delivery@livepowers | oltp-action-safety@livepowers | 0.115 | 否 |
+| fde-delivery@livepowers | takeover-handling@livepowers | 0.115 | 否 |
+| night-loop-planning | takeover-handling@livepowers | 0.115 | 否 |
+| night-loop-planning@livepowers | takeover-handling@livepowers | 0.115 | 否 |
+| oltp-action-safety | fde-delivery@livepowers | 0.115 | 否 |
+| oltp-action-safety | using-livepowers@livepowers | 0.115 | 否 |
+| oltp-action-safety@livepowers | using-livepowers@livepowers | 0.115 | 否 |
+| outcome-ledger | crystallize-to-system1@livepowers | 0.115 | 否 |
+| system1-first | delivery-chain | 0.115 | 否 |
+| system1-first | delivery-chain@livepowers | 0.115 | 否 |
+| takeover-handling | fde-delivery@livepowers | 0.115 | 否 |
+| takeover-handling | night-loop-planning | 0.115 | 否 |
+| takeover-handling | night-loop-planning@livepowers | 0.115 | 否 |
+| using-livepowers | oltp-action-safety | 0.115 | 否 |
+| using-livepowers | oltp-action-safety@livepowers | 0.115 | 否 |
+| auditable-agent-comms | oltp-action-safety | 0.114 | 否 |
+| auditable-agent-comms | oltp-action-safety@livepowers | 0.114 | 否 |
+| auditable-agent-comms@livepowers | oltp-action-safety@livepowers | 0.114 | 否 |
+| explore-with-evidence | generalizing-skills | 0.114 | 否 |
+| explore-with-evidence | generalizing-skills@livepowers | 0.114 | 否 |
+| explore-with-evidence | writing-livepowers-skills | 0.114 | 否 |
+| explore-with-evidence | writing-livepowers-skills@livepowers | 0.114 | 否 |
+| explore-with-evidence@livepowers | generalizing-skills@livepowers | 0.114 | 否 |
+| explore-with-evidence@livepowers | writing-livepowers-skills@livepowers | 0.114 | 否 |
+| generalizing-skills | explore-with-evidence@livepowers | 0.114 | 否 |
+| oltp-action-safety | auditable-agent-comms@livepowers | 0.114 | 否 |
+| writing-livepowers-skills | explore-with-evidence@livepowers | 0.114 | 否 |
+| acceptance-gates | living-surface | 0.113 | 否 |
+| acceptance-gates | living-surface@livepowers | 0.113 | 否 |
+| acceptance-gates@livepowers | living-surface@livepowers | 0.113 | 否 |
+| auditable-agent-comms | system1-first@livepowers | 0.113 | 否 |
+| auditable-agent-comms@livepowers | system1-first@livepowers | 0.113 | 否 |
+| crystallize-to-system1 | delivery-chain | 0.113 | 否 |
+| crystallize-to-system1 | delivery-chain@livepowers | 0.113 | 否 |
+| crystallize-to-system1@livepowers | delivery-chain@livepowers | 0.113 | 否 |
+| delivery-chain | crystallize-to-system1@livepowers | 0.113 | 否 |
+| delivery-chain | living-surface | 0.113 | 否 |
+| delivery-chain | living-surface@livepowers | 0.113 | 否 |
+| delivery-chain | takeover-handling | 0.113 | 否 |
+| delivery-chain | takeover-handling@livepowers | 0.113 | 否 |
+| delivery-chain@livepowers | living-surface@livepowers | 0.113 | 否 |
+| delivery-chain@livepowers | takeover-handling@livepowers | 0.113 | 否 |
+| digital-role-spec | using-livepowers@livepowers | 0.113 | 否 |
+| digital-role-spec@livepowers | using-livepowers@livepowers | 0.113 | 否 |
+| fde-delivery | living-surface | 0.113 | 否 |
+| fde-delivery | living-surface@livepowers | 0.113 | 否 |
+| fde-delivery@livepowers | living-surface@livepowers | 0.113 | 否 |
+| generalizing-skills | takeover-handling@livepowers | 0.113 | 否 |
+| generalizing-skills | writing-livepowers-skills | 0.113 | 否 |
+| generalizing-skills | writing-livepowers-skills@livepowers | 0.113 | 否 |
+| generalizing-skills@livepowers | takeover-handling@livepowers | 0.113 | 否 |
+| generalizing-skills@livepowers | writing-livepowers-skills@livepowers | 0.113 | 否 |
+| living-surface | acceptance-gates@livepowers | 0.113 | 否 |
+| living-surface | delivery-chain@livepowers | 0.113 | 否 |
+| living-surface | fde-delivery@livepowers | 0.113 | 否 |
+| night-loop-planning | system1-first@livepowers | 0.113 | 否 |
+| night-loop-planning@livepowers | system1-first@livepowers | 0.113 | 否 |
+| ontology-evolution | outcome-ledger@livepowers | 0.113 | 否 |
+| ontology-evolution@livepowers | outcome-ledger@livepowers | 0.113 | 否 |
+| outcome-ledger | ontology-evolution | 0.113 | 否 |
+| outcome-ledger | ontology-evolution@livepowers | 0.113 | 否 |
+| system1-first | auditable-agent-comms | 0.113 | 否 |
+| system1-first | auditable-agent-comms@livepowers | 0.113 | 否 |
+| system1-first | night-loop-planning | 0.113 | 否 |
+| system1-first | night-loop-planning@livepowers | 0.113 | 否 |
+| takeover-handling | delivery-chain@livepowers | 0.113 | 否 |
+| takeover-handling | generalizing-skills | 0.113 | 否 |
+| takeover-handling | generalizing-skills@livepowers | 0.113 | 否 |
+| using-livepowers | digital-role-spec | 0.113 | 否 |
+| using-livepowers | digital-role-spec@livepowers | 0.113 | 否 |
+| writing-livepowers-skills | generalizing-skills@livepowers | 0.113 | 否 |
+| digital-role-spec | living-surface | 0.112 | 否 |
+| digital-role-spec | living-surface@livepowers | 0.112 | 否 |
+| digital-role-spec@livepowers | living-surface@livepowers | 0.112 | 否 |
+| explore-with-evidence | night-loop-planning | 0.112 | 否 |
+| explore-with-evidence | night-loop-planning@livepowers | 0.112 | 否 |
+| explore-with-evidence@livepowers | night-loop-planning@livepowers | 0.112 | 否 |
+| living-surface | digital-role-spec@livepowers | 0.112 | 否 |
+| night-loop-planning | explore-with-evidence@livepowers | 0.112 | 否 |
+| takeover-handling | writing-livepowers-skills | 0.112 | 否 |
+| takeover-handling | writing-livepowers-skills@livepowers | 0.112 | 否 |
+| takeover-handling@livepowers | writing-livepowers-skills@livepowers | 0.112 | 否 |
+| using-livepowers | writing-livepowers-skills | 0.112 | 否 |
+| using-livepowers | writing-livepowers-skills@livepowers | 0.112 | 否 |
+| using-livepowers@livepowers | writing-livepowers-skills@livepowers | 0.112 | 否 |
+| writing-livepowers-skills | takeover-handling@livepowers | 0.112 | 否 |
+| writing-livepowers-skills | using-livepowers@livepowers | 0.112 | 否 |
+| auditable-agent-comms | env-scan-ontology | 0.111 | 否 |
+| auditable-agent-comms | env-scan-ontology@livepowers | 0.111 | 否 |
+| auditable-agent-comms@livepowers | env-scan-ontology@livepowers | 0.111 | 否 |
+| env-scan-ontology | auditable-agent-comms@livepowers | 0.111 | 否 |
+| oltp-action-safety | takeover-handling | 0.111 | 否 |
+| oltp-action-safety | takeover-handling@livepowers | 0.111 | 否 |
+| oltp-action-safety@livepowers | takeover-handling@livepowers | 0.111 | 否 |
+| ontology-evolution | using-livepowers@livepowers | 0.111 | 否 |
+| ontology-evolution@livepowers | using-livepowers@livepowers | 0.111 | 否 |
+| takeover-handling | oltp-action-safety@livepowers | 0.111 | 否 |
+| using-livepowers | ontology-evolution | 0.111 | 否 |
+| using-livepowers | ontology-evolution@livepowers | 0.111 | 否 |
+| auditable-agent-comms | ontology-evolution | 0.110 | 否 |
+| auditable-agent-comms | ontology-evolution@livepowers | 0.110 | 否 |
+| auditable-agent-comms | ontology-grounded-spec@livepowers | 0.110 | 否 |
+| auditable-agent-comms@livepowers | ontology-evolution@livepowers | 0.110 | 否 |
+| auditable-agent-comms@livepowers | ontology-grounded-spec@livepowers | 0.110 | 否 |
+| delivery-chain | env-scan-ontology | 0.110 | 否 |
+| delivery-chain | env-scan-ontology@livepowers | 0.110 | 否 |
+| delivery-chain | explore-with-evidence@livepowers | 0.110 | 否 |
+| delivery-chain | writing-livepowers-skills | 0.110 | 否 |
+| delivery-chain | writing-livepowers-skills@livepowers | 0.110 | 否 |
+| delivery-chain@livepowers | env-scan-ontology@livepowers | 0.110 | 否 |
+| delivery-chain@livepowers | explore-with-evidence@livepowers | 0.110 | 否 |
+| delivery-chain@livepowers | writing-livepowers-skills@livepowers | 0.110 | 否 |
+| env-scan-ontology | delivery-chain@livepowers | 0.110 | 否 |
+| explore-with-evidence | delivery-chain | 0.110 | 否 |
+| explore-with-evidence | delivery-chain@livepowers | 0.110 | 否 |
+| night-loop-planning | oltp-action-safety@livepowers | 0.110 | 否 |
+| night-loop-planning@livepowers | oltp-action-safety@livepowers | 0.110 | 否 |
+| oltp-action-safety | night-loop-planning | 0.110 | 否 |
+| oltp-action-safety | night-loop-planning@livepowers | 0.110 | 否 |
+| ontology-evolution | auditable-agent-comms@livepowers | 0.110 | 否 |
+| ontology-grounded-spec | auditable-agent-comms | 0.110 | 否 |
+| ontology-grounded-spec | auditable-agent-comms@livepowers | 0.110 | 否 |
+| writing-livepowers-skills | delivery-chain@livepowers | 0.110 | 否 |
+| crystallize-to-system1 | night-loop-planning | 0.109 | 否 |
+| crystallize-to-system1 | night-loop-planning@livepowers | 0.109 | 否 |
+| crystallize-to-system1@livepowers | night-loop-planning@livepowers | 0.109 | 否 |
+| delivery-chain | fde-delivery | 0.109 | 否 |
+| delivery-chain | fde-delivery@livepowers | 0.109 | 否 |
+| delivery-chain | nightly-crystallization-review | 0.109 | 否 |
+| delivery-chain | nightly-crystallization-review@livepowers | 0.109 | 否 |
+| delivery-chain@livepowers | fde-delivery@livepowers | 0.109 | 否 |
+| delivery-chain@livepowers | nightly-crystallization-review@livepowers | 0.109 | 否 |
+| env-scan-ontology | night-loop-planning@livepowers | 0.109 | 否 |
+| env-scan-ontology | outcome-ledger@livepowers | 0.109 | 否 |
+| env-scan-ontology@livepowers | night-loop-planning@livepowers | 0.109 | 否 |
+| env-scan-ontology@livepowers | outcome-ledger@livepowers | 0.109 | 否 |
+| explore-with-evidence | outcome-ledger | 0.109 | 否 |
+| explore-with-evidence | outcome-ledger@livepowers | 0.109 | 否 |
+| explore-with-evidence@livepowers | outcome-ledger@livepowers | 0.109 | 否 |
+| fde-delivery | delivery-chain@livepowers | 0.109 | 否 |
+| generalizing-skills | ontology-evolution@livepowers | 0.109 | 否 |
+| generalizing-skills@livepowers | ontology-evolution@livepowers | 0.109 | 否 |
+| night-loop-planning | crystallize-to-system1@livepowers | 0.109 | 否 |
+| night-loop-planning | env-scan-ontology | 0.109 | 否 |
+| night-loop-planning | env-scan-ontology@livepowers | 0.109 | 否 |
+| nightly-crystallization-review | delivery-chain@livepowers | 0.109 | 否 |
+| nightly-crystallization-review | outcome-ledger@livepowers | 0.109 | 否 |
+| nightly-crystallization-review@livepowers | outcome-ledger@livepowers | 0.109 | 否 |
+| oltp-action-safety | outcome-ledger | 0.109 | 否 |
+| oltp-action-safety | outcome-ledger@livepowers | 0.109 | 否 |
+| oltp-action-safety@livepowers | outcome-ledger@livepowers | 0.109 | 否 |
+| ontology-evolution | generalizing-skills | 0.109 | 否 |
+| ontology-evolution | generalizing-skills@livepowers | 0.109 | 否 |
+| outcome-ledger | env-scan-ontology | 0.109 | 否 |
+| outcome-ledger | env-scan-ontology@livepowers | 0.109 | 否 |
+| outcome-ledger | explore-with-evidence@livepowers | 0.109 | 否 |
+| outcome-ledger | nightly-crystallization-review | 0.109 | 否 |
+| outcome-ledger | nightly-crystallization-review@livepowers | 0.109 | 否 |
+| outcome-ledger | oltp-action-safety@livepowers | 0.109 | 否 |
+| acceptance-gates | writing-livepowers-skills | 0.108 | 否 |
+| acceptance-gates | writing-livepowers-skills@livepowers | 0.108 | 否 |
+| acceptance-gates@livepowers | writing-livepowers-skills@livepowers | 0.108 | 否 |
+| agent-harness-for-tools | fde-delivery@livepowers | 0.108 | 否 |
+| agent-harness-for-tools@livepowers | fde-delivery@livepowers | 0.108 | 否 |
+| fde-delivery | agent-harness-for-tools | 0.108 | 否 |
+| fde-delivery | agent-harness-for-tools@livepowers | 0.108 | 否 |
+| fde-delivery | generalizing-skills | 0.108 | 否 |
+| fde-delivery | generalizing-skills@livepowers | 0.108 | 否 |
+| fde-delivery@livepowers | generalizing-skills@livepowers | 0.108 | 否 |
+| generalizing-skills | fde-delivery@livepowers | 0.108 | 否 |
+| nightly-crystallization-review | oltp-action-safety@livepowers | 0.108 | 否 |
+| nightly-crystallization-review@livepowers | oltp-action-safety@livepowers | 0.108 | 否 |
+| oltp-action-safety | nightly-crystallization-review | 0.108 | 否 |
+| oltp-action-safety | nightly-crystallization-review@livepowers | 0.108 | 否 |
+| oltp-action-safety | writing-livepowers-skills | 0.108 | 否 |
+| oltp-action-safety | writing-livepowers-skills@livepowers | 0.108 | 否 |
+| oltp-action-safety@livepowers | writing-livepowers-skills@livepowers | 0.108 | 否 |
+| writing-livepowers-skills | acceptance-gates@livepowers | 0.108 | 否 |
+| writing-livepowers-skills | oltp-action-safety@livepowers | 0.108 | 否 |
+| agent-harness-for-tools | delivery-chain@livepowers | 0.107 | 否 |
+| agent-harness-for-tools@livepowers | delivery-chain@livepowers | 0.107 | 否 |
+| auditable-agent-comms | crystallize-to-system1@livepowers | 0.107 | 否 |
+| auditable-agent-comms | living-surface | 0.107 | 否 |
+| auditable-agent-comms | living-surface@livepowers | 0.107 | 否 |
+| auditable-agent-comms@livepowers | crystallize-to-system1@livepowers | 0.107 | 否 |
+| auditable-agent-comms@livepowers | living-surface@livepowers | 0.107 | 否 |
+| crystallize-to-system1 | auditable-agent-comms | 0.107 | 否 |
+| crystallize-to-system1 | auditable-agent-comms@livepowers | 0.107 | 否 |
+| delivery-chain | agent-harness-for-tools | 0.107 | 否 |
+| delivery-chain | agent-harness-for-tools@livepowers | 0.107 | 否 |
+| living-surface | auditable-agent-comms@livepowers | 0.107 | 否 |
+| acceptance-gates | generalizing-skills | 0.106 | 否 |
+| acceptance-gates | generalizing-skills@livepowers | 0.106 | 否 |
+| acceptance-gates@livepowers | generalizing-skills@livepowers | 0.106 | 否 |
+| delivery-chain | night-loop-planning | 0.106 | 否 |
+| delivery-chain | night-loop-planning@livepowers | 0.106 | 否 |
+| delivery-chain@livepowers | night-loop-planning@livepowers | 0.106 | 否 |
+| generalizing-skills | acceptance-gates@livepowers | 0.106 | 否 |
+| night-loop-planning | delivery-chain@livepowers | 0.106 | 否 |
+| nightly-crystallization-review | writing-livepowers-skills | 0.106 | 否 |
+| nightly-crystallization-review | writing-livepowers-skills@livepowers | 0.106 | 否 |
+| nightly-crystallization-review@livepowers | writing-livepowers-skills@livepowers | 0.106 | 否 |
+| writing-livepowers-skills | nightly-crystallization-review@livepowers | 0.106 | 否 |
+| agent-harness-for-tools | generalizing-skills | 0.105 | 否 |
+| agent-harness-for-tools | generalizing-skills@livepowers | 0.105 | 否 |
+| agent-harness-for-tools@livepowers | generalizing-skills@livepowers | 0.105 | 否 |
+| auditable-agent-comms | delivery-chain | 0.105 | 否 |
+| auditable-agent-comms | delivery-chain@livepowers | 0.105 | 否 |
+| auditable-agent-comms@livepowers | delivery-chain@livepowers | 0.105 | 否 |
+| delivery-chain | auditable-agent-comms@livepowers | 0.105 | 否 |
+| delivery-chain | digital-role-spec | 0.105 | 否 |
+| delivery-chain | digital-role-spec@livepowers | 0.105 | 否 |
+| delivery-chain@livepowers | digital-role-spec@livepowers | 0.105 | 否 |
+| digital-role-spec | delivery-chain@livepowers | 0.105 | 否 |
+| fde-delivery | night-loop-planning | 0.105 | 否 |
+| fde-delivery | night-loop-planning@livepowers | 0.105 | 否 |
+| fde-delivery@livepowers | night-loop-planning@livepowers | 0.105 | 否 |
+| generalizing-skills | agent-harness-for-tools@livepowers | 0.105 | 否 |
+| generalizing-skills | system1-first@livepowers | 0.105 | 否 |
+| generalizing-skills@livepowers | system1-first@livepowers | 0.105 | 否 |
+| living-surface | outcome-ledger@livepowers | 0.105 | 否 |
+| living-surface@livepowers | outcome-ledger@livepowers | 0.105 | 否 |
+| night-loop-planning | fde-delivery@livepowers | 0.105 | 否 |
+| night-loop-planning | outcome-ledger@livepowers | 0.105 | 否 |
+| night-loop-planning@livepowers | outcome-ledger@livepowers | 0.105 | 否 |
+| outcome-ledger | living-surface | 0.105 | 否 |
+| outcome-ledger | living-surface@livepowers | 0.105 | 否 |
+| outcome-ledger | night-loop-planning | 0.105 | 否 |
+| outcome-ledger | night-loop-planning@livepowers | 0.105 | 否 |
+| system1-first | generalizing-skills | 0.105 | 否 |
+| system1-first | generalizing-skills@livepowers | 0.105 | 否 |
+| agent-harness-for-tools | auditable-agent-comms@livepowers | 0.104 | 否 |
+| agent-harness-for-tools | outcome-ledger@livepowers | 0.104 | 否 |
+| agent-harness-for-tools@livepowers | auditable-agent-comms@livepowers | 0.104 | 否 |
+| agent-harness-for-tools@livepowers | outcome-ledger@livepowers | 0.104 | 否 |
+| auditable-agent-comms | agent-harness-for-tools | 0.104 | 否 |
+| auditable-agent-comms | agent-harness-for-tools@livepowers | 0.104 | 否 |
+| auditable-agent-comms | takeover-handling | 0.104 | 否 |
+| auditable-agent-comms | takeover-handling@livepowers | 0.104 | 否 |
+| auditable-agent-comms@livepowers | takeover-handling@livepowers | 0.104 | 否 |
+| generalizing-skills | nightly-crystallization-review@livepowers | 0.104 | 否 |
+| generalizing-skills@livepowers | nightly-crystallization-review@livepowers | 0.104 | 否 |
+| living-surface | night-loop-planning@livepowers | 0.104 | 否 |
+| living-surface@livepowers | night-loop-planning@livepowers | 0.104 | 否 |
+| night-loop-planning | living-surface | 0.104 | 否 |
+| night-loop-planning | living-surface@livepowers | 0.104 | 否 |
+| night-loop-planning | ontology-evolution | 0.104 | 否 |
+| night-loop-planning | ontology-evolution@livepowers | 0.104 | 否 |
+| night-loop-planning@livepowers | ontology-evolution@livepowers | 0.104 | 否 |
+| nightly-crystallization-review | generalizing-skills | 0.104 | 否 |
+| nightly-crystallization-review | generalizing-skills@livepowers | 0.104 | 否 |
+| ontology-evolution | night-loop-planning@livepowers | 0.104 | 否 |
+| outcome-ledger | agent-harness-for-tools | 0.104 | 否 |
+| outcome-ledger | agent-harness-for-tools@livepowers | 0.104 | 否 |
+| takeover-handling | auditable-agent-comms@livepowers | 0.104 | 否 |
+| auditable-agent-comms | fde-delivery | 0.103 | 否 |
+| auditable-agent-comms | fde-delivery@livepowers | 0.103 | 否 |
+| auditable-agent-comms | nightly-crystallization-review | 0.103 | 否 |
+| auditable-agent-comms | nightly-crystallization-review@livepowers | 0.103 | 否 |
+| auditable-agent-comms@livepowers | fde-delivery@livepowers | 0.103 | 否 |
+| auditable-agent-comms@livepowers | nightly-crystallization-review@livepowers | 0.103 | 否 |
+| delivery-chain | generalizing-skills | 0.103 | 否 |
+| delivery-chain | generalizing-skills@livepowers | 0.103 | 否 |
+| delivery-chain@livepowers | generalizing-skills@livepowers | 0.103 | 否 |
+| fde-delivery | auditable-agent-comms@livepowers | 0.103 | 否 |
+| generalizing-skills | delivery-chain@livepowers | 0.103 | 否 |
+| nightly-crystallization-review | auditable-agent-comms@livepowers | 0.103 | 否 |
+| delivery-chain | oltp-action-safety | 0.102 | 否 |
+| delivery-chain | oltp-action-safety@livepowers | 0.102 | 否 |
+| delivery-chain@livepowers | oltp-action-safety@livepowers | 0.102 | 否 |
+| oltp-action-safety | delivery-chain@livepowers | 0.102 | 否 |
+| night-loop-planning | writing-livepowers-skills | 0.101 | 否 |
+| night-loop-planning | writing-livepowers-skills@livepowers | 0.101 | 否 |
+| night-loop-planning@livepowers | writing-livepowers-skills@livepowers | 0.101 | 否 |
+| outcome-ledger | writing-livepowers-skills | 0.101 | 否 |
+| outcome-ledger | writing-livepowers-skills@livepowers | 0.101 | 否 |
+| outcome-ledger@livepowers | writing-livepowers-skills@livepowers | 0.101 | 否 |
+| writing-livepowers-skills | night-loop-planning@livepowers | 0.101 | 否 |
+| writing-livepowers-skills | outcome-ledger@livepowers | 0.101 | 否 |
+| auditable-agent-comms | explore-with-evidence@livepowers | 0.100 | 否 |
+| auditable-agent-comms@livepowers | explore-with-evidence@livepowers | 0.100 | 否 |
+| explore-with-evidence | auditable-agent-comms | 0.100 | 否 |
+| explore-with-evidence | auditable-agent-comms@livepowers | 0.100 | 否 |
+| auditable-agent-comms | outcome-ledger | 0.099 | 否 |
+| auditable-agent-comms | outcome-ledger@livepowers | 0.099 | 否 |
+| auditable-agent-comms@livepowers | outcome-ledger@livepowers | 0.099 | 否 |
+| outcome-ledger | auditable-agent-comms@livepowers | 0.099 | 否 |
+| delivery-chain | ontology-evolution | 0.098 | 否 |
+| delivery-chain | ontology-evolution@livepowers | 0.098 | 否 |
+| delivery-chain | outcome-ledger | 0.098 | 否 |
+| delivery-chain | outcome-ledger@livepowers | 0.098 | 否 |
+| delivery-chain@livepowers | ontology-evolution@livepowers | 0.098 | 否 |
+| delivery-chain@livepowers | outcome-ledger@livepowers | 0.098 | 否 |
+| ontology-evolution | delivery-chain@livepowers | 0.098 | 否 |
+| outcome-ledger | delivery-chain@livepowers | 0.098 | 否 |
+| generalizing-skills | outcome-ledger@livepowers | 0.097 | 否 |
+| generalizing-skills@livepowers | outcome-ledger@livepowers | 0.097 | 否 |
+| outcome-ledger | generalizing-skills | 0.097 | 否 |
+| outcome-ledger | generalizing-skills@livepowers | 0.097 | 否 |
+| auditable-agent-comms | using-livepowers@livepowers | 0.095 | 否 |
+| auditable-agent-comms@livepowers | using-livepowers@livepowers | 0.095 | 否 |
+| using-livepowers | auditable-agent-comms | 0.095 | 否 |
+| using-livepowers | auditable-agent-comms@livepowers | 0.095 | 否 |
+| generalizing-skills | oltp-action-safety@livepowers | 0.094 | 否 |
+| generalizing-skills@livepowers | oltp-action-safety@livepowers | 0.094 | 否 |
+| oltp-action-safety | generalizing-skills | 0.094 | 否 |
+| oltp-action-safety | generalizing-skills@livepowers | 0.094 | 否 |
+| generalizing-skills | night-loop-planning@livepowers | 0.091 | 否 |
+| generalizing-skills@livepowers | night-loop-planning@livepowers | 0.091 | 否 |
+| night-loop-planning | generalizing-skills | 0.091 | 否 |
+| night-loop-planning | generalizing-skills@livepowers | 0.091 | 否 |
+| digital-role-spec | generalizing-skills | 0.090 | 否 |
+| digital-role-spec | generalizing-skills@livepowers | 0.090 | 否 |
+| digital-role-spec@livepowers | generalizing-skills@livepowers | 0.090 | 否 |
+| generalizing-skills | digital-role-spec@livepowers | 0.090 | 否 |
+| auditable-agent-comms | generalizing-skills | 0.078 | 否 |
+| auditable-agent-comms | generalizing-skills@livepowers | 0.078 | 否 |
+| auditable-agent-comms@livepowers | generalizing-skills@livepowers | 0.078 | 否 |
+| generalizing-skills | auditable-agent-comms@livepowers | 0.078 | 否 |
+
+## 三、待核查清单（疑似重叠）
+
+- acceptance-gates ↔ acceptance-gates@livepowers（相似度 1.000）：只进待核查清单，不自动合并；行为层确认与合并/拆分/保留分工由人决定。
+- agent-harness-for-tools ↔ agent-harness-for-tools@livepowers（相似度 1.000）：只进待核查清单，不自动合并；行为层确认与合并/拆分/保留分工由人决定。
+- auditable-agent-comms ↔ auditable-agent-comms@livepowers（相似度 1.000）：只进待核查清单，不自动合并；行为层确认与合并/拆分/保留分工由人决定。
+- crystallize-to-system1 ↔ crystallize-to-system1@livepowers（相似度 1.000）：只进待核查清单，不自动合并；行为层确认与合并/拆分/保留分工由人决定。
+- delivery-chain ↔ delivery-chain@livepowers（相似度 1.000）：只进待核查清单，不自动合并；行为层确认与合并/拆分/保留分工由人决定。
+- digital-role-spec ↔ digital-role-spec@livepowers（相似度 1.000）：只进待核查清单，不自动合并；行为层确认与合并/拆分/保留分工由人决定。
+- env-scan-ontology ↔ env-scan-ontology@livepowers（相似度 1.000）：只进待核查清单，不自动合并；行为层确认与合并/拆分/保留分工由人决定。
+- explore-with-evidence ↔ explore-with-evidence@livepowers（相似度 1.000）：只进待核查清单，不自动合并；行为层确认与合并/拆分/保留分工由人决定。
+- fde-delivery ↔ fde-delivery@livepowers（相似度 1.000）：只进待核查清单，不自动合并；行为层确认与合并/拆分/保留分工由人决定。
+- generalizing-skills ↔ generalizing-skills@livepowers（相似度 1.000）：只进待核查清单，不自动合并；行为层确认与合并/拆分/保留分工由人决定。
+- living-surface ↔ living-surface@livepowers（相似度 1.000）：只进待核查清单，不自动合并；行为层确认与合并/拆分/保留分工由人决定。
+- night-loop-planning ↔ night-loop-planning@livepowers（相似度 1.000）：只进待核查清单，不自动合并；行为层确认与合并/拆分/保留分工由人决定。
+- nightly-crystallization-review ↔ nightly-crystallization-review@livepowers（相似度 1.000）：只进待核查清单，不自动合并；行为层确认与合并/拆分/保留分工由人决定。
+- oltp-action-safety ↔ oltp-action-safety@livepowers（相似度 1.000）：只进待核查清单，不自动合并；行为层确认与合并/拆分/保留分工由人决定。
+- ontology-evolution ↔ ontology-evolution@livepowers（相似度 1.000）：只进待核查清单，不自动合并；行为层确认与合并/拆分/保留分工由人决定。
+- ontology-grounded-spec ↔ ontology-grounded-spec@livepowers（相似度 1.000）：只进待核查清单，不自动合并；行为层确认与合并/拆分/保留分工由人决定。
+- outcome-ledger ↔ outcome-ledger@livepowers（相似度 1.000）：只进待核查清单，不自动合并；行为层确认与合并/拆分/保留分工由人决定。
+- system1-first ↔ system1-first@livepowers（相似度 1.000）：只进待核查清单，不自动合并；行为层确认与合并/拆分/保留分工由人决定。
+- takeover-handling ↔ takeover-handling@livepowers（相似度 1.000）：只进待核查清单，不自动合并；行为层确认与合并/拆分/保留分工由人决定。
+- using-livepowers ↔ using-livepowers@livepowers（相似度 1.000）：只进待核查清单，不自动合并；行为层确认与合并/拆分/保留分工由人决定。
+- writing-livepowers-skills ↔ writing-livepowers-skills@livepowers（相似度 1.000）：只进待核查清单，不自动合并；行为层确认与合并/拆分/保留分工由人决定。
+
+## 四、整改清单候选（质量门未过关）
+
+无。质量门结论为“证据不足”的技能不在此列——证据不足不是失效，待对照跑分补测。
+
+## 五、方法与诚实声明
+
+- 本报告由评估脚本按评估清单自动生成；清单里的技能文本取自仓库 main 上的真实技能文件（路径见清单）。
+- 质量门样本量为 0 的技能判“证据不足”：T2 只跑门逻辑与重叠检测，真实对照跑分（A/B）在后续实测试运行；不编造跑分数据。
+- 评估结论只进整改清单/待核查清单；技能下线另走审批，绝不因评估未过关直接删技能。
