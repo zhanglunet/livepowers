@@ -122,7 +122,8 @@ class TestChainRerun(unittest.TestCase):
                      "test_prd446_t3_skill_supervision_gate.py",
                      "test_prd446_t4_skill_supervision_boundary.py"):
             proc = subprocess.run(
-                [sys.executable, "-m", "pytest", "-q", str(TESTS / name)],
+                [sys.executable, "-m", "unittest", "discover",
+                 "-s", str(TESTS), "-p", name],
                 capture_output=True, timeout=300)
             self.assertEqual(proc.returncode, 0,
                              f"{name} 复跑失败：{proc.stdout[-400:]}{proc.stderr[-400:]}")
