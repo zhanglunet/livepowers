@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+
 """PRD-575/T2（trend issue #2886 的 T2 环节）：livepowers 技能开发产物红队巡检巡检最小实现。
 
 按 T1 设计（docs/plans/2026-11-20-prd-575-livepowers-hunting-design.md）落地红队巡检：
