@@ -31,6 +31,8 @@
 
 官方标准没有统一版本号，本 checklist 以"来源 + 抓取日期"作为版本标（对应 PRD 风险节"checklist 标注标准版本号，T5 复核"）。全部条目均出自下列原文，2026-10-20 抓取：
 
+> **v1.1（2026-11-21，T5 复核升级）**：A1 README 已实质变更（2026-11-21 抓取实测）——**`.claude-plugin/marketplace.json` 正对第三方插件淘汰**（"reduced over time to Anthropic's own plugins"），第三方插件提交入口改为 claude.ai/directory/manage，PR 不再受理。影响与处置：C-03/C-04 的 marketplace.json 语义从"第三方分发清单"收窄为"**本地多插件分发/安装面**"（Cursor 侧与本地 `claude plugin install` 仍走该文件），第三方上架以 directory/manage 为准；本仓文件继续保留（本地 install 实测 C-23 依赖它），条目分数不触发重打。A4 六字段可移植集与 C2 提交清单经比对无条文变化。
+
 | 编号 | 来源 | 链接 | 备注 |
 |---|---|---|---|
 | A1 | anthropics/claude-plugins-official 仓库 README | https://github.com/anthropics/claude-plugins-official | 官方目录结构、外部插件提交与质量/安全标准、名称不可变规则 |

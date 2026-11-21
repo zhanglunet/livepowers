@@ -35,8 +35,13 @@ def parse_frontmatter(text):
         return None, ["缺 frontmatter（文件开头 --- ... ---）"]
     fm, problems = {}, []
     for i, raw in enumerate(m.group(1).splitlines(), 1):
-        s = raw.strip()
+        s = raw.rstrip()
         if not s or s.startswith("#"):
+            continue
+        # 嵌套块（metadata 等的子键缩进行）不是顶层字段——跳过但保结构可见。
+        # 2026-11-21 修复(#60)：此前把 metadata 子键当顶层键校验，PRD-199/T2 给
+        # 21 个 skill 补 metadata 块后假红 21/21（"未知字段 when_not_to_use"）。
+        if s[0] in " -" or s.startswith(("\t",)):
             continue
         if ":" not in s:
             problems.append("frontmatter 第%d行无法解析：%s" % (i, s))
